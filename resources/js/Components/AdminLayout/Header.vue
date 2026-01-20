@@ -1,0 +1,166 @@
+<template>
+    <header
+        class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 h-20 flex items-center justify-between px-6 shadow-sm z-20 transition-colors duration-300"
+    >
+        <!-- Left Section: Toggle & Title -->
+        <div class="flex items-center gap-4">
+            <button
+                @click="toggleSidebar"
+                class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200"
+            >
+                <Menu class="h-6 w-6" />
+            </button>
+
+            <div class="hidden md:block">
+                <h1
+                    class="text-xl font-bold text-gray-800 dark:text-white tracking-tight"
+                >
+                    Admin Dashboard
+                </h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Welcome back, {{ $page.props.auth.user.name }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Section: Actions -->
+        <div class="flex items-center gap-2 sm:gap-4">
+            <!-- Fullscreen Toggle -->
+            <button
+                @click="toggleFullscreen"
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200"
+                title="Toggle Fullscreen"
+            >
+                <Maximize2 v-if="!isFullscreen" class="h-5 w-5" />
+                <Minimize2 v-else class="h-5 w-5" />
+            </button>
+
+            <!-- Dark Mode Toggle -->
+            <button
+                @click="toggleDarkMode"
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200"
+                title="Toggle Theme"
+            >
+                <Sun v-if="isDark" class="h-5 w-5" />
+                <Moon v-else class="h-5 w-5" />
+            </button>
+
+            <!-- Notifications (Optional Placeholder) -->
+            <button
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200 relative"
+            >
+                <Bell class="h-5 w-5" />
+                <span
+                    class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"
+                ></span>
+            </button>
+
+            <!-- Profile Dropdown -->
+            <div class="relative ml-2">
+                <button
+                    @click="toggleProfile"
+                    class="flex items-center gap-3 focus:outline-none group"
+                >
+                    <div
+                        class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm border-2 border-transparent group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-all"
+                    >
+                        {{ $page.props.auth.user.name.charAt(0) }}
+                    </div>
+                    <div class="hidden md:block text-left">
+                        <p
+                            class="text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+                        >
+                            {{ $page.props.auth.user.name }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Admin
+                        </p>
+                    </div>
+                    <ChevronDown
+                        class="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-transform duration-200"
+                        :class="{ 'rotate-180': isProfileOpen }"
+                    />
+                </button>
+
+                <!-- Dropdown Menu -->
+                <transition
+                    enter-active-class="transition ease-out duration-200"
+                    enter-from-class="transform opacity-0 scale-95"
+                    enter-to-class="transform opacity-100 scale-100"
+                    leave-active-class="transition ease-in duration-75"
+                    leave-from-class="transform opacity-100 scale-100"
+                    leave-to-class="transform opacity-0 scale-95"
+                >
+                    <div
+                        v-if="isProfileOpen"
+                        class="absolute right-0 mt-3 w-56 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-2 z-50 border border-gray-100 dark:border-gray-800"
+                    >
+                        <div
+                            class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 mb-2"
+                        >
+                            <p
+                                class="text-sm font-semibold text-gray-900 dark:text-white"
+                            >
+                                {{ $page.props.auth.user.name }}
+                            </p>
+                            <p
+                                class="text-xs text-gray-500 dark:text-gray-400 truncate"
+                            >
+                                {{ $page.props.auth.user.email }}
+                            </p>
+                        </div>
+
+                        <Link
+                            class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            :href="route('admin.profile.edit')"
+                        >
+                            <User class="w-4 h-4" />
+                            Profile Settings
+                        </Link>
+
+                        <div
+                            class="border-t border-gray-100 dark:border-gray-800 my-2"
+                        ></div>
+
+                        <Link
+                            class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            :href="route('logout')"
+                            method="post"
+                            as="button"
+                        >
+                            <LogOut class="w-4 h-4" />
+                            Log Out
+                        </Link>
+                    </div>
+                </transition>
+            </div>
+        </div>
+    </header>
+</template>
+
+<script setup>
+import { defineProps } from "vue";
+import {
+    Menu,
+    Sun,
+    Moon,
+    Maximize2,
+    Minimize2,
+    ChevronDown,
+    Bell,
+    User,
+    LogOut,
+} from "lucide-vue-next";
+import { Link } from "@inertiajs/vue3";
+
+defineProps({
+    sidebarOpen: Boolean,
+    toggleSidebar: Function,
+    isDark: Boolean,
+    toggleDarkMode: Function,
+    isFullscreen: Boolean,
+    toggleFullscreen: Function,
+    isProfileOpen: Boolean,
+    toggleProfile: Function,
+});
+</script>
