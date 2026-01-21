@@ -45,15 +45,56 @@
                 <Moon v-else class="h-5 w-5" />
             </button>
 
-            <!-- Notifications (Optional Placeholder) -->
-            <button
-                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200 relative"
-            >
-                <Bell class="h-5 w-5" />
-                <span
-                    class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"
-                ></span>
-            </button>
+            <!-- Notifications -->
+            <div class="relative">
+                <button
+                    @click="toggleNotifications"
+                    class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200 relative"
+                    title="Notifications"
+                >
+                    <Bell class="h-5 w-5" />
+                    <span v-if="unreadCount > 0"
+                        class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold text-white bg-red-500 rounded-full border-2 border-white dark:border-gray-900"
+                    >{{ unreadCount }}</span>
+                </button>
+
+                <transition
+                    enter-active-class="transition ease-out duration-200"
+                    enter-from-class="transform opacity-0 scale-95"
+                    enter-to-class="transform opacity-100 scale-100"
+                    leave-active-class="transition ease-in duration-75"
+                    leave-from-class="transform opacity-100 scale-100"
+                    leave-to-class="transform opacity-0 scale-95"
+                >
+                    <div
+                        v-if="isNotificationsOpen"
+                        class="absolute right-0 mt-3 w-80 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-2 z-50 border border-gray-100 dark:border-gray-800"
+                    >
+                        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">Notifications</p>
+                        </div>
+
+                        <div v-if="notifications.length === 0" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                            No notifications
+                        </div>
+
+                        <div v-for="n in notifications" :key="n.id" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <div class="text-sm font-medium text-gray-800 dark:text-white truncate">
+                                {{ n.data.order_number ?? n.data.title ?? n.type }}
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                <span v-if="n.data.customer_name">{{ n.data.customer_name }} • </span>
+                                <span v-if="n.data.total">{{ n.data.total }}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1 truncate">{{ formatDate(n.created_at) }}</div>
+                        </div>
+
+                        <div class="border-t p-2 text-center">
+                            <Link :href="route('admin.notifications.index')" class="text-sm text-blue-600 dark:text-blue-400">View all</Link>
+                        </div>
+                    </div>
+                </transition>
+            </div>
 
             <!-- Profile Dropdown -->
             <div class="relative ml-2">
@@ -139,7 +180,8 @@
 </template>
 
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, ref, computed } from "vue";
+import { usePage } from "@inertiajs/vue3";
 import {
     Menu,
     Sun,
@@ -163,4 +205,49 @@ defineProps({
     isProfileOpen: Boolean,
     toggleProfile: Function,
 });
+
+// Notifications state
+const isNotificationsOpen = ref(false);
+const toggleNotifications = () => (isNotificationsOpen.value = !isNotificationsOpen.value);
+
+const page = usePage();
+
+// Safely resolve adminNotifications from Inertia props (handles SSR / shape differences)
+const adminNotifications = computed(() => {
+    try {
+        // Prefer the .props.value shape (Vue 3 + Inertia), fall back to .props directly
+        if (page && page.props && page.props.value && page.props.value.adminNotifications) {
+            return page.props.value.adminNotifications;
+        }
+        if (page && page.props && page.props.adminNotifications) {
+            return page.props.adminNotifications;
+        }
+    } catch (e) {
+        // ignore and fall through
+    }
+
+    return { count: 0, notifications: [] };
+});
+
+const unreadCount = computed(() => adminNotifications.value?.count || 0);
+
+// Normalize notifications into an array for safe iteration in template
+const notifications = computed(() => {
+    const n = adminNotifications.value?.notifications || [];
+    if (Array.isArray(n)) return n;
+    // Inertia pagination may provide an object with `data`
+    if (n && n.data && Array.isArray(n.data)) return n.data;
+    // As a last resort, convert object values to array
+    if (n && typeof n === 'object') return Object.values(n);
+    return [];
+});
+
+function formatDate(value) {
+    if (!value) return '';
+    try {
+        return new Date(value).toLocaleString();
+    } catch (e) {
+        return value;
+    }
+}
 </script>

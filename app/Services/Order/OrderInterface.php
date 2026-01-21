@@ -30,4 +30,11 @@ interface OrderInterface
 
     // updateNewOrder($orderId, $request->all());
     public function updateNewOrder(int $orderId, array $data): Order;
-}
+
+    /**
+     * Return admin-facing notifications (count + recent items)
+     *
+     * @return array
+     */
+    public function adminNotifications(): array;
+} 

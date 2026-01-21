@@ -241,6 +241,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/leads/{id}', [App\Http\Controllers\Admin\PreOrderLeadController::class, 'show'])->name('leads.show');
     Route::patch('/leads/{id}/status', [App\Http\Controllers\Admin\PreOrderLeadController::class, 'updateStatus'])->name('leads.update-status');
     Route::delete('/leads/{id}', [App\Http\Controllers\Admin\PreOrderLeadController::class, 'destroy'])->name('leads.destroy');
+
+    // Admin notifications listing
+    Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
 });
 
 require __DIR__ . '/auth.php';

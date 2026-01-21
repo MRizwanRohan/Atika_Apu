@@ -11,6 +11,7 @@ use App\Services\Wishlist\WishlistService;
 use App\Services\Compare\CompareService;
 use App\Http\Resources\Cart\CartResource;
 use Illuminate\Support\Str;
+use App\Services\Order\OrderInterface as OrderServiceInterface;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -19,19 +20,22 @@ class HandleInertiaRequests extends Middleware
     protected $settingsService;
     protected $wishlistService;
     protected $compareService;
+    protected $orderService;
 
     public function __construct(
         CategoryService $categoryService, 
         CartService $cartService,
         SettingsService $settingsService,
         WishlistService $wishlistService,
-        CompareService $compareService
+        CompareService $compareService,
+        OrderServiceInterface $orderService
     ) {
         $this->categoryService = $categoryService;
         $this->cartService = $cartService;
         $this->settingsService = $settingsService;
         $this->wishlistService = $wishlistService;
         $this->compareService = $compareService;
+        $this->orderService = $orderService;
     }
 
     /**
@@ -108,6 +112,10 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
             ],
+            // Admin notifications (only visible to admin users)
+            'adminNotifications' => fn () => ($user && ($user->hasRole('admin') || $user->hasRole('super-admin')))
+                ? $this->orderService->adminNotifications()
+                : ['count' => 0, 'notifications' => collect()],
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\OrderCreated;
 use App\Events\OrderUpdated;
 use App\Listeners\ClearOrderCache;
+use App\Listeners\CreateOrderNotificationRecord;
 use App\Listeners\ClearOrderUpdateCache;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,7 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         OrderCreated::class => [
             ClearOrderCache::class,
+            CreateOrderNotificationRecord::class,
         ],
 
         // Add other events and listeners here

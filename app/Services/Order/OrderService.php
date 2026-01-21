@@ -21,6 +21,7 @@ use App\Models\Cart;
 use App\Services\Cart\CartService;
 use App\Services\Coupon\CouponService;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Notification;
 
 class OrderService implements OrderInterface
 {
@@ -1612,4 +1613,48 @@ class OrderService implements OrderInterface
             }
         }
     }
+
+
+
+    // only admin can see notifications
+    public function adminNotifications(): array
+    {
+        $user = auth()->user();
+
+        // Only admins (or super-admins) should see admin notifications
+        if (!$user || (! $user->hasRole('admin') && ! $user->hasRole('super-admin'))) {
+            return ['count' => 0, 'notifications' => collect()];
+        }
+
+        // Count unread notifications
+        $unreadCount = Notification::where('is_read', 0)->count();
+
+        // Return last 10 notifications with JSON-decoded data
+        $notifications = Notification::orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($n) {
+                $data = $n->data;
+                if (is_string($data)) {
+                    $decoded = json_decode($data, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $data = $decoded;
+                    }
+                }
+
+                return [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'order_id' => $n->order_id ?? null,
+                    'data' => $data,
+                    'is_read' => (bool) $n->is_read,
+                    'created_at' => $n->created_at,
+                ];
+            });
+
+        return ['count' => $unreadCount, 'notifications' => $notifications];
+    }
+
+
+
 }
