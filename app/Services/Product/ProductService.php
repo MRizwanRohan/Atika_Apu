@@ -324,7 +324,7 @@ class ProductService
     $attributeFilters = $params['attributes'] ?? [];
 
     $query = Product::where('status', 'Published')
-        ->with(['category', 'brand', 'variations.attributes.value.attribute'])
+        ->with(['category', 'brand', 'variations.attributes.value.attribute', 'campaigns'])
         ->withAvg('reviews', 'rating')
         ->withCount('reviews');
 
