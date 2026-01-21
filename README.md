@@ -436,7 +436,7 @@ POST /orders
       "product_variation_id": 2,
       "quantity": 2,
       "coupon_code": "WINTER25",
-      "discount_type": "fixed_amount",
+      "discount_type": "fixed",
       "discount_amount": 25
     },
     {

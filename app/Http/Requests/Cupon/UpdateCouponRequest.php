@@ -26,7 +26,7 @@ class UpdateCouponRequest extends FormRequest
             'code' => ['sometimes', 'string', 'max:50', Rule::unique('coupons')->ignore($this->coupon)],
             'name' => ['sometimes', 'string', 'max:255'],
             'discount_value' => ['sometimes', 'numeric', 'min:0'],
-            'discount_type' => ['sometimes', Rule::in(['percentage', 'fixed_amount'])],
+            'discount_type' => ['sometimes', Rule::in(['percentage', 'fixed'])],
             'max_uses' => ['nullable', 'integer', 'min:1'],
             'start_date' => ['sometimes', 'date'],
             'expiry_date' => ['sometimes', 'date', 'after:start_date'],

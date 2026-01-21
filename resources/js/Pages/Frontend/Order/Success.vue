@@ -198,9 +198,9 @@ const estimatedDelivery = computed(() => {
                                 <span class="text-gray-600">Shipping</span>
                                 <span class="font-medium text-gray-900">৳{{ parseFloat(order.shipping_cost || 0).toFixed(2) }}</span>
                             </div>
-                            <div v-if="order.discount > 0" class="flex justify-between text-sm">
+                            <div v-if="parseFloat(order.discount_total || order.discount || 0) > 0" class="flex justify-between text-sm">
                                 <span class="text-gray-600">Discount</span>
-                                <span class="font-medium text-green-600">-৳{{ parseFloat(order.discount).toFixed(2) }}</span>
+                                <span class="font-medium text-green-600">-৳{{ parseFloat(order.discount_total || order.discount || 0).toFixed(2) }}</span>
                             </div>
                             <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
                                 <span class="text-gray-900">Total</span>

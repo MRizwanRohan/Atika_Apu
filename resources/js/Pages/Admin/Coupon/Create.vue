@@ -167,7 +167,7 @@ const submit = () => {
 // Discount type options with descriptions
 const discountTypes = [
   { value: 'percentage', label: 'Percentage (%)', description: 'e.g., 10% off' },
-  { value: 'fixed_amount', label: 'Fixed Amount', description: 'e.g., $50 off' }
+  { value: 'fixed', label: 'Fixed Amount', description: 'e.g., $50 off' }
 ];
 
 // Close date picker when clicking outside

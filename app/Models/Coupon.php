@@ -70,7 +70,7 @@ class Coupon extends Model
             case 'percentage':
                 $discount = ($price * $this->discount_value) / 100;
                 break;
-            case 'fixed_amount':
+            case 'fixed':
                 $discount = min($this->discount_value, $price);
                 break;
             default:

@@ -110,7 +110,7 @@ const submit = () => {
               required
             >
               <option value="percentage">Percentage</option>
-              <option value="fixed_amount">Fixed Amount</option>
+              <option value="fixed">Fixed Amount</option>
             </select>
             <p v-if="form.errors.discount_type" class="mt-1 text-sm text-red-600">{{ form.errors.discount_type }}</p>
           </div>

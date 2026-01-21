@@ -91,8 +91,10 @@ const discountBadgeText = computed(() => {
 // WhatsApp share link using global settings (provided via Inertia page props)
 const page = usePage();
 const settings = computed(() => page.props.settings || {});
-const whatsappNumberRaw = computed(() => settings.value.generalSettings.whatsapp_number || "");
-const whatsappNumberClean = computed(() => whatsappNumberRaw.value.replace(/\D/g, ""));
+// guard against settings.generalSettings being null
+const whatsappNumberRaw = computed(() => settings.value.generalSettings?.whatsapp_number || "");
+// ensure we always operate on a string
+const whatsappNumberClean = computed(() => (whatsappNumberRaw.value || "").replace(/\D/g, ""));
 const whatsappMessage = computed(() => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const name = props.product.name || "";

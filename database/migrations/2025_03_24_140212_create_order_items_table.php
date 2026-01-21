@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2);
 
             $table->string('coupon_code')->nullable();
-            $table->enum('discount_type', ['percentage', 'fixed_amount'])->nullable();
+            $table->enum('discount_type', ['percentage', 'fixed'])->nullable();
             $table->decimal('discount_total', 10, 2)->default(0.00);
             $table->decimal('final_price', 10, 2);
             $table->json('options')->nullable();

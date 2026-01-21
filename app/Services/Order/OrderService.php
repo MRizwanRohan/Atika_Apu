@@ -262,7 +262,7 @@ class OrderService implements OrderInterface
             'items.*.product_variation_id' => ['nullable', 'integer', 'exists:product_variations,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:100'],
             'items.*.coupon_code' => ['nullable', 'string'],
-            'items.*.discount_type' => ['nullable', 'string', 'in:percentage,fixed,fixed_amount'],
+            'items.*.discount_type' => ['nullable', 'string', 'in:percentage,fixed'],
             'items.*.discount_amount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
@@ -371,14 +371,23 @@ class OrderService implements OrderInterface
             //     'price' => $price
             // ]);
 
+            // Preserve base price (pre-campaign) then apply campaign to get displayed unit price
+            $basePrice = $price;
+            if ($activeCampaign) {
+                $price = $activeCampaign->calculateDiscountedPrice($price);
+            }
+
             // Prepare processed item with resolved variation
+            // Note: We only pass coupon/explicit item discounts via discount_type/discount_amount
+            // Campaign discount is already applied to the unit_price above to avoid double-application later
             $processedItems[] = [
                 'product' => $product,
                 'variation' => $productVariation,
                 'quantity' => $itemData['quantity'],
+                'base_unit_price' => $basePrice,
                 'unit_price' => $price,
-                'discount_type' => (!empty($itemData['discount_type'])) ? $itemData['discount_type'] : ($campaignDiscountType === 'fixed' ? 'fixed_amount' : $campaignDiscountType),
-                'discount_amount' => (!empty($itemData['discount_amount']) && $itemData['discount_amount'] > 0) ? $itemData['discount_amount'] : $campaignDiscountAmount,
+                'discount_type' => !empty($itemData['discount_type']) ? $itemData['discount_type'] : null,
+                'discount_amount' => (!empty($itemData['discount_amount']) && $itemData['discount_amount'] > 0) ? $itemData['discount_amount'] : 0,
                 'additional_data' => $itemData
             ];
         }
@@ -450,15 +459,18 @@ class OrderService implements OrderInterface
 
         // Apply discount if available
         if (!empty($itemData['discount_type']) && !empty($itemData['discount_amount'])) {
+            // If a coupon was applied (coupon_code present), we compute percentage discounts
+            // against the base (pre-campaign) unit price so totals match checkout behavior.
+            $baseUnitPrice = $itemData['base_unit_price'] ?? $unitPrice;
+
             switch ($itemData['discount_type']) {
                 case 'percentage':
-                    // e.g., 10% off per unit, then multiplied by quantity
+                    // Percentage discounts apply on the displayed unit price (post-campaign)
                     $discountAmount = (($unitPrice * $itemData['discount_amount']) / 100) * $quantity;
                     break;
 
                 case 'fixed':
-                case 'fixed_amount':
-                    // fixed amount off per unit, then multiplied by quantity
+                    // fixed amount off per unit (per-unit value provided for fixed coupons), then multiplied by quantity
                     $discountAmount = $itemData['discount_amount'] * $quantity;
                     break;
 
@@ -1490,7 +1502,7 @@ class OrderService implements OrderInterface
             'items.*.product_variation_id' => ['nullable', 'integer', 'exists:product_variations,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:100'],
             'items.*.coupon_code' => ['nullable', 'string'],
-            'items.*.discount_type' => ['nullable', 'string', 'in:percentage,fixed_amount'],
+            'items.*.discount_type' => ['nullable', 'string', 'in:percentage,fixed'],
             'items.*.discount_amount' => ['nullable', 'numeric', 'min:0'],
         ]);
 

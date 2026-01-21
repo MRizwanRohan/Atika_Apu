@@ -432,36 +432,58 @@ class CouponService
                 ? $item->variation->price + $item->product->price
                 : $product->price;
 
+            // Apply active campaign price (if any) to align with cart display
+            $discountedUnitPrice = $unitPrice;
+            if (!empty($product->campaigns)) {
+                $now = now();
+                foreach ($product->campaigns as $campaign) {
+                    $start = \Carbon\Carbon::parse($campaign->start_date);
+                    $end = \Carbon\Carbon::parse($campaign->end_date);
+                    if ($campaign->status === 'active' && $now->between($start, $end)) {
+                        $discountedUnitPrice = $campaign->calculateDiscountedPrice($unitPrice);
+                        break;
+                    }
+                }
+            }
+
             // Calculate totals with quantity
-            //  $totalPrice = $unitPrice * $quantity;
-            $totalPrice = $unitPrice;
+            $totalPrice = $discountedUnitPrice * $quantity;
 
             $cartItemResult = [
                 'cart_item_id' => $item->id,
                 'product_id' => $product->id,
                 'name' => $product->name,
                 'quantity' => $quantity,
-                'unit_price' => $unitPrice,
+                'unit_price' => $discountedUnitPrice,
                 'total_price' => $totalPrice,
             ];
 
             // Only apply discount if product is eligible
             if ($isEligible) {
+                // Calculate total discount for this line (considering quantity)
                 $discount = $coupon->calculateDiscount($totalPrice);
                 $discountedPrice = $totalPrice - $discount;
+
+                // For fixed-type coupons, normalize discount_amount to be per-unit monetary value
+                if ($coupon->discount_type === 'fixed') {
+                    $perUnitDiscount = $quantity > 0 ? ($discount / $quantity) : 0; // distribute evenly
+                    $discountAmountField = $perUnitDiscount;
+                } else {
+                    // percentage: keep as percentage value (e.g., 10 for 10%) - percent applies to the unit after campaign
+                    $discountAmountField = $coupon->discount_value;
+                }
 
                 $cartItemResult = array_merge($cartItemResult, [
                     'coupon_code' => $coupon->code,
                     'discount_type' => $coupon->discount_type,
-                    'discount_amount' => $coupon->discount_value,
+                    'discount_amount' => $discountAmountField,
                     'discount' => $discount,
                     'discounted_price' => $discountedPrice,
                     'is_eligible' => true
                 ]);
 
                 $totalDiscount += $discount;
-            } else {
-                $cartItemResult = array_merge($cartItemResult, [
+            } else {                $cartItemResult = array_merge($cartItemResult, [
                     'discount' => 0,
                     'discounted_price' => $totalPrice,
                     'is_eligible' => false
