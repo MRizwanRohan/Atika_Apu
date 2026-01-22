@@ -7,6 +7,8 @@ import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import { Link, Head } from "@inertiajs/vue3";
 import StarRating from '@/Components/Frontend/Product/StarRating.vue';
 import ProductCardRelated from "@/Components/Frontend/Product/ProductCardRelated.vue";
+// --- Tabbed sections + smooth scroll / active-state ---
+import { onMounted, onBeforeUnmount, nextTick } from "vue";
 
 const props = defineProps({
     product: {
@@ -34,6 +36,7 @@ const props = defineProps({
         default: () => ({}),
     },
 });
+
 
 const selectedVariationImage = ref(null);
 
@@ -81,8 +84,7 @@ const handleVariationChange = (payload) => {
     }
 };
 
-// --- Tabbed sections + smooth scroll / active-state ---
-import { onMounted, onBeforeUnmount, nextTick } from "vue";
+
 
 const activeTab = ref("specs");
 const specsSection = ref(null);

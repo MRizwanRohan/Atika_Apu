@@ -1,6 +1,10 @@
 <script setup>
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { Link } from "@inertiajs/vue3";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import { Autoplay, Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 
 const props = defineProps({
     categories: {
@@ -9,92 +13,121 @@ const props = defineProps({
     },
 });
 
-const isExpanded = ref(false);
 const parentCategories = computed(() =>
     props.categories.filter((c) => !c.parent_id),
 );
 
-const toggleExpand = () => {
-    isExpanded.value = !isExpanded.value;
+const swiperModules = [Autoplay, Navigation];
+
+const swiperBreakpoints = {
+    320: {
+        slidesPerView: 3,
+        spaceBetween: 10,
+    },
+    640: {
+        slidesPerView: 4,
+        spaceBetween: 15,
+    },
+    768: {
+        slidesPerView: 5,
+        spaceBetween: 20,
+    },
+    1024: {
+        slidesPerView: 7,
+        spaceBetween: 25,
+    },
+    1280: {
+        slidesPerView: 8, // Adjusted for typical constraints
+        spaceBetween: 30,
+    },
 };
 </script>
 
 <template>
-    <section class="py-8 md:py-12 bg-white">
+    <section class="py-12 bg-white">
         <div class="container mx-auto px-4">
-            <!-- Section Title -->
-            <div class="text-center mb-8 md:mb-12">
-                <h2 class="text-xl md:text-2xl font-semibold text-[#2D3A4B]">
-                    Featured Categories
+            <!-- Section Header -->
+            <div class="text-center mb-10">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                    Explore Popular Categories
                 </h2>
+                <p class="text-gray-600 text-sm md:text-base">
+                    Find your preferred item in the highlighted product
+                    selection.
+                </p>
             </div>
 
-            <!-- Categories Grid -->
-            <div
-                class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 gap-y-8 md:gap-y-10 gap-x-4 md:gap-x-6"
-            >
-                <Link
-                    v-for="(category, index) in parentCategories"
-                    :key="category.id"
-                    :href="route('category.show', category.slug)"
-                    class="flex-col items-center group"
-                    :class="[
-                        index >= 6 ? 'hidden md:flex' : 'flex',
-                        isExpanded ? '!flex' : '',
-                    ]"
+            <!-- Categories Slider -->
+            <div class="relative px-4 md:px-8">
+                <swiper
+                    :modules="swiperModules"
+                    :slides-per-view="3"
+                    :space-between="15"
+                    :breakpoints="swiperBreakpoints"
+                    :autoplay="{
+                        delay: 3000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    }"
+                    :loop="true"
+                    class="py-4"
                 >
-                    <!-- Image Container -->
-                    <div
-                        class="relative w-full aspect-square mb-3 flex items-center justify-center transition-all duration-300"
+                    <swiper-slide
+                        v-for="category in parentCategories"
+                        :key="category.id"
+                        class="flex justify-center"
                     >
-                        <img
-                            v-if="category.image"
-                            :src="category.image"
-                            :alt="category.name"
-                            class="w-[80%] h-[80%] object-contain transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg"
+                        <Link
+                            :href="route('category.show', category.slug)"
+                            class="group flex flex-col items-center gap-3 w-full"
                         >
-                            <span class="text-[10px] text-gray-400"
-                                >No Image</span
+                            <!-- Image Container -->
+                            <div
+                                class="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 group-hover:ring-2 group-hover:ring-primary group-hover:ring-offset-2 overflow-hidden"
                             >
-                        </div>
-                    </div>
+                                <img
+                                    v-if="category.image"
+                                    :src="category.image"
+                                    :alt="category.name"
+                                    class="w-[70%] h-[70%] object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div
+                                    v-else
+                                    class="w-full h-full flex items-center justify-center text-gray-400"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-8 w-8"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
 
-                    <!-- Category Name -->
-                    <span
-                        class="text-[11px] md:text-[13px] font-medium text-[#000] group-hover:text-primary transition-colors text-center leading-tight"
-                    >
-                        {{ category.name }}
-                    </span>
-                </Link>
-            </div>
-
-            <!-- Toggle Expand Button -->
-            <div
-                v-if="parentCategories.length > 6"
-                class="text-center mt-10 md:hidden"
-            >
-                <button
-                    @click="toggleExpand"
-                    class="text-[12px] font-bold text-[#2D3A4B] underline decoration-2 underline-offset-4 hover:text-primary transition-colors cursor-pointer"
-                >
-                    {{
-                        isExpanded
-                            ? "Show Less Categories"
-                            : "See All Categories"
-                    }}
-                </button>
+                            <!-- Category Name -->
+                            <span
+                                class="text-xs md:text-sm font-semibold text-gray-800 text-center leading-tight group-hover:text-primary transition-colors line-clamp-2"
+                            >
+                                {{ category.name }}
+                            </span>
+                        </Link>
+                    </swiper-slide>
+                </swiper>
             </div>
         </div>
     </section>
 </template>
 
 <style scoped>
-/* Mix blend for white background images to blend in well */
-img {
-    mix-blend-mode: multiply;
+:deep(.swiper-wrapper) {
+    align-items: center;
 }
 </style>

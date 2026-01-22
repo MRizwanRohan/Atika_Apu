@@ -5,6 +5,7 @@ import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import { useCart } from "@/Composables/useCart";
 import { useToast } from "@/Composables/useToast";
 import axios from "axios";
+import { trackCheckout, trackPurchase } from "@/Composables/gtm";
 
 const toast = useToast();
 
@@ -253,11 +254,30 @@ const submitOrder = () => {
 
     form.post(route("order.store"), {
         preserveScroll: true,
+        onSuccess: (page) => {
+            console.log("Order submission successful", page.props.order);
+            if (page.props?.order) {
+                // Track purchase via GTM
+                trackPurchase(page.props.order);
+            }
+            if (page.props.flash?.error) {
+                console.error("Order error:", page.props.flash.error);
+            }
+        },
         onError: (errors) => {
             console.error("Order submission failed:", errors);
         },
     });
 };
+
+
+
+onMounted(() => {
+    trackCheckout(props.cart);
+});
+
+
+
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useCart } from "@/Composables/useCart";
 import { useWishlist } from "@/Composables/useWishlist";
 import { useCompare } from "@/Composables/useCompare";
@@ -7,6 +7,7 @@ import { useToast } from "@/Composables/useToast";
 import { GitCompare, Truck } from "lucide-vue-next";
 import { router, usePage } from "@inertiajs/vue3";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue"; 
+import { trackViewItem, trackAddToCart } from "@/Composables/gtm";
 
 const props = defineProps({
     product: {
@@ -330,6 +331,8 @@ const addToCart = () => {
         },
         onSuccess: () => {
             isAddingToCart.value = false;
+            // Track add_to_cart in Google Tag Manager
+            trackAddToCart(props.product, matchingVariation, quantity.value);
         },
         onError: () => {
             isAddingToCart.value = false;
@@ -361,6 +364,7 @@ const buyNow = () => {
         },
         onSuccess: () => {
             isAddingToCart.value = false;
+            trackAddToCart(props.product, matchingVariation, quantity.value);
             router.visit("/order/checkout");
         },
         onError: () => {
@@ -435,6 +439,49 @@ const isOptionAvailable = (key, valueObj) => {
         });
     });
 };
+
+
+// Helper function to wait for dataLayer to be ready
+const waitForDataLayer = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && window.dataLayer) {
+      resolve();
+    } else {
+      // Check every 100ms for up to 5 seconds
+      let attempts = 0;
+      const maxAttempts = 50;
+      const interval = setInterval(() => {
+        attempts++;
+        if (window.dataLayer) {
+          clearInterval(interval);
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          console.warn("DataLayer not initialized after 5 seconds");
+          resolve(); // Resolve anyway to not block
+        }
+      }, 100);
+    }
+  });
+};
+
+// Track view when product is loaded (works for both navigation and reload)
+watch(
+  () => props.product,
+  async (newProduct) => {
+    if (newProduct) {
+      // Wait for dataLayer to be ready
+      await waitForDataLayer();
+      // Track product view in Google Tag Manager
+      //console.log("Tracking view_item for:", newProduct);
+      // Pass the computed main price for accurate ecommerce value
+      trackViewItem(newProduct, pricing.value.main);
+    }
+  },
+  { immediate: true } // Run immediately if product is already loaded
+);
+
+
 </script>
 
 <template>

@@ -42,16 +42,18 @@ const props = defineProps({
 });
 
 // Expose settings as a ref so it's accessible in the template and reactive in script
-const settings = toRef(props, 'settings');
+const settings = toRef(props, "settings");
 
 // Expose other props as refs so template bindings remain available
-const categories = toRef(props, 'categories');
-const groupedProducts = toRef(props, 'groupedProducts');
-const activeCampaigns = toRef(props, 'activeCampaigns');
-const productGroups = toRef(props, 'productGroups');
-const sliders = toRef(props, 'sliders');
+const categories = toRef(props, "categories");
+const groupedProducts = toRef(props, "groupedProducts");
+const activeCampaigns = toRef(props, "activeCampaigns");
+const productGroups = toRef(props, "productGroups");
+const sliders = toRef(props, "sliders");
 
-const pageTitle = computed(() => settings.value?.generalSettings?.home_page_title || 'Home');
+const pageTitle = computed(
+    () => settings.value?.generalSettings?.home_page_title || "Home",
+);
 </script>
 
 <template>
@@ -60,9 +62,6 @@ const pageTitle = computed(() => settings.value?.generalSettings?.home_page_titl
     <!-- <pre>{{ settings }}</pre> -->
 
     <Sliders :sliders="sliders" />
-
-    <!-- Features Section -->
-    <Features />
 
     <!-- Featured Categories -->
     <FeaturedCategories :categories="categories" />
@@ -138,10 +137,10 @@ const pageTitle = computed(() => settings.value?.generalSettings?.home_page_titl
 
             <!-- Product Grid -->
             <div
-                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
+                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
             >
                 <ProductCard
-                    v-for="product in group.products.slice(0, 5)"
+                    v-for="product in group.products.slice(0, 6)"
                     :key="product.id"
                     :product="product"
                 />
@@ -162,7 +161,7 @@ const pageTitle = computed(() => settings.value?.generalSettings?.home_page_titl
     <!-- <pre>{{ categories }}</pre> -->
 
     <!-- CTA Section -->
-    <section class="py-16 bg-gray-900 text-white">
+    <!-- <section class="py-16 bg-gray-900 text-white">
         <div class="container mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-bold mb-4">
                 Ready to Start Shopping?
@@ -187,5 +186,7 @@ const pageTitle = computed(() => settings.value?.generalSettings?.home_page_titl
                 </Link>
             </div>
         </div>
-    </section>
+    </section> -->
+    <!-- Features Section -->
+    <Features />
 </template>

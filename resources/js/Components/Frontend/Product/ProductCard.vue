@@ -31,24 +31,36 @@ const activeCampaign = computed(() => {
 
 const pricing = computed(() => {
     // If product is variable, display lowest variation price by default
-    if (props.product.type === 'variable' && props.product.variations && props.product.variations.length > 0) {
-        const numericVars = props.product.variations.map(v => ({
+    if (
+        props.product.type === "variable" &&
+        props.product.variations &&
+        props.product.variations.length > 0
+    ) {
+        const numericVars = props.product.variations.map((v) => ({
             price: parseFloat(v.price || 0),
-            previous_price: v.previous_price !== null && v.previous_price !== undefined ? parseFloat(v.previous_price) : null
+            previous_price:
+                v.previous_price !== null && v.previous_price !== undefined
+                    ? parseFloat(v.previous_price)
+                    : null,
         }));
 
-        const minVar = numericVars.reduce((acc, v) => acc === null || v.price < acc.price ? v : acc, null);
+        const minVar = numericVars.reduce(
+            (acc, v) => (acc === null || v.price < acc.price ? v : acc),
+            null,
+        );
         let main = minVar ? minVar.price : parseFloat(props.product.price);
         let cross = null;
         let discountValue = 0;
         let discountType = null;
 
         if (minVar) {
-            const candidates = numericVars.filter(v => v.previous_price && v.previous_price > main).map(v => v.previous_price);
+            const candidates = numericVars
+                .filter((v) => v.previous_price && v.previous_price > main)
+                .map((v) => v.previous_price);
             if (candidates.length > 0) {
                 cross = Math.max(...candidates);
                 discountValue = ((cross - main) / cross) * 100;
-                discountType = 'percentage';
+                discountType = "percentage";
             }
         }
 
@@ -73,7 +85,8 @@ const pricing = computed(() => {
         }
     } else if (
         props.product.previous_price &&
-        parseFloat(props.product.previous_price) > parseFloat(props.product.price)
+        parseFloat(props.product.previous_price) >
+            parseFloat(props.product.price)
     ) {
         cross = parseFloat(props.product.previous_price);
         main = parseFloat(props.product.price);
@@ -112,133 +125,151 @@ const handleCompare = () => {
 
 <template>
     <div
-        class="group relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 flex flex-col h-full"
-        :class="{ 'opacity-60': isOutOfStock }"
+        class="group relative flex flex-col h-full bg-white rounded-xl border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300 p-2"
+        :class="{ 'opacity-75 grayscale': isOutOfStock }"
     >
-        <!-- Discount Badge -->
+        <!-- Action Buttons (Hover) -->
         <div
-            v-if="pricing.cross && !isOutOfStock"
-            class="absolute top-3 right-3 z-20 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-[10px] font-bold shadow-md"
-        >
-            <span v-if="pricing.discountType === 'percentage'">
-                 {{ discountBadgeText }}
-            </span>
-            <span v-else>{{ discountBadgeText }} OFF</span>
-        </div>
-
-        <!-- Free Delivery Badge -->
-        <div
-            v-if="product.is_free_delivery"
-            class="absolute right-3 top-12 z-20 bg-green-50 text-green-700 px-2 py-1 rounded-full text-[10px] font-semibold shadow-md flex items-center gap-1"
-            title="Free Delivery"
-        >
-            <Truck :size="14" />
-            <span>Free Delivery</span>
-        </div>
-
-        <!-- Out of Stock Badge -->
-        <div
-            v-if="isOutOfStock"
-            class="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-t from-black/40 to-transparent rounded-lg pointer-events-none"
-        >
-            <span class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg pointer-events-none">
-                Out of Stock
-            </span>
-        </div>
-
-        <!-- Action Buttons (Top Right) -->
-        <div
-            class="absolute top-3 left-3 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            class="absolute top-12 right-3 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0"
             v-if="!isOutOfStock"
         >
             <button
                 @click.prevent="handleWishlist"
-                :class="[
-                    'p-2.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110',
+                class="p-2 rounded-full shadow-md bg-white text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors"
+                :title="
                     isInWishlist(product.id)
-                        ? 'bg-red-50 text-red-600'
-                        : 'bg-white/90 text-gray-500 hover:text-red-500 hover:bg-red-50',
-                ]"
-                :title="isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'"
+                        ? 'Remove from wishlist'
+                        : 'Add to wishlist'
+                "
             >
-                <Heart :size="18" :fill="isInWishlist(product.id) ? 'currentColor' : 'none'" />
+                <Heart
+                    :size="16"
+                    :fill="isInWishlist(product.id) ? 'currentColor' : 'none'"
+                    :class="{ 'text-red-500': isInWishlist(product.id) }"
+                />
             </button>
             <button
                 @click.prevent="handleCompare"
-                :class="[
-                    'p-2.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110',
+                class="p-2 rounded-full shadow-md bg-white text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                :title="
                     isInCompare(product.id)
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'bg-white/90 text-gray-500 hover:text-blue-500 hover:bg-blue-50',
-                ]"
-                :title="isInCompare(product.id) ? 'Remove from compare' : 'Add to compare'"
+                        ? 'Remove from compare'
+                        : 'Add to compare'
+                "
             >
-                <GitCompare :size="18" />
+                <GitCompare
+                    :size="16"
+                    :class="{ 'text-blue-500': isInCompare(product.id) }"
+                />
             </button>
         </div>
 
-        <!-- Product Image -->
-        <Link
-            :href="route('product.details', product.slug)"
-            class="block relative aspect-square overflow-hidden bg-gray-50"
-        >
-            <img
-                :src="product.feature_image"
-                :alt="product.name"
-                class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                @error="$event.target.src = '/assets/placeholder.png'"
-                @load="imageLoaded = true"
-            />
-        </Link>
-
-        <!-- Product Info -->
-        <div class="flex flex-col flex-1 sm:p-4 p-2 gap-3">
-            <!-- Product Name -->
+        <div class="relative">
+            <!-- Product Image -->
             <Link
                 :href="route('product.details', product.slug)"
-                class="block"
+                class="block relative w-full aspect-square mb-4 overflow-hidden"
+            >
+                <img
+                    :src="product.feature_image"
+                    :alt="product.name"
+                    loading="lazy"
+                    class="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                    @load="imageLoaded = true"
+                />
+
+                <!-- Out of Stock Overlay -->
+                <div
+                    v-if="isOutOfStock"
+                    class="absolute inset-0 z-10 flex items-center justify-center bg-white/50"
+                >
+                    <span
+                        class="bg-gray-900 text-white px-3 py-1 text-xs font-bold rounded uppercase tracking-wider"
+                    >
+                        Sold Out
+                    </span>
+                </div>
+            </Link>
+
+            <!-- Top Badges & Brand -->
+            <div class="absolute top-0 left-0">
+                <!-- Discount Badge -->
+                <div
+                    v-if="pricing.discountValue > 0 && !isOutOfStock"
+                    class="bg-blue-600 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full"
+                >
+                    <span v-if="pricing.discountType === 'percentage'">
+                        {{ Math.round(pricing.discountValue) }}%
+                    </span>
+                    <span v-else>
+                        ৳{{ formatPrice(pricing.discountValue) }} OFF
+                    </span>
+                </div>
+                <div v-else>
+                    <!-- Spacer if no discount -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex flex-col flex-1 mt-auto">
+            <!-- Title -->
+            <Link
+                :href="route('product.details', product.slug)"
+                class="group-hover:text-primary transition-colors"
             >
                 <h3
-                    class="text-[12px] md:text-[14px] line-clamp-2 font-semibold text-gray-900 hover:text-primary transition-colors leading-snug"
+                    class="text-sm rounded font-bold text-gray-800 leading-tight line-clamp-2"
+                    :title="product.name"
                 >
                     {{ product.name }}
                 </h3>
             </Link>
 
-            <!-- Rating -->
-            <div v-if="product.reviews_count > 0" class="flex items-center gap-2">
-                <StarRating
-                    :rating="product.avg_rating"
-                    size="sm"
-                    :show-count="false"
-                />
-                <span class="text-xs text-gray-800">({{ product.reviews_count }})</span>
+            <!-- Price -->
+            <div class="flex items-end gap-1 mt-1">
+                <span class="text-lg font-bold text-primary">
+                    ৳ {{ formatPrice(pricing.main) }}
+                </span>
+                <span
+                    v-if="pricing.cross"
+                    class="text-xs text-gray-400 line-through mb-1"
+                >
+                    ৳ {{ formatPrice(pricing.cross) }}
+                </span>
             </div>
 
-            <!-- Price Section -->
-            <div class="space-y-1">
-                <div class="flex items-baseline gap-2">
-                    <span class="text-sm md:text-xl font-bold text-gray-900">
-                        ৳ {{ formatPrice(pricing.main) }}
-                    </span>
+            <!-- Footer: Rating & Cart -->
+            <div
+                class="flex items-center justify-between border-t border-gray-50"
+            >
+                <!-- Rating -->
+                <!-- Rating -->
+                <div class="flex items-center gap-1">
+                    <StarRating
+                        :rating="Number(product.avg_rating || 0)"
+                        size="sm"
+                        :show-count="false"
+                    />
                     <span
-                        v-if="pricing.cross"
-                        class="text-xs sm:text-sm text-gray-400 line-through"
+                        v-if="product.reviews_count > 0"
+                        class="text-xs text-gray-800"
                     >
-                        ৳ {{ formatPrice(pricing.cross) }}
+                        ({{ product.reviews_count }})
                     </span>
                 </div>
-            </div>
 
-            <!-- CTA Button -->
-            <Link
-                :href="route('product.details', product.slug)"
-                class="mt-auto inline-flex items-center justify-center gap-2 w-full sm:px-4 px-2 py-2.5 bg-primary text-white text-[12px] sm:text-sm font-semibold rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-                :class="{ 'opacity-50 pointer-events-none': isOutOfStock }"
-            >
-                <ShoppingCart :size="16" />
-                <span>View Details</span>
-            </Link>
+                <!-- Cart Action -->
+                <button
+                    @click.prevent="
+                        $inertia.visit(route('product.details', product.slug))
+                    "
+                    class="text-primary hover:bg-primary hover:text-white p-1.5 rounded-lg transition-all duration-200"
+                    :disabled="isOutOfStock"
+                >
+                    <ShoppingCart :size="20" stroke-width="2.5" />
+                </button>
+            </div>
         </div>
     </div>
 </template>

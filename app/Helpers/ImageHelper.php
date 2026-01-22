@@ -1,36 +1,62 @@
 <?php
- 
+
 namespace App\Helpers;
- 
+
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
- 
+
 class ImageHelper
 {
     public static function uploadImage(UploadedFile $file, $path)
     {
-        // Generate a unique filename
-        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
- 
-        // Move the file to the specified path
-        $file->move(public_path($path), $filename);
- 
-        // Construct the relative path
-        $relativePath = $path . '/' . $filename;
- 
-        // Return the full URL with the domain
-        return url($relativePath);
+        // Ensure directory exists
+        $fullPath = public_path($path);
+        if (!File::exists($fullPath)) {
+            File::makeDirectory($fullPath, 0755, true);
+        }
+
+        // Generate filename (always webp)
+        $filename = time() . '_' . uniqid() . '.webp';
+        $destination = $fullPath . '/' . $filename;
+
+        // Create image resource based on type
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        switch ($extension) {
+            case 'jpg':
+            case 'jpeg':
+                $image = imagecreatefromjpeg($file->getRealPath());
+                break;
+
+            case 'png':
+                $image = imagecreatefrompng($file->getRealPath());
+                imagepalettetotruecolor($image);
+                imagealphablending($image, true);
+                imagesavealpha($image, true);
+                break;
+
+            case 'webp':
+                $image = imagecreatefromwebp($file->getRealPath());
+                break;
+
+            default:
+                throw new \Exception('Unsupported image type');
+        }
+
+        // ✅ Convert & compress to WebP (quality: 70)
+        imagewebp($image, $destination, 70);
+        imagedestroy($image);
+
+        // Return full URL
+        return url($path . '/' . $filename);
     }
- 
+
     public static function deleteImage($url)
     {
-        // Remove domain part if full URL was stored
+        // Remove domain
         $relativePath = str_replace(url('/'), '', $url);
- 
-        // Build full path to delete
         $fullPath = public_path($relativePath);
- 
+
         if (File::exists($fullPath)) {
             File::delete($fullPath);
         }
