@@ -16,13 +16,15 @@ class CreateOrderNotificationRecord
         // No-op
     }
 
-    /**
-     * Handle the event.
-     */
-    public function handle(OrderCreated $event): void
-    {
-        $order = $event->order;
+/**
+ * Handle the event.
+ */
+public function handle(OrderCreated $event): void
+{
+    $order = $event->order;
 
+    // Add condition: only notify if order is not 'incomplete'
+    if ($order->status !== 'incomplete') {
         try {
             DB::table('notifications')->insert([
                 'type' => 'order_created',
@@ -41,5 +43,9 @@ class CreateOrderNotificationRecord
         } catch (\Exception $e) {
             Log::error('Failed to create order notification: ' . $e->getMessage());
         }
+    } else {
+        Log::info('Order notification skipped for incomplete order ID: ' . $order->id);
     }
+}
+
 }

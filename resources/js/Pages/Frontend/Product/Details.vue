@@ -58,11 +58,24 @@ const pageTitle = computed(() => {
     return siteTitle ? `${props.product.name} - ${siteTitle}` : props.product.name;
 });
 
-const handleVariationChange = (variation) => {
-    // Check if variation has image_path (based on user json structure)
-    // JSON: "image_path": null. If it has a value, use it.
+const handleVariationChange = (payload) => {
+    // Payload can be either a variation object (legacy) or an object { variation, attributeImage }
+    let variation = null;
+    let attributeImage = null;
+
+    if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'variation')) {
+        variation = payload.variation;
+        attributeImage = payload.attributeImage || null;
+    } else {
+        // Legacy single-argument emit (variation)
+        variation = payload;
+    }
+
+    // Prefer full variation image when available; otherwise fall back to color attribute image
     if (variation && variation.image_path) {
         selectedVariationImage.value = variation.image_path;
+    } else if (attributeImage) {
+        selectedVariationImage.value = attributeImage;
     } else {
         selectedVariationImage.value = null;
     }

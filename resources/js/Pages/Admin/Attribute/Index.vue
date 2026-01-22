@@ -3,7 +3,7 @@ import { Head } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { useForm, router } from "@inertiajs/vue3";
 import { toast } from "@steveyuowo/vue-hot-toast";
-import { defineProps, ref, watch } from "vue";
+import { defineProps, ref, watch, computed } from "vue";
 import { Trash2Icon, SquarePen } from "lucide-vue-next";
 import DeleteModal from "@/Components/Modal/DeleteModal.vue";
 
@@ -38,11 +38,22 @@ watch(
         if (newValue) {
             isEditing.value = true;
             form.name = newValue.name;
-            form.values = newValue.values.map((v) => ({
-                id: v.id,
-                value: v.value,
-                color: v.color || "#000000",
-            }));
+            const nameLower = (newValue.name || "").toString().trim().toLowerCase();
+            const isColor = nameLower === "color" || nameLower === "colorus";
+            form.values = newValue.values.map((v) => {
+                if (isColor) {
+                    return {
+                        id: v.id,
+                        value: v.value,
+                        color: v.color || "#000000",
+                    };
+                } else {
+                    return {
+                        id: v.id,
+                        value: v.value,
+                    };
+                }
+            });
         } else {
             isEditing.value = false;
             form.reset();
@@ -51,8 +62,31 @@ watch(
     { immediate: true }
 );
 
+const isColorAttribute = computed(() => {
+    const name = (form.name || "").toString().trim().toLowerCase();
+    return name === "color" || name === "colorus";
+});
+
+// Keep values in sync when attribute name changes
+watch(isColorAttribute, (newVal) => {
+    if (newVal) {
+        // ensure existing values have color
+        form.values = form.values.map((v) => ({
+            ...v,
+            color: v.color || "#000000",
+        }));
+    } else {
+        // remove color property to avoid sending unnecessary data
+        form.values = form.values.map(({ color, ...rest }) => rest);
+    }
+});
+
 const addValue = () => {
-    form.values.push({ value: "", color: "#000000" });
+    if (isColorAttribute.value) {
+        form.values.push({ value: "", color: "#000000" });
+    } else {
+        form.values.push({ value: "" });
+    }
 };
 
 const submitForm = () => {
@@ -158,6 +192,7 @@ const editAttr = (id) => {
                                     required
                                 />
                                 <input
+                                    v-if="isColorAttribute"
                                     v-model="form.values[index].color"
                                     type="color"
                                     class="h-[38px] w-[50px] p-1 border rounded cursor-pointer"

@@ -4,7 +4,8 @@ let isInitialLoad = true;
 </script>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import '../../css/frontend.css';
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { usePage, Head, router } from "@inertiajs/vue3";
 import FrontendHeader from "@/Components/Frontend/FrontendHeader.vue";
 import FrontendFooter from "@/Components/Frontend/FrontendFooter.vue";
@@ -44,6 +45,14 @@ onMounted(() => {
 
     // Initial injection of marketing tools
     injectMarketingTools();
+
+    // Add frontend class to body so frontend-only font applies
+    document.body.classList.add('frontend');
+});
+
+onUnmounted(() => {
+    // Remove frontend class when layout is destroyed
+    document.body.classList.remove('frontend');
 });
 
 /**
@@ -81,6 +90,8 @@ const injectMarketingTools = () => {
 
 <template>
     <Head>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link v-if="media?.favicon" rel="icon" :href="media.favicon" />
     </Head>
 

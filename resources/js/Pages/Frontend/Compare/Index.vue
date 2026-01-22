@@ -30,6 +30,43 @@ const formatPrice = (price) => {
 const handleAddToCart = (product) => {
     // Logic to add product to cart
 };
+
+const formatRating = (product) => {
+    if (!product || product.avg_rating === null || product.avg_rating === undefined) return "--";
+    return `${parseFloat(product.avg_rating).toFixed(1)} (${product.reviews_count || 0})`;
+};
+
+const formatShortDescription = (product) => {
+    if (!product || !product.short_description) return "--";
+    // Strip HTML tags and limit length
+    const text = product.short_description.replace(/<[^>]*>/g, "").trim();
+    return text.length > 120 ? text.slice(0, 120) + "..." : text;
+};
+
+const formatAttributes = (product) => {
+    if (!product || !product.variations || product.variations.length === 0) return "--";
+    const map = new Map();
+
+    product.variations.forEach((variation) => {
+        variation.attributes?.forEach((a) => {
+            const key = (a.value.attribute && a.value.attribute.name) || "Attribute";
+            const val = a.value.value;
+            if (!map.has(key)) map.set(key, new Set());
+            map.get(key).add(val);
+        });
+    });
+
+    if (map.size === 0) return "--";
+    return Array.from(map.entries())
+        .map(([k, set]) => `${k}: ${Array.from(set).join(", ")}`)
+        .join(" • ");
+};
+
+const formatSpecification = (product) => {
+    if (!product || !product.specification || product.specification.length === 0) return "--";
+    // Map spec array {title,value} to a compact string
+    return product.specification.map(s => `${s.title}: ${s.value}`).join(" • ");
+};
 </script>
 
 <template>
@@ -201,9 +238,75 @@ const handleAddToCart = (product) => {
                                     :key="product.id"
                                     class="p-4 border-b border-l text-sm text-gray-600"
                                 >
-                                    {{ product.brand?.name || "Generic" }}
+                                    {{ product.brand?.name || "--" }}
                                 </td>
                             </tr>
+
+                            <!-- Average Rating -->
+                            <tr>
+                                <td
+                                    class="p-4 border-b bg-gray-50 font-medium text-gray-700"
+                                >
+                                    Avg Rating
+                                </td>
+                                <td
+                                    v-for="product in compareItems"
+                                    :key="product.id"
+                                    class="p-4 border-b border-l text-sm text-gray-600"
+                                >
+                                    <span v-if="product.avg_rating && product.reviews_count > 0">{{ formatRating(product) }}</span>
+                                    <span v-else>--</span>
+                                </td>
+                            </tr>
+
+                            <!-- Short Description -->
+                            <tr>
+                                <td
+                                    class="p-4 border-b bg-gray-50 font-medium text-gray-700"
+                                >
+                                    Short Description
+                                </td>
+                                <td
+                                    v-for="product in compareItems"
+                                    :key="product.id"
+                                    class="p-4 border-b border-l text-sm text-gray-600"
+                                >
+                                    {{ formatShortDescription(product) }}
+                                </td>
+                            </tr>
+
+                            <!-- Attributes -->
+                            <tr>
+                                <td
+                                    class="p-4 border-b bg-gray-50 font-medium text-gray-700"
+                                >
+                                    Attributes
+                                </td>
+                                <td
+                                    v-for="product in compareItems"
+                                    :key="product.id"
+                                    class="p-4 border-b border-l text-sm text-gray-600"
+                                >
+                                    {{ formatAttributes(product) }}
+                                </td>
+                            </tr>
+
+                            <!-- Specifications -->
+                            <tr>
+                                <td
+                                    class="p-4 border-b bg-gray-50 font-medium text-gray-700"
+                                >
+                                    Specifications
+                                </td>
+                                <td
+                                    v-for="product in compareItems"
+                                    :key="product.id"
+                                    class="p-4 border-b border-l text-sm text-gray-600"
+                                >
+                                    {{ formatSpecification(product) }}
+                                </td>
+                            </tr>
+
                             <tr>
                                 <td class="p-4 bg-gray-50"></td>
                                 <td

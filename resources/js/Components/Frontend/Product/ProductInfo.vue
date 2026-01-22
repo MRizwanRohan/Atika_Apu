@@ -245,7 +245,12 @@ watch(
     selectedAttributes,
     () => {
         const variation = getMatchingVariation();
-        emit("variation-change", variation);
+        // If a color attribute is selected, capture its image (if any)
+        const colorSelection = selectedAttributes.value['color'];
+        const attributeImage = colorSelection ? colorSelection.image || null : null;
+
+        // Emit both the resolved variation (may be null) and attributeImage (for color swatches)
+        emit("variation-change", { variation, attributeImage });
 
         // Reset quantity if it exceeds new stock limit
         if (variation && quantity.value > variation.stock) {

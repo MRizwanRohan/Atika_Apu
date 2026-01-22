@@ -204,12 +204,12 @@
                         </div>
 
                         <!-- Variation Badge -->
-                        <div
+                        <!-- <div
                             v-if="activeMedia.isVariation"
                             class="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold"
                         >
                             Selected Variation
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Image Counter -->

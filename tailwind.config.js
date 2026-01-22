@@ -17,9 +17,10 @@ export default {
             colors: {
                 primary: '#f0512e',
             },
-            // fontFamily: {
-            //     sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
-            // },
+            fontFamily: {
+                heebo: ['Heebo', 'sans-serif'],
+                sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
+            },
 
             container: {
                 center: true,
