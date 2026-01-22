@@ -66,7 +66,7 @@
               <th>#</th>
               <th>Image</th>
               <th>Name</th>
-              <th>Price</th>
+              <!-- <th>Price</th> -->
               <th>In Stock</th>
               <th>Free Shipping</th>
               <th>Status</th>
@@ -125,7 +125,7 @@
                       {{ item.name }}
                     </h3>
                   </td>
-                  <td>৳{{ item.price }}</td>
+                  <!-- <td>৳{{ item.price }}</td> -->
                   <td>
                     <span
                       class="px-2 py-1 dark:text-gray-100"

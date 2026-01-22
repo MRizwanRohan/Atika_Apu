@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->decimal('price', 10, 2);
+            // Added previous_price to support showing previous (compare at) price per variation
+            $table->decimal('previous_price', 10, 2)->nullable();
             $table->integer('stock')->nullable();
             $table->integer('sold_stock')->nullable()->default(0);
             $table->string('image_path')->nullable();

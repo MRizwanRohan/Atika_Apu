@@ -92,6 +92,10 @@ const uploadProgress = ref({});
 const newTag = ref("");
 const globalVariationPrice = ref("");
 const globalVariationStock = ref("");
+// Bulk previous price for variations
+const globalVariationPreviousPrice = ref("");
+// Per-variation validation messages (keyed by variation index)
+const variationPriceErrors = ref({});
 
 // --- Form Initialization & Helpers ---
 
@@ -318,6 +322,7 @@ const initializeVariations = () => {
         return {
             id: variation.id,
             price: variation.price,
+            previous_price: variation.previous_price || "",
             purchase_price: variation.purchase_price || "",
             stock: variation.stock || "0",
             image_path: null,
@@ -356,6 +361,15 @@ const progressPercentage = computed(() => {
     return ((currentTabIndex.value + 1) / getTabs.value.length) * 100;
 });
 
+// True when any front-end validation errors exist (main price or per-variation)
+const hasValidationErrors = computed(() => {
+    // Ignore main price error for variable products (main price is not used)
+    if (form.type === 'simple' && priceError.value) return true;
+    // Only treat non-empty variation error messages as validation errors
+    const values = Object.values(variationPriceErrors.value || {});
+    return values.some((v) => v && v.toString().trim().length > 0);
+});
+
 const calculateTotalStock = () => {
     if (form.type === "variable") {
         if (!form.variations || form.variations.length === 0) return 0;
@@ -371,7 +385,18 @@ const calculateTotalStock = () => {
 watch(
     () => form.type,
     (newType) => {
-        if (newType === "variable") calculateTotalStock();
+        if (newType === "variable") {
+            calculateTotalStock();
+            // Main product price fields are not used for variable products — force them to 0
+            form.price = 0;
+            form.previous_price = 0;
+            // Clear any main price validation errors coming from server or client
+            if (form.errors) {
+                delete form.errors.price;
+                delete form.errors.previous_price;
+            }
+            priceError.value = "";
+        }
     }
 );
 
@@ -397,7 +422,8 @@ watch(
                 priceError.value = "Previous price must be greater than regular price";
             }
         }
-    }
+    },
+    { immediate: true }
 );
 
 // --- Variation Generation Logic ---
@@ -553,6 +579,7 @@ watch(
                 return {
                     id: null,
                     price: "0",
+                    previous_price: "",
                     purchase_price: "",
                     stock: "0",
                     image_path: null,
@@ -741,6 +768,64 @@ const applyGlobalStock = () => {
     }
 };
 
+// Apply a bulk 'compare at' price to all variations
+const applyGlobalPreviousPrice = () => {
+    if (globalVariationPreviousPrice.value === "") return;
+    const gpNum = parseFloat(globalVariationPreviousPrice.value);
+    if (isNaN(gpNum)) {
+        toast.error("Invalid previous price");
+        return;
+    }
+
+    // Ensure gpNum is greater than all variation prices (where price is provided)
+    const invalidIndex = form.variations.findIndex((v) => {
+        const pNum = parseFloat(v.price);
+        return !isNaN(pNum) && gpNum <= pNum;
+    });
+
+    if (invalidIndex !== -1) {
+        toast.error("Bulk Previous Price must be greater than all variation prices.");
+        activeTab.value = "variations";
+        variationPriceErrors.value = { [invalidIndex]: "Previous price must be greater than price for this variation" };
+        return;
+    }
+
+    form.variations.forEach(
+        (variation) => (variation.previous_price = globalVariationPreviousPrice.value)
+    );
+};
+
+// Validate a single variation's price vs its previous_price
+const validateVariationPrice = (index) => {
+    variationPriceErrors.value = variationPriceErrors.value || {};
+    const v = form.variations[index];
+    if (!v) return true;
+
+    const p = parseFloat(v.price);
+    const prev = parseFloat(v.previous_price);
+    if (!isNaN(prev) && !isNaN(p) && prev <= p) {
+        variationPriceErrors.value = { ...variationPriceErrors.value, [index]: "Previous price must be greater than price for this variation" };
+        return false;
+    }
+
+    // If valid, ensure we remove any previous error key
+    if (variationPriceErrors.value && Object.prototype.hasOwnProperty.call(variationPriceErrors.value, index)) {
+        const { [index]: removed, ...rest } = variationPriceErrors.value;
+        variationPriceErrors.value = { ...rest };
+    }
+
+    return true;
+};
+
+// Re-validate all variations when their values change programmatically
+watch(
+    () => form.variations,
+    (nv) => {
+        nv.forEach((_, i) => validateVariationPrice(i));
+    },
+    { deep: true }
+);
+
 const addSpecification = () => {
     form.specification.push({ title: "", value: "" });
 };
@@ -769,6 +854,41 @@ const submit = () => {
             toast.error("Variable product টাইপের জন্য কমপক্ষে একটি valid variation প্রয়োজন। অনুগ্রহ করে Attributes ট্যাবে গিয়ে attribute values সিলেক্ট করুন।");
             return;
         }
+    }
+
+    // Validation: Previous price must be greater than price for simple products
+    if (form.type === 'simple') {
+        if (form.previous_price !== "" && form.price !== "") {
+            const reg = parseFloat(form.price);
+            const prev = parseFloat(form.previous_price);
+            if (!isNaN(reg) && !isNaN(prev) && prev <= reg) {
+                priceError.value = "Previous price must be greater than regular price";
+                toast.error(priceError.value);
+                activeTab.value = 'general';
+                return;
+            }
+        }
+    }
+
+    // Validation: For variable products, each variation's previous_price must be > its price (if provided)
+    if (form.type === 'variable') {
+        for (let i = 0; i < form.variations.length; i++) {
+            const v = form.variations[i];
+            if (v.previous_price !== undefined && v.previous_price !== "" && v.price !== undefined && v.price !== "") {
+                const p = parseFloat(v.price);
+                const prev = parseFloat(v.previous_price);
+                if (!isNaN(p) && !isNaN(prev) && prev <= p) {
+                    variationPriceErrors.value = { [i]: 'Previous price must be greater than price for this variation' };
+                    toast.error('Each variation\'s Previous price must be greater than its Price');
+                    activeTab.value = 'variations';
+                    return;
+                }
+            }
+        }
+
+        // Main product price fields are not used for variable products — force them to 0
+        form.price = 0;
+        form.previous_price = 0;
     }
 
     // Stock Calculation for non-variable
@@ -881,7 +1001,7 @@ const submit = () => {
                     <div class="flex items-center gap-3">
                         <button
                             @click="submit"
-                            :disabled="form.processing"
+                            :disabled="form.processing || hasValidationErrors"
                             class="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                         >
                             <Save class="w-4 h-4" />
@@ -1114,46 +1234,58 @@ const submit = () => {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <label for="price" class="block text-sm font-semibold text-gray-700 mb-2">
-                                                Regular Price <span class="text-red-500">*</span>
-                                            </label>
-                                            <div class="relative">
-                                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">৳</span>
-                                                <input
-                                                    id="price"
-                                                    v-model="form.price"
-                                                    type="number"
-                                                    step="0.01"
-                                                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all bg-gray-50/50 focus:bg-white"
-                                                    placeholder="0.00"
-                                                />
+                                        <template v-if="form.type === 'simple'">
+                                            <div>
+                                                <label for="price" class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Regular Price <span class="text-red-500">*</span>
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">৳</span>
+                                                    <input
+                                                        id="price"
+                                                        v-model="form.price"
+                                                        type="number"
+                                                        step="0.01"
+                                                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all bg-gray-50/50 focus:bg-white"
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                                <p v-if="form.errors.price" class="mt-2 text-sm text-red-600">{{ form.errors.price }}</p>
                                             </div>
-                                            <p v-if="form.errors.price" class="mt-2 text-sm text-red-600">{{ form.errors.price }}</p>
-                                        </div>
 
-                                        <div>
-                                            <label for="previous_price" class="block text-sm font-semibold text-gray-700 mb-2">
-                                                Previous Price
-                                                <span class="text-xs text-gray-400 font-normal ml-1">(Compare at)</span>
-                                            </label>
-                                            <div class="relative">
-                                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">৳</span>
-                                                <input
-                                                    id="previous_price"
-                                                    v-model="form.previous_price"
-                                                    type="number"
-                                                    step="0.01"
-                                                    :class="[
-                                                        'w-full pl-10 pr-4 py-3 border-2 rounded-xl text-gray-900 focus:ring-4 focus:ring-blue-500/10 transition-all bg-gray-50/50 focus:bg-white',
-                                                        priceError ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
-                                                    ]"
-                                                    placeholder="0.00"
-                                                />
+                                            <div>
+                                                <label for="previous_price" class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Previous Price
+                                                    <span class="text-xs text-gray-400 font-normal ml-1">(Compare at)</span>
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">৳</span>
+                                                    <input
+                                                        id="previous_price"
+                                                        v-model="form.previous_price"
+                                                        type="number"
+                                                        step="0.01"
+                                                        :class="[
+                                                            'w-full pl-10 pr-4 py-3 border-2 rounded-xl text-gray-900 focus:ring-4 focus:ring-blue-500/10 transition-all bg-gray-50/50 focus:bg-white',
+                                                            priceError ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
+                                                        ]"
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                                <p v-if="priceError" class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                    <XIcon class="w-4 h-4" />{{ priceError }}
+                                                </p>
                                             </div>
-                                            <p v-if="priceError" class="mt-2 text-sm text-red-600 flex items-center gap-1">
-                                                <XIcon class="w-4 h-4" />{{ priceError }}
-                                            </p>
+                                        </template>
+
+                                        <div v-else class="md:col-span-2 flex items-center gap-3 bg-blue-50 rounded-xl p-3 border border-blue-100">
+                                            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                                                <Layers class="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-900">Variable product selected</p>
+                                                <p class="text-xs text-gray-500">Regular & Previous price fields are hidden. Prices should be set on each variation; main product price will be submitted as 0.</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1610,6 +1742,26 @@ const submit = () => {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Bulk Previous Price</label>
+                                            <div class="flex rounded-xl overflow-hidden border-2 border-gray-200 focus-within:border-indigo-500 transition-colors">
+                                                <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600 font-semibold border-r border-gray-200">৳</span>
+                                                <input
+                                                    v-model="globalVariationPreviousPrice"
+                                                    type="number"
+                                                    placeholder="0.00"
+                                                    class="flex-1 px-4 py-3 border-0 focus:ring-0 text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="applyGlobalPreviousPrice"
+                                                    class="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm transition-all"
+                                                >
+                                                    Apply
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1682,7 +1834,7 @@ const submit = () => {
                                                 </button>
                                             </div>
 
-                                            <div class="grid grid-cols-2 gap-4">
+                                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                 <div>
                                                     <label class="flex items-center gap-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
                                                         <DollarSignIcon class="w-3.5 h-3.5 text-emerald-500" />
@@ -1692,6 +1844,7 @@ const submit = () => {
                                                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-sm">৳</span>
                                                         <input
                                                             v-model="variation.price"
+                                                            @input="() => validateVariationPrice(index)"
                                                             type="number"
                                                             step="0.01"
                                                             class="w-full pl-9 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
@@ -1699,6 +1852,28 @@ const submit = () => {
                                                         />
                                                     </div>
                                                 </div>
+
+                                                <div>
+                                                    <label class="flex items-center gap-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                                                        <DollarSignIcon class="w-3.5 h-3.5 text-yellow-500" />
+                                                        Previous Price
+                                                    </label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-sm">৳</span>
+                                                        <input
+                                                            v-model="variation.previous_price"
+                                                            @input="() => validateVariationPrice(index)"
+                                                            type="number"
+                                                            step="0.01"
+                                                            class="w-full pl-9 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                                                            placeholder="0.00"
+                                                        />
+                                                        <p v-if="variationPriceErrors[index]" class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                            <XIcon class="w-4 h-4" />{{ variationPriceErrors[index] }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
                                                 <div>
                                                     <label class="flex items-center gap-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
                                                         <BoxIcon class="w-3.5 h-3.5 text-blue-500" />

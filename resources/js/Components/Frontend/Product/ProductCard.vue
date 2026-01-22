@@ -30,6 +30,32 @@ const activeCampaign = computed(() => {
 });
 
 const pricing = computed(() => {
+    // If product is variable, display lowest variation price by default
+    if (props.product.type === 'variable' && props.product.variations && props.product.variations.length > 0) {
+        const numericVars = props.product.variations.map(v => ({
+            price: parseFloat(v.price || 0),
+            previous_price: v.previous_price !== null && v.previous_price !== undefined ? parseFloat(v.previous_price) : null
+        }));
+
+        const minVar = numericVars.reduce((acc, v) => acc === null || v.price < acc.price ? v : acc, null);
+        let main = minVar ? minVar.price : parseFloat(props.product.price);
+        let cross = null;
+        let discountValue = 0;
+        let discountType = null;
+
+        if (minVar) {
+            const candidates = numericVars.filter(v => v.previous_price && v.previous_price > main).map(v => v.previous_price);
+            if (candidates.length > 0) {
+                cross = Math.max(...candidates);
+                discountValue = ((cross - main) / cross) * 100;
+                discountType = 'percentage';
+            }
+        }
+
+        return { main, cross, discountValue, discountType };
+    }
+
+    // Fallback to previous logic for simple products
     let main = parseFloat(props.product.price);
     let cross = null;
     let discountValue = 0;

@@ -42,34 +42,77 @@ const activeCampaign = computed(() => {
     });
 });
 
+// Helper: find the variation that matches current selection (if any)
+const selectedVariation = computed(() => getMatchingVariation());
+
 const pricing = computed(() => {
-    let main = parseFloat(props.product.price);
+    // If a variation is explicitly selected, show its prices
+    const selected = selectedVariation.value;
+    let main = null;
     let cross = null;
     let discountValue = 0;
     let discountType = null;
 
-    // Campaign Logic
-    if (activeCampaign.value) {
-        cross = main;
-        discountValue = parseFloat(activeCampaign.value.discount_amount);
-        discountType = activeCampaign.value.discount_type;
-
-        if (discountType === "percentage") {
-            main = main - main * (discountValue / 100);
-        } else if (discountType === "fixed") {
-            main = main - discountValue;
+    // Campaign logic should still prefer the product-level price/campaign when no variation selected
+    if (selected) {
+        main = parseFloat(selected.price);
+        if (selected.previous_price && parseFloat(selected.previous_price) > parseFloat(selected.price)) {
+            cross = parseFloat(selected.previous_price);
+            discountValue = ((cross - main) / cross) * 100;
+            discountType = "percentage";
         }
-    }
-    // Fallback: Manual Previous Price
-    else if (
-        props.product.previous_price &&
-        parseFloat(props.product.previous_price) >
-            parseFloat(props.product.price)
-    ) {
-        cross = parseFloat(props.product.previous_price);
+    } else if (props.product.type === 'variable' && props.product.variations && props.product.variations.length > 0) {
+        // No selection: show lowest variation price as main
+        const numericVars = props.product.variations.map(v => ({
+            price: parseFloat(v.price || 0),
+            previous_price: v.previous_price !== null && v.previous_price !== undefined ? parseFloat(v.previous_price) : null
+        }));
+
+        const minVar = numericVars.reduce((acc, v) => acc === null || v.price < acc.price ? v : acc, null);
+        if (minVar) {
+            main = minVar.price;
+            // Find any previous_price greater than main — prefer the maximum previous_price for a clear cross price
+            const candidates = numericVars.filter(v => v.previous_price && v.previous_price > main).map(v => v.previous_price);
+            if (candidates.length > 0) {
+                cross = Math.max(...candidates);
+                discountValue = ((cross - main) / cross) * 100;
+                discountType = "percentage";
+            }
+        }
+
+        // If there's an active campaign on product level, we still apply it to product price display ONLY when product.price is meaningful (fallback)
+        if (activeCampaign.value && main === null) {
+            main = parseFloat(props.product.price);
+            cross = main;
+            discountValue = parseFloat(activeCampaign.value.discount_amount);
+            discountType = activeCampaign.value.discount_type;
+
+            if (discountType === "percentage") {
+                main = main - main * (discountValue / 100);
+            } else if (discountType === "fixed") {
+                main = main - discountValue;
+            }
+        }
+    } else {
+        // Simple product or fallback
         main = parseFloat(props.product.price);
-        discountValue = ((cross - main) / cross) * 100;
-        discountType = "percentage";
+
+        if (activeCampaign.value) {
+            cross = main;
+            discountValue = parseFloat(activeCampaign.value.discount_amount);
+            discountType = activeCampaign.value.discount_type;
+
+            if (discountType === "percentage") {
+                main = main - main * (discountValue / 100);
+            } else if (discountType === "fixed") {
+                main = main - discountValue;
+            }
+        } else if (props.product.previous_price && parseFloat(props.product.previous_price) > parseFloat(props.product.price)) {
+            cross = parseFloat(props.product.previous_price);
+            main = parseFloat(props.product.price);
+            discountValue = ((cross - main) / cross) * 100;
+            discountType = "percentage";
+        }
     }
 
     return {

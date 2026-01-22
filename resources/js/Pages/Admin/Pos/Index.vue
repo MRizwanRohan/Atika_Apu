@@ -813,7 +813,7 @@ onMounted(async () => {
 
             <div class="flex flex-col lg:flex-row h-full">
                 <!-- Products Section -->
-                <div class="w-full lg:w-2/3 p-3">
+                <div class="w-full xl:w-2/3 p-3">
                     <!-- Search and Filters -->
                     <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
                         <div class="flex items-center justify-between">
@@ -906,14 +906,14 @@ onMounted(async () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <div
+                                    <!-- <div
                                         class="text-sm font-semibold text-gray-900"
                                     >
                                         ৳{{ formatPrice(product.price) }}
-                                    </div>
+                                    </div> -->
 
                                     <div
-                                        class="mt-4 flex items-center justify-between"
+                                        class="mt-4 flex flex-col gap-2 items-center justify-between"
                                     >
                                         <span
                                             v-if="product.is_pre_order"
@@ -1122,7 +1122,7 @@ onMounted(async () => {
 
                 <!-- Cart Section -->
                 <div
-                    class="w-full lg:w-1/3 bg-white border-l shadow-lg relative"
+                    class="w-full xl:w-1/3 bg-white border-l shadow-lg relative"
                 >
                     <!-- Cart Loading Overlay -->
                     <div

@@ -619,6 +619,8 @@ class ProductService
       $variation = ProductVariation::create([
         'product_id' => $product->id,
         'price' => $variationData['price'],
+        // Accept previous_price when provided
+        'previous_price' => $variationData['previous_price'] ?? null,
         'stock' => $variationData['stock'] ?? 0,
         'image_path' => $variationImagePath,
       ]);
@@ -861,6 +863,7 @@ class ProductService
 
           $variation->update([
             'price' => $variationData['price'],
+            'previous_price' => $variationData['previous_price'] ?? null,
             'stock' => $variationData['stock'] ?? 0,
             'image_path' => $variationImagePath,
           ]);
@@ -887,6 +890,7 @@ class ProductService
           $variation = ProductVariation::create([
             'product_id' => $product->id,
             'price' => $variationData['price'],
+            'previous_price' => $variationData['previous_price'] ?? null,
             'stock' => $variationData['stock'] ?? 0,
             'image_path' => $variationImagePath,
           ]);

@@ -10,7 +10,16 @@ class ProductVariation extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['product_id', 'price', 'stock', 'sold_stock', 'image_path'];
+    // Include previous_price so we can mass assign and return it in APIs
+    protected $fillable = ['product_id', 'price', 'previous_price', 'stock', 'sold_stock', 'image_path'];
+
+    // Cast numeric fields for consistent behavior
+    protected $casts = [
+        'price' => 'decimal:2',
+        'previous_price' => 'decimal:2',
+        'stock' => 'integer',
+        'sold_stock' => 'integer',
+    ];
 
     public function product()
     {

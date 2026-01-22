@@ -71,8 +71,9 @@ class StoreProductRequest extends FormRequest
             'is_daily_product' => 'nullable|boolean',
             'is_pre_order' => 'nullable|boolean',
             'type' => 'required|in:simple,variable',
-            'price' => 'required|numeric|min:0',
-            'previous_price' => 'nullable|numeric|min:0|gt:price',
+            'price' => 'required_if:type,simple|numeric|min:0',
+            // previous_price check (comparison with price) handled in validator to allow variable products without price
+            'previous_price' => 'nullable|numeric|min:0',
             'youtube_video' => 'nullable|url|max:500',
             'feature_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'upload_video' => 'nullable|mimetypes:video/mp4,video/ogg,video/webm|max:51200',
@@ -94,7 +95,36 @@ class StoreProductRequest extends FormRequest
             'variations.*.image_path' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'variations.*.attributes' => 'required_if:type,variable|array|min:1',
             'variations.*.attributes.*.attribute_value_id' => 'required_if:type,variable|integer|exists:attribute_values,id',
+            'variations.*.previous_price' => 'nullable|numeric|min:0',
         ];
+    }
+
+    protected function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Validate variations: previous_price must be greater than price if provided
+            $variations = $this->input('variations', []);
+            foreach ($variations as $i => $v) {
+                if (isset($v['previous_price']) && $v['previous_price'] !== '' && isset($v['price'])) {
+                    $p = floatval($v['price']);
+                    $prev = floatval($v['previous_price']);
+                    if (!is_nan($p) && !is_nan($prev) && $prev <= $p) {
+                        $validator->errors()->add("variations.$i.previous_price", "Previous price must be greater than price for variation #" . ($i+1));
+                    }
+                }
+            }
+
+            // For simple products ensure main previous_price > price if provided
+            if ($this->input('type') === 'simple') {
+                if ($this->filled('previous_price') && $this->filled('price')) {
+                    $p = floatval($this->input('price'));
+                    $prev = floatval($this->input('previous_price'));
+                    if (!is_nan($p) && !is_nan($prev) && $prev <= $p) {
+                        $validator->errors()->add('previous_price', 'Previous price must be greater than regular price.');
+                    }
+                }
+            }
+        });
     }
 
     /**
