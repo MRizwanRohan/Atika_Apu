@@ -23,7 +23,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         $categoryId = request()->route('category') ? request()->route('category')->id : null;
         return [
-            'name' => "required|string,{$categoryId}",
+            'name' => "required|string,{$categoryId},max:255|unique:categories,name,{$categoryId}",
             'parent_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',

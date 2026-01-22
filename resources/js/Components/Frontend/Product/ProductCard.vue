@@ -113,9 +113,9 @@ const handleCompare = () => {
         <!-- Out of Stock Badge -->
         <div
             v-if="isOutOfStock"
-            class="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-t from-black/40 to-transparent rounded-lg"
+            class="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-t from-black/40 to-transparent rounded-lg pointer-events-none"
         >
-            <span class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">
+            <span class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg pointer-events-none">
                 Out of Stock
             </span>
         </div>

@@ -1,11 +1,8 @@
 <template>
     <div class="relative">
         <select
-            :value="modelValue"
-            @change="
-                $emit('update:modelValue', $event.target.value);
-                updateStatus($event.target.value);
-            "
+            :value="localSelected"
+            @change="onChange($event)"
             :disabled="isLoading"
             class="appearance-none w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             :class="getStatusClasses"
@@ -63,7 +60,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 // Define props
 const props = defineProps({
@@ -81,8 +78,14 @@ const props = defineProps({
     },
 });
 
-// Define emits
-const emit = defineEmits(["update:modelValue", "status-change"]);
+// Define emits — only notify parent about status-change (no optimistic update)
+const emit = defineEmits(["status-change"]);
+
+// Local selection mirrors the prop but will NOT be changed optimistically
+const localSelected = ref(props.modelValue);
+watch(() => props.modelValue, (val) => {
+    localSelected.value = val;
+});
 
 // Status options with exact colors from the second image
 const statusOptions = [
@@ -124,7 +127,7 @@ const statusOptions = [
 // Computed property to get the appropriate styling based on status
 const getStatusClasses = computed(() => {
     const currentOption = statusOptions.find(
-        (option) => option.value === props.modelValue
+        (option) => option.value === localSelected.value
     );
 
     // Default styling if no matching status is found
@@ -139,12 +142,18 @@ const getStatusClasses = computed(() => {
 
 // Get appropriate arrow color based on text color
 const getArrowColor = computed(() => {
-    const isBlackText = props.modelValue === "shipped"; // Yellow background has black text
+    const isBlackText = localSelected.value === "shipped"; // Yellow background has black text
     return isBlackText ? "text-black" : "text-white";
 });
 
-// Method to update status
-const updateStatus = (newStatus) => {
+// Handle change without optimistic UI update — emit event and keep select showing previous value
+const onChange = (event) => {
+    const newStatus = event.target.value;
+
+    // Revert visible value to previous selection until parent confirms
+    event.target.value = localSelected.value;
+
+    // Notify parent to perform the status change
     emit("status-change", props.orderId, newStatus);
 };
 </script>

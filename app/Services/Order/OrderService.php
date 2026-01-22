@@ -1631,7 +1631,7 @@ class OrderService implements OrderInterface
 
         // Return last 10 notifications with JSON-decoded data
         $notifications = Notification::orderBy('created_at', 'desc')
-            ->take(10)
+            ->take(6)
             ->get()
             ->map(function ($n) {
                 $data = $n->data;

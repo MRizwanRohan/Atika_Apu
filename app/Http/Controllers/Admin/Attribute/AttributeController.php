@@ -80,12 +80,12 @@ public function store(Request $request)
 
         // Create attribute (lowercase enforced)
         $attribute = Attribute::create([
-            'name' => Str::lower(trim($request->name)),
+            'name' => Str::upper(trim($request->name)),
         ]);
 
         // Create or restore attribute values
         foreach ($request->values as $value) {
-            $valueText = Str::lower(trim($value['value']));
+            $valueText = Str::upper(trim($value['value']));
 
             // Check if soft-deleted value exists
             $existingValue = AttributeValue::withTrashed()
@@ -183,7 +183,7 @@ public function store(Request $request)
         // Process values
         $existingIds = [];
         foreach ($request->values as $value) {
-            $valueText = Str::lower(trim($value['value']));
+            $valueText = Str::upper(trim($value['value']));
 
             if (isset($value['id'])) {
                 // Update existing value
