@@ -36,14 +36,14 @@
             </button>
 
             <!-- Dark Mode Toggle -->
-            <button
+            <!-- <button
                 @click="toggleDarkMode"
                 class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200"
                 title="Toggle Theme"
             >
                 <Sun v-if="isDark" class="h-5 w-5" />
                 <Moon v-else class="h-5 w-5" />
-            </button>
+            </button> -->
 
             <!-- Notifications -->
             <div class="relative">
