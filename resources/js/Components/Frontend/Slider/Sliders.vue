@@ -1,5 +1,5 @@
 <template>
-    <div class="container mx-auto mt-4 px-4 overflow-hidden">
+    <div class="container mx-auto md:mt-4 mt-0 overflow-hidden">
         <swiper
             v-if="sliders && sliders.length > 0"
             :modules="modules"
@@ -31,7 +31,7 @@
                         <img
                             :src="slider.image"
                             :alt="'Slide ' + slider.id"
-                            class="w-full h-auto object-cover rounded-2xl block"
+                            class="w-full h-auto object-cover block"
                         />
                     </picture>
                 </Link>
@@ -44,7 +44,7 @@
                         <img
                             :src="slider.image"
                             :alt="'Slide ' + slider.id"
-                            class="w-full h-auto object-cover rounded-2xl block"
+                            class="w-full h-auto object-cover block"
                         />
                     </picture>
                 </div>

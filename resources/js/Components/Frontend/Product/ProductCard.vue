@@ -3,8 +3,17 @@ import { Link } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
 import { useWishlist } from "@/Composables/useWishlist";
 import { useCompare } from "@/Composables/useCompare";
-import { GitCompare, Heart, ShoppingCart, Truck } from "lucide-vue-next";
+import {
+    GitCompare,
+    Heart,
+    ShoppingCart,
+    Truck,
+    X,
+    Plus,
+    Minus,
+} from "lucide-vue-next";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
+import { useCart } from "@/Composables/useCart";
 
 const props = defineProps({
     product: {
@@ -17,6 +26,140 @@ const imageLoaded = ref(false);
 
 const { toggleWishlist, isInWishlist } = useWishlist();
 const { toggleCompare, isInCompare } = useCompare();
+const { addToCart: addToCartAction } = useCart();
+const showOptions = ref(false);
+const selectedAttributes = ref({});
+const quantity = ref(1);
+const addingToCart = ref(false);
+
+const isVariable = computed(() => props.product.type === "variable");
+
+// Extract all unique attributes dynamically from variations (Simplified version of ProductInfo logic)
+const availableAttributes = computed(() => {
+    if (!props.product.variations) return [];
+
+    const attributesMap = new Map();
+
+    props.product.variations.forEach((variation) => {
+        variation.attributes?.forEach((attr) => {
+            const attrName = attr.value.attribute.name.toLowerCase();
+            if (!attributesMap.has(attrName)) {
+                attributesMap.set(attrName, {
+                    name: attr.value.attribute.name,
+                    values: new Map(), // Use Map to ensure unique values by ID
+                });
+            }
+            const valuesMap = attributesMap.get(attrName).values;
+            if (!valuesMap.has(attr.value.id)) {
+                valuesMap.set(attr.value.id, {
+                    id: attr.value.id,
+                    value: attr.value.value,
+                    color: attr.value.color,
+                });
+            }
+        });
+    });
+
+    const result = [];
+    attributesMap.forEach((attrData, attrKey) => {
+        result.push({
+            key: attrKey,
+            name: attrData.name,
+            values: Array.from(attrData.values.values()),
+        });
+    });
+    return result;
+});
+
+const selectAttribute = (type, value) => {
+    selectedAttributes.value[type] = value;
+};
+
+const getMatchingVariation = () => {
+    if (!props.product.variations) return null;
+    const selectedKeys = Object.keys(selectedAttributes.value);
+
+    if (selectedKeys.length === 0 && availableAttributes.value.length > 0)
+        return null;
+
+    return props.product.variations.find((variation) => {
+        if (!variation.attributes) return false;
+        if (variation.attributes.length !== selectedKeys.length) return false;
+        return selectedKeys.every((attrKey) => {
+            const selectedAttr = selectedAttributes.value[attrKey];
+            return variation.attributes.some(
+                (varAttr) =>
+                    varAttr.value.attribute.name.toLowerCase() === attrKey &&
+                    varAttr.value.id === selectedAttr.id,
+            );
+        });
+    });
+};
+
+const currentStock = computed(() => {
+    if (isVariable.value) {
+        const variation = getMatchingVariation();
+        return variation ? variation.stock : 0;
+    }
+    return props.product.stock;
+});
+
+// For variable products, we only allow adding if we have a match OR if no attributes are needed (unlikely for variable)
+const canAddToCart = computed(() => {
+    if (!isVariable.value) return props.product.stock > 0;
+
+    // Check if all attributes are selected
+    const requiredAttrs = availableAttributes.value.map((a) => a.key);
+    const selected = Object.keys(selectedAttributes.value);
+    const allSelected = requiredAttrs.every((k) => selected.includes(k));
+
+    if (!allSelected) return false;
+
+    const variation = getMatchingVariation();
+    return variation && variation.stock > 0;
+});
+
+const handleAddToCartClick = (e) => {
+    if (isVariable.value) {
+        showOptions.value = true;
+        // Pre-select first options if available to save clicks?
+        // Optional: Implement auto-select first values
+        if (Object.keys(selectedAttributes.value).length === 0) {
+            availableAttributes.value.forEach((attr) => {
+                if (attr.values.length > 0) {
+                    selectAttribute(attr.key, attr.values[0]);
+                }
+            });
+        }
+    } else {
+        performAddToCart();
+    }
+};
+
+const performAddToCart = () => {
+    addingToCart.value = true;
+
+    let variationId = null;
+    if (isVariable.value) {
+        const v = getMatchingVariation();
+        if (v) variationId = v.id;
+    }
+
+    addToCartAction({
+        productId: props.product.id,
+        quantity: quantity.value,
+        variationId: variationId,
+        productOptions: {},
+        onSuccess: () => {
+            addingToCart.value = false;
+            showOptions.value = false;
+            quantity.value = 1;
+        },
+        onError: () => {
+            addingToCart.value = false;
+        },
+    });
+};
 
 const activeCampaign = computed(() => {
     if (!props.product.campaigns || props.product.campaigns.length === 0)
@@ -125,11 +268,11 @@ const handleCompare = () => {
 
 <template>
     <div
-        class="group relative flex flex-col h-full bg-white rounded-xl border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300 p-2"
+        class="group relative flex flex-col h-full bg-white"
         :class="{ 'opacity-75 grayscale': isOutOfStock }"
     >
         <!-- Action Buttons (Hover) -->
-        <div
+        <!-- <div
             class="absolute top-12 right-3 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0"
             v-if="!isOutOfStock"
         >
@@ -162,19 +305,19 @@ const handleCompare = () => {
                     :class="{ 'text-blue-500': isInCompare(product.id) }"
                 />
             </button>
-        </div>
+        </div> -->
 
         <div class="relative">
             <!-- Product Image -->
             <Link
                 :href="route('product.details', product.slug)"
-                class="block relative w-full aspect-square mb-4 overflow-hidden"
+                class="block relative w-full aspect-[2/3] rounded-xl overflow-hidden"
             >
                 <img
                     :src="product.feature_image"
                     :alt="product.name"
                     loading="lazy"
-                    class="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                    class="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
                     @load="imageLoaded = true"
                 />
 
@@ -191,28 +334,134 @@ const handleCompare = () => {
                 </div>
             </Link>
 
-            <!-- Top Badges & Brand -->
-            <div class="absolute top-0 left-0">
-                <!-- Discount Badge -->
-                <div
-                    v-if="pricing.discountValue > 0 && !isOutOfStock"
-                    class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
-                >
-                    <span v-if="pricing.discountType === 'percentage'">
-                        {{ Math.round(pricing.discountValue) }}% OFF
-                    </span>
-                    <span v-else>
-                        ৳{{ formatPrice(pricing.discountValue) }} OFF
-                    </span>
+            <!-- Quick View Overlay -->
+            <div
+                v-if="showOptions"
+                class="absolute inset-x-0 bottom-0 bg-white z-[30] p-4 shadow-lg rounded-t-xl border-t border-gray-100 flex flex-col gap-3 animate-in slide-in-from-bottom duration-300"
+                @click.stop.prevent
+            >
+                <div class="flex justify-between items-center mb-1">
+                    <span
+                        class="text-xs font-bold text-gray-800 uppercase tracking-wide"
+                        >Select Options</span
+                    >
+                    <button
+                        @click="showOptions = false"
+                        class="text-gray-400 hover:text-red-500"
+                    >
+                        <X :size="16" />
+                    </button>
                 </div>
-                <div v-else>
-                    <!-- Spacer if no discount -->
+
+                <!-- Dynamic Attributes -->
+                <div
+                    v-for="attr in availableAttributes"
+                    :key="attr.key"
+                    class="border-b border-gray-50 pb-2 last:border-0 last:pb-0"
+                >
+                    <div class="flex justify-between items-baseline mb-1">
+                        <span
+                            class="text-[10px] font-bold text-gray-500 uppercase"
+                        >
+                            {{ attr.name }}:
+                            <span
+                                class="text-primary"
+                                v-if="selectedAttributes[attr.key]"
+                                >{{ selectedAttributes[attr.key].value }}</span
+                            >
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button
+                            v-for="val in attr.values"
+                            :key="val.id"
+                            @click="selectAttribute(attr.key, val)"
+                            class="px-2 py-0.5 text-[10px] uppercase font-bold border rounded transition-all duration-200"
+                            :class="
+                                selectedAttributes[attr.key]?.id === val.id
+                                    ? 'bg-primary border-primary text-white shadow-sm'
+                                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                            "
+                        >
+                            {{ val.value }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quantity & Add -->
+                <div class="flex gap-2 mt-1">
+                    <div
+                        class="flex items-center border border-gray-200 rounded h-8 bg-gray-50"
+                    >
+                        <button
+                            @click="quantity > 1 ? quantity-- : null"
+                            class="px-2 h-full flex items-center text-gray-500 hover:text-primary disabled:opacity-50"
+                            :disabled="quantity <= 1"
+                        >
+                            <Minus :size="12" />
+                        </button>
+                        <span
+                            class="w-6 text-center text-xs font-bold text-gray-800"
+                            >{{ quantity }}</span
+                        >
+                        <button
+                            @click="quantity++"
+                            class="px-2 h-full flex items-center text-gray-500 hover:text-primary"
+                        >
+                            <Plus :size="12" />
+                        </button>
+                    </div>
+                    <button
+                        @click="performAddToCart"
+                        :disabled="!canAddToCart || addingToCart"
+                        class="flex-1 bg-primary text-white text-[10px] font-bold uppercase tracking-wider rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 h-8 transition-colors"
+                    >
+                        <span v-if="addingToCart">...</span>
+                        <span v-else class="flex items-center gap-1">
+                            Add
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Content -->
-        <div class="flex flex-col flex-1 mt-auto">
+        <div class="flex flex-col flex-1 mt-3">
+            <div class="flex items-center justify-between mb-2">
+                <!-- Top Badges & Brand -->
+                <div class="relative h-6 flex items-center">
+                    <!-- Discount Badge -->
+                    <div
+                        v-if="pricing.discountValue > 0 && !isOutOfStock"
+                        class="border border-lime-500 text-lime-600 bg-white text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+                    >
+                        <span v-if="pricing.discountType === 'percentage'">
+                            -{{ Math.round(pricing.discountValue) }}%
+                        </span>
+                        <span v-else>
+                            -৳{{ formatPrice(pricing.discountValue) }}
+                        </span>
+                    </div>
+                    <div v-else class="h-6">
+                        <span
+                            class="border border-lime-500 text-lime-600 bg-white text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+                            >0%</span
+                        >
+                        <!-- Spacer to maintain height if no discount -->
+                    </div>
+                </div>
+
+                <!-- Quick Add Button -->
+                <button
+                    @click.stop.prevent="handleAddToCartClick"
+                    class="bg-gray-200/80 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+                    :disabled="isOutOfStock"
+                    :title="isVariable ? 'Select Options' : 'Add to Cart'"
+                >
+                    <ShoppingCart :size="14" stroke-width="2.5" />
+                    <span>{{ isOutOfStock ? "Sold Out" : "Add To Cart" }}</span>
+                </button>
+            </div>
             <!-- Title -->
             <Link
                 :href="route('product.details', product.slug)"
@@ -260,15 +509,14 @@ const handleCompare = () => {
                 </div>
 
                 <!-- Cart Action -->
-                <button
-                    @click.prevent="
-                        $inertia.visit(route('product.details', product.slug))
-                    "
-                    class="text-primary hover:bg-primary hover:text-white p-1.5 rounded-lg transition-all duration-200"
+                <!-- <button
+                    @click.stop.prevent="handleAddToCartClick"
+                    class="text-primary hover:bg-primary hover:text-white p-2 rounded-lg transition-all duration-200 flex items-center justify-center bg-gray-50"
                     :disabled="isOutOfStock"
+                    :title="isVariable ? 'Select Options' : 'Add to Cart'"
                 >
-                    <ShoppingCart :size="20" stroke-width="2.5" />
-                </button>
+                    <ShoppingCart :size="18" stroke-width="2.5" />
+                </button> -->
             </div>
         </div>
     </div>

@@ -72,7 +72,7 @@ defineProps({
 
             <!-- Product Grid -->
             <div
-                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-6"
+                class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-6"
             >
                 <div
                     v-for="product in group.products"

@@ -5,6 +5,7 @@ import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 import Campaigns from "@/Components/Frontend/Product/Campaigns.vue";
 import Sliders from "@/Components/Frontend/Slider/Sliders.vue";
 import Features from "@/Components/Frontend/Features/Features.vue";
+import ProductVideo from "@/Components/Frontend/Product/ProductVideo.vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
 import ProductsGroup from "@/Components/Frontend/Home/ProductsGroup.vue";
@@ -39,6 +40,10 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
     },
+    productswithVideo: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 // Expose settings as a ref so it's accessible in the template and reactive in script
@@ -65,6 +70,8 @@ const pageTitle = computed(
 
     <!-- Featured Categories -->
     <FeaturedCategories :categories="categories" />
+
+    <ProductVideo :productswithVideo="productswithVideo" />
 
     <!-- Offers preview (compact) -->
     <!-- <section class="py-8 bg-white">
@@ -98,14 +105,14 @@ const pageTitle = computed(
     <section
         v-for="group in groupedProducts"
         :key="group.name"
-        class="py-16 bg-white"
+        class="py-8 bg-white"
     >
         <div
             v-if="group.products && group.products.length > 0"
             class="container mx-auto px-4"
         >
             <!-- Section Header -->
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between">
                 <div>
                     <h2
                         class="text-xl md:text-2xl font-bold text-gray-900 mb-2"
@@ -134,10 +141,11 @@ const pageTitle = computed(
                     </svg>
                 </Link>
             </div>
+            <hr class="border-gray-200 my-4" />
 
             <!-- Product Grid -->
             <div
-                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
+                class="pt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             >
                 <ProductCard
                     v-for="product in group.products.slice(0, 6)"
@@ -188,5 +196,5 @@ const pageTitle = computed(
         </div>
     </section> -->
     <!-- Features Section -->
-    <Features />
+    <!-- <Features /> -->
 </template>

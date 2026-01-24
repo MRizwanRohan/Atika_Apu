@@ -18,17 +18,17 @@ export default {
                 primary: 'var(--primary-color)',
             },
             fontFamily: {
-                heebo: ['Heebo', 'sans-serif'],
+                heebo: ['Jost', 'sans-serif'],
                 sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
             },
 
-            container: {
-                center: true,
-                padding: '2rem',
-                screens: {
-                    '2xl': '1400px',
-                },
-            },
+            // container: {
+            //     center: true,
+            //     padding: '2rem',
+            //     screens: {
+            //         '2xl': '1400px',
+            //     },
+            // },
         },
     },
 

@@ -21,23 +21,23 @@ const swiperModules = [Autoplay, Navigation];
 
 const swiperBreakpoints = {
     320: {
-        slidesPerView: 3,
+        slidesPerView: 2,
         spaceBetween: 10,
     },
     640: {
-        slidesPerView: 4,
+        slidesPerView: 3,
         spaceBetween: 15,
     },
     768: {
-        slidesPerView: 5,
+        slidesPerView: 4,
         spaceBetween: 20,
     },
     1024: {
-        slidesPerView: 7,
+        slidesPerView: 5,
         spaceBetween: 25,
     },
     1280: {
-        slidesPerView: 8, // Adjusted for typical constraints
+        slidesPerView: 6, // Adjusted for typical constraints
         spaceBetween: 30,
     },
 };
@@ -83,13 +83,13 @@ const swiperBreakpoints = {
                         >
                             <!-- Image Container -->
                             <div
-                                class="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 group-hover:ring-2 group-hover:ring-primary group-hover:ring-offset-2 overflow-hidden"
+                                class="relative aspect-square rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 overflow-hidden"
                             >
                                 <img
                                     v-if="category.image"
                                     :src="category.image"
                                     :alt="category.name"
-                                    class="w-[70%] h-[70%] object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                                    class="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
                                 />
                                 <div
                                     v-else

@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { Home, Search, Heart, GitCompare } from "lucide-vue-next";
+import { Home, Search, Heart, GitCompare, MapPin, User } from "lucide-vue-next";
 
 defineProps({
     wishlistCount: {
@@ -39,6 +39,22 @@ const emit = defineEmits(["open-search"]);
             </button>
 
             <Link
+                href="/order/track"
+                class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
+            >
+                <MapPin class="w-5 h-5" />
+                <span class="text-[10px] font-medium">Track</span>
+            </Link>
+
+            <Link
+                :href="route('user.dashboard')"
+                class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
+            >
+                <User class="w-5 h-5" />
+                <span class="text-[10px] font-medium">Account</span>
+            </Link>
+
+            <!-- <Link
                 href="/wishlist"
                 class="relative flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
                 :class="{ 'text-primary': $page.url === '/wishlist' }"
@@ -51,9 +67,9 @@ const emit = defineEmits(["open-search"]);
                     {{ wishlistCount }}
                 </span>
                 <span class="text-[10px] font-medium">Wishlist</span>
-            </Link>
+            </Link> -->
 
-            <Link
+            <!-- <Link
                 href="/compare"
                 class="relative flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
                 :class="{ 'text-primary': $page.url === '/compare' }"
@@ -66,7 +82,7 @@ const emit = defineEmits(["open-search"]);
                     {{ compareCount }}
                 </span>
                 <span class="text-[10px] font-medium">Compare</span>
-            </Link>
+            </Link> -->
         </div>
     </div>
 </template>

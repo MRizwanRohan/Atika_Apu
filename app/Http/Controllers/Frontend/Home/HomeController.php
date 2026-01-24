@@ -9,6 +9,7 @@ use App\Services\Product\ProductService;
 use App\Services\ProductGroup\ProductGroupService;
 use App\Models\Slider;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Product;
 
 class HomeController extends Controller
 {
@@ -27,6 +28,7 @@ class HomeController extends Controller
         $activeCampaigns = $this->productService->getActiveCampaigns();
         $productGroups = $this->productGroupService->getAllWithProducts();
         $sliders = $this->sliders();
+        $productswithVideo = $this->productswithVideo();
 
         // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [
@@ -34,6 +36,7 @@ class HomeController extends Controller
             'activeCampaigns' => $activeCampaigns,
             'productGroups' => $productGroups,
             'sliders' => $sliders,
+            'productswithVideo' => $productswithVideo,
         ]);
     }
 
@@ -44,5 +47,17 @@ class HomeController extends Controller
             return Slider::all();
         });
         return $sliders;
+    }
+
+    private function productswithVideo()
+    {
+        $products = Product::select('id', 'name', 'product_code', 'slug', 'price', 'previous_price', 'feature_image', 'upload_video')
+                    ->where('status', 'published')
+                    ->whereNotNull('upload_video')
+                    ->take(30)
+                    ->orderBy('created_at','desc')
+                    ->get();
+
+        return $products;
     }
 }

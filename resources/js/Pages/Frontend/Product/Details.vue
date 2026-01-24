@@ -1,12 +1,14 @@
 <script setup>
-import { defineProps, ref, computed } from "vue";
+import { defineProps, ref, computed, watch } from "vue";
 import ImageGallery from "@/Components/Frontend/Product/ImageGallery.vue";
 import ProductInfo from "@/Components/Frontend/Product/ProductInfo.vue";
 import ProductReviews from "@/Components/Frontend/Product/ProductReviews.vue";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import { Link, Head } from "@inertiajs/vue3";
-import StarRating from '@/Components/Frontend/Product/StarRating.vue';
+import StarRating from "@/Components/Frontend/Product/StarRating.vue";
+import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 import ProductCardRelated from "@/Components/Frontend/Product/ProductCardRelated.vue";
+import RelatedProducts from "@/Components/Frontend/Product/RelatedProducts.vue";
 // --- Tabbed sections + smooth scroll / active-state ---
 import { onMounted, onBeforeUnmount, nextTick } from "vue";
 
@@ -37,8 +39,68 @@ const props = defineProps({
     },
 });
 
-
 const selectedVariationImage = ref(null);
+const recentProducts = ref([]);
+
+const updateRecentViewed = (product) => {
+    try {
+        const STORAGE_KEY = "recently_viewed_products";
+        const raw = localStorage.getItem(STORAGE_KEY);
+        let items = raw ? JSON.parse(raw) : [];
+
+        // 1. Populate the display list (everything currently in history, EXCLUDING current product)
+        // We filter by ID to ensure we don't show the product the user is currently looking at
+        recentProducts.value = items.filter((item) => item.id !== product.id);
+
+        // 2. Update the storage with the current product
+        // Remove current product if it exists (to move it to the top)
+        items = items.filter((item) => item.id !== product.id);
+
+        // Minify product data to save space in localStorage
+        const minifiedProduct = {
+            id: product.id,
+            name: product.name,
+            slug: product.slug,
+            price: product.price,
+            previous_price: product.previous_price,
+            feature_image: product.feature_image,
+            avg_rating: product.avg_rating,
+            reviews_count: product.reviews_count,
+            type: product.type,
+            stock: product.stock,
+            campaigns: product.campaigns, // needed for pricing calc
+            variations: product.variations
+                ? product.variations.map((v) => ({
+                      price: v.price,
+                      previous_price: v.previous_price,
+                  }))
+                : [], // simplify variations
+        };
+
+        // Add to front
+        items.unshift(minifiedProduct);
+
+        // Limit to 10 items
+        if (items.length > 10) {
+            items = items.slice(0, 10);
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (e) {
+        console.error("Failed to update recent products", e);
+    }
+};
+
+// Watch for product changes to update history
+watch(
+    () => props.product,
+    (newProduct) => {
+        if (newProduct) {
+            updateRecentViewed(newProduct);
+        }
+    },
+    { immediate: true },
+);
 
 const productImages = computed(() => {
     const images = [];
@@ -58,7 +120,9 @@ const productImages = computed(() => {
 const pageTitle = computed(() => {
     const gp = props.settings?.generalSettings;
     const siteTitle = gp?.product_page_title;
-    return siteTitle ? `${props.product.name} - ${siteTitle}` : props.product.name;
+    return siteTitle
+        ? `${props.product.name} - ${siteTitle}`
+        : props.product.name;
 });
 
 const handleVariationChange = (payload) => {
@@ -66,7 +130,11 @@ const handleVariationChange = (payload) => {
     let variation = null;
     let attributeImage = null;
 
-    if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'variation')) {
+    if (
+        payload &&
+        typeof payload === "object" &&
+        Object.prototype.hasOwnProperty.call(payload, "variation")
+    ) {
         variation = payload.variation;
         attributeImage = payload.attributeImage || null;
     } else {
@@ -83,8 +151,6 @@ const handleVariationChange = (payload) => {
         selectedVariationImage.value = null;
     }
 };
-
-
 
 const activeTab = ref("specs");
 const specsSection = ref(null);
@@ -159,7 +225,7 @@ onMounted(() => {
             root: null,
             rootMargin: `-${HEADER_OFFSET + 8}px 0px -40% 0px`,
             threshold: [0, 0.25, 0.5, 0.75],
-        }
+        },
     );
 
     observeTargets.forEach((s) => {
@@ -216,7 +282,7 @@ onBeforeUnmount(() => {
                                         ? route(
                                               'category.show',
                                               props.product.category
-                                                  .parent_recursive.slug
+                                                  .parent_recursive.slug,
                                           )
                                         : `/category/${props.product.category.parent_recursive.slug}`
                                 "
@@ -242,7 +308,7 @@ onBeforeUnmount(() => {
                                     route
                                         ? route(
                                               'category.show',
-                                              props.product.category.slug
+                                              props.product.category.slug,
                                           )
                                         : `/category/${props.product.category.slug}`
                                 "
@@ -293,7 +359,7 @@ onBeforeUnmount(() => {
 
                 <div class="flex flex-col lg:flex-row gap-8 mt-16 md:mt-24">
                     <!-- Tabbed product details (specification / description / warranty / reviews) -->
-                    <div class=" w-full lg:w-3/4  mx-auto">
+                    <div class="w-full lg:w-3/4 mx-auto">
                         <div
                             class="border-b border-gray-200 mb-8 sticky top-[70px] z-20 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 md:mx-0 md:px-0"
                         >
@@ -315,7 +381,7 @@ onBeforeUnmount(() => {
                                     Specification
                                 </button>
 
-                                <button
+                                <!-- <button
                                     v-if="product.description"
                                     @click.prevent="scrollToSection('description')"
                                     class="pb-4 text-sm font-semibold transition-all whitespace-nowrap border-b-2"
@@ -326,20 +392,7 @@ onBeforeUnmount(() => {
                                     ]"
                                 >
                                     Description
-                                </button>
-
-                                <button
-                                    v-if="hasWarranty"
-                                    @click.prevent="scrollToSection('warranty')"
-                                    class="pb-4 text-sm font-semibold transition-all whitespace-nowrap border-b-2"
-                                    :class="[
-                                        activeTab === 'warranty'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                                    ]"
-                                >
-                                    Warranty
-                                </button>
+                                </button> -->
 
                                 <button
                                     @click.prevent="scrollToSection('reviews')"
@@ -397,7 +450,7 @@ onBeforeUnmount(() => {
                         </section>
 
                         <!-- Description -->
-                        <section
+                        <!-- <section
                             v-if="product.description"
                             ref="descriptionSection"
                             id="description"
@@ -410,23 +463,7 @@ onBeforeUnmount(() => {
                                 class="prose prose-lg max-w-none text-gray-600 leading-relaxed bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
                                 v-html="product.description"
                             ></div>
-                        </section>
-
-                        <!-- Warranty (optional) -->
-                        <section
-                            v-if="product.warranty"
-                            ref="warrantySection"
-                            id="warranty"
-                            class="mb-16 scroll-mt-28"
-                        >
-                            <h2 class="text-2xl font-bold text-gray-900 mb-6">
-                                Warranty
-                            </h2>
-                            <div
-                                class="text-gray-600 bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
-                                v-html="product.warranty"
-                            ></div>
-                        </section>
+                        </section> -->
 
                         <!-- Reviews (anchor target) -->
                         <section
@@ -443,17 +480,27 @@ onBeforeUnmount(() => {
                         </section>
                     </div>
 
-                    <!-- Similar Products (display as a vertical list on right side) -->
-                    <div v-if="relatedProducts && relatedProducts.length" class="mt-6 w-full lg:w-1/3">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Similar Products</h3>
+                    <!-- recent view products (display as a vertical list on right side) -->
+                    <!-- recent view products (display as a vertical list on right side) -->
+                    <div
+                        v-if="recentProducts && recentProducts.length"
+                        class="mt-6 w-full lg:w-1/3"
+                    >
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            Recently Viewed
+                        </h3>
                         <div class="space-y-3">
-                            <div v-for="rp in relatedProducts" :key="rp.id" class="flex items-center gap-3 bg-white rounded-lg border border-gray-100 p-3">
+                            <div
+                                v-for="rp in recentProducts"
+                                :key="rp.id"
+                                class="flex items-center gap-3 bg-white rounded-lg border border-gray-100 p-3"
+                            >
                                 <ProductCardRelated :product="rp" />
                             </div>
                         </div>
                     </div>
                 </div>
-
+                <RelatedProducts :products="relatedProducts" />
             </div>
         </div>
     </FrontendLayout>

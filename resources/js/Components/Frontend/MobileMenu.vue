@@ -151,7 +151,7 @@ watch(
             </div>
 
             <!-- Footer Links -->
-            <div class="p-4 border-t bg-gray-50">
+            <!-- <div class="p-4 border-t bg-gray-50">
                 <div class="grid grid-cols-2 gap-2 text-sm">
                     <Link
                         href="/offers"
@@ -172,7 +172,7 @@ watch(
                         >Pre-order</Link
                     >
                 </div>
-            </div>
+            </div> -->
         </div>
     </Transition>
 </template>

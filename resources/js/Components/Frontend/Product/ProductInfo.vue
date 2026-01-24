@@ -6,7 +6,7 @@ import { useCompare } from "@/Composables/useCompare";
 import { useToast } from "@/Composables/useToast";
 import { GitCompare, Truck } from "lucide-vue-next";
 import { router, usePage } from "@inertiajs/vue3";
-import StarRating from "@/Components/Frontend/Product/StarRating.vue"; 
+import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 import { trackViewItem, trackAddToCart } from "@/Composables/gtm";
 
 const props = defineProps({
@@ -17,7 +17,7 @@ const props = defineProps({
     settings: {
         type: Object,
         default: () => ({}),
-    }
+    },
 });
 
 // Use centralized cart composable
@@ -57,23 +57,38 @@ const pricing = computed(() => {
     // Campaign logic should still prefer the product-level price/campaign when no variation selected
     if (selected) {
         main = parseFloat(selected.price);
-        if (selected.previous_price && parseFloat(selected.previous_price) > parseFloat(selected.price)) {
+        if (
+            selected.previous_price &&
+            parseFloat(selected.previous_price) > parseFloat(selected.price)
+        ) {
             cross = parseFloat(selected.previous_price);
             discountValue = ((cross - main) / cross) * 100;
             discountType = "percentage";
         }
-    } else if (props.product.type === 'variable' && props.product.variations && props.product.variations.length > 0) {
+    } else if (
+        props.product.type === "variable" &&
+        props.product.variations &&
+        props.product.variations.length > 0
+    ) {
         // No selection: show lowest variation price as main
-        const numericVars = props.product.variations.map(v => ({
+        const numericVars = props.product.variations.map((v) => ({
             price: parseFloat(v.price || 0),
-            previous_price: v.previous_price !== null && v.previous_price !== undefined ? parseFloat(v.previous_price) : null
+            previous_price:
+                v.previous_price !== null && v.previous_price !== undefined
+                    ? parseFloat(v.previous_price)
+                    : null,
         }));
 
-        const minVar = numericVars.reduce((acc, v) => acc === null || v.price < acc.price ? v : acc, null);
+        const minVar = numericVars.reduce(
+            (acc, v) => (acc === null || v.price < acc.price ? v : acc),
+            null,
+        );
         if (minVar) {
             main = minVar.price;
             // Find any previous_price greater than main — prefer the maximum previous_price for a clear cross price
-            const candidates = numericVars.filter(v => v.previous_price && v.previous_price > main).map(v => v.previous_price);
+            const candidates = numericVars
+                .filter((v) => v.previous_price && v.previous_price > main)
+                .map((v) => v.previous_price);
             if (candidates.length > 0) {
                 cross = Math.max(...candidates);
                 discountValue = ((cross - main) / cross) * 100;
@@ -108,7 +123,11 @@ const pricing = computed(() => {
             } else if (discountType === "fixed") {
                 main = main - discountValue;
             }
-        } else if (props.product.previous_price && parseFloat(props.product.previous_price) > parseFloat(props.product.price)) {
+        } else if (
+            props.product.previous_price &&
+            parseFloat(props.product.previous_price) >
+                parseFloat(props.product.price)
+        ) {
             cross = parseFloat(props.product.previous_price);
             main = parseFloat(props.product.price);
             discountValue = ((cross - main) / cross) * 100;
@@ -136,21 +155,29 @@ const discountBadgeText = computed(() => {
 const page = usePage();
 const settings = computed(() => page.props.settings || {});
 // guard against settings.generalSettings being null
-const whatsappNumberRaw = computed(() => settings.value.generalSettings?.whatsapp_number || "");
+const whatsappNumberRaw = computed(
+    () => settings.value.generalSettings?.whatsapp_number || "",
+);
 // ensure we always operate on a string
-const whatsappNumberClean = computed(() => (whatsappNumberRaw.value || "").replace(/\D/g, ""));
+const whatsappNumberClean = computed(() =>
+    (whatsappNumberRaw.value || "").replace(/\D/g, ""),
+);
 const whatsappMessage = computed(() => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const name = props.product.name || "";
-    const code = props.product.product_code ? ` (Code: ${props.product.product_code})` : "";
+    const code = props.product.product_code
+        ? ` (Code: ${props.product.product_code})`
+        : "";
 
-    return encodeURIComponent(`Hello, I'm interested in ${name}${code}. Here's the link: ${url}`);
+    return encodeURIComponent(
+        `Hello, I'm interested in ${name}${code}. Here's the link: ${url}`,
+    );
 });
 const whatsappLink = computed(() => {
     if (!whatsappNumberClean.value) return null;
     return `https://wa.me/${whatsappNumberClean.value}?text=${whatsappMessage.value}`;
 });
-const showWhatsapp = computed(() => !!whatsappLink.value); 
+const showWhatsapp = computed(() => !!whatsappLink.value);
 
 // const whatsappLink = computed(() => {
 //     if (!whatsappNumberClean.value) return null;
@@ -180,7 +207,7 @@ const availableAttributes = computed(() => {
                     value: attr.value.value,
                     color: attr.value.color,
                     image: null,
-                })
+                }),
             );
         });
     });
@@ -253,7 +280,7 @@ const getMatchingVariation = () => {
             return variation.attributes.some(
                 (varAttr) =>
                     varAttr.value.attribute.name.toLowerCase() === attrKey &&
-                    varAttr.value.id === selectedAttr.id
+                    varAttr.value.id === selectedAttr.id,
             );
         });
     });
@@ -290,8 +317,10 @@ watch(
     () => {
         const variation = getMatchingVariation();
         // If a color attribute is selected, capture its image (if any)
-        const colorSelection = selectedAttributes.value['color'];
-        const attributeImage = colorSelection ? colorSelection.image || null : null;
+        const colorSelection = selectedAttributes.value["color"];
+        const attributeImage = colorSelection
+            ? colorSelection.image || null
+            : null;
 
         // Emit both the resolved variation (may be null) and attributeImage (for color swatches)
         emit("variation-change", { variation, attributeImage });
@@ -301,7 +330,7 @@ watch(
             quantity.value = Math.max(1, variation.stock);
         }
     },
-    { deep: true }
+    { deep: true },
 );
 
 const addToCart = () => {
@@ -428,7 +457,7 @@ const isOptionAvailable = (key, valueObj) => {
             // Find corresponding attribute in variation
             // Note: variation.attributes structure: [ { value: { attribute: { name: 'Color' }, id: 123 } } ]
             const matchingAttr = variation.attributes.find(
-                (a) => a.value.attribute.name.toLowerCase() === selKey
+                (a) => a.value.attribute.name.toLowerCase() === selKey,
             );
 
             // If variation doesn't have this attribute defined, it's not a match for this specific combination
@@ -440,48 +469,45 @@ const isOptionAvailable = (key, valueObj) => {
     });
 };
 
-
 // Helper function to wait for dataLayer to be ready
 const waitForDataLayer = () => {
-  return new Promise((resolve) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      resolve();
-    } else {
-      // Check every 100ms for up to 5 seconds
-      let attempts = 0;
-      const maxAttempts = 50;
-      const interval = setInterval(() => {
-        attempts++;
-        if (window.dataLayer) {
-          clearInterval(interval);
-          resolve();
-        } else if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          console.warn("DataLayer not initialized after 5 seconds");
-          resolve(); // Resolve anyway to not block
+    return new Promise((resolve) => {
+        if (typeof window !== "undefined" && window.dataLayer) {
+            resolve();
+        } else {
+            // Check every 100ms for up to 5 seconds
+            let attempts = 0;
+            const maxAttempts = 50;
+            const interval = setInterval(() => {
+                attempts++;
+                if (window.dataLayer) {
+                    clearInterval(interval);
+                    resolve();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    console.warn("DataLayer not initialized after 5 seconds");
+                    resolve(); // Resolve anyway to not block
+                }
+            }, 100);
         }
-      }, 100);
-    }
-  });
+    });
 };
 
 // Track view when product is loaded (works for both navigation and reload)
 watch(
-  () => props.product,
-  async (newProduct) => {
-    if (newProduct) {
-      // Wait for dataLayer to be ready
-      await waitForDataLayer();
-      // Track product view in Google Tag Manager
-      //console.log("Tracking view_item for:", newProduct);
-      // Pass the computed main price for accurate ecommerce value
-      trackViewItem(newProduct, pricing.value.main);
-    }
-  },
-  { immediate: true } // Run immediately if product is already loaded
+    () => props.product,
+    async (newProduct) => {
+        if (newProduct) {
+            // Wait for dataLayer to be ready
+            await waitForDataLayer();
+            // Track product view in Google Tag Manager
+            //console.log("Tracking view_item for:", newProduct);
+            // Pass the computed main price for accurate ecommerce value
+            trackViewItem(newProduct, pricing.value.main);
+        }
+    },
+    { immediate: true }, // Run immediately if product is already loaded
 );
-
-
 </script>
 
 <template>
@@ -520,9 +546,12 @@ watch(
             </div>
 
             <div v-if="product.brand && product.brand.brand_image" class="my-2">
-                <img :src="product.brand.brand_image" alt="brand" class="w-20" />
+                <img
+                    :src="product.brand.brand_image"
+                    alt="brand"
+                    class="w-20"
+                />
             </div>
-
 
             <p
                 v-if="hasStock"
@@ -547,11 +576,13 @@ watch(
                 * This item is currently unavailable
             </p>
 
-            <p v-if="product.is_free_delivery" class="text-xs text-green-700 mt-2 font-medium flex items-center gap-2">
+            <p
+                v-if="product.is_free_delivery"
+                class="text-xs text-green-700 mt-2 font-medium flex items-center gap-2"
+            >
                 <Truck :size="16" />
                 <span>Free Delivery</span>
             </p>
-
         </div>
 
         <!-- Price Section -->
@@ -588,7 +619,7 @@ watch(
             </div> -->
 
             <!-- WhatsApp share button (shows if store number is configured) -->
-            <div class=" flex items-center">
+            <div class="flex items-center">
                 <a
                     v-if="showWhatsapp"
                     :href="whatsappLink"
@@ -603,9 +634,12 @@ watch(
                         <path d="M16.005 3C9.383 3 3.999 8.385 3.999 15c0 2.638.86 4.88 2.325 6.75L3 29l7.528-3.063A11.91 11.91 0 0016.005 27c6.621 0 12.005-5.385 12.005-12S22.626 3 16.005 3z"/>
                     </svg>
                     <span class="hidden md:inline text-sm font-semibold">WhatsApp</span> -->
-                    <img src="/assets/img/logo/whatsapp-button.webp" alt="" class="w-[150px]">
+                    <img
+                        src="/assets/img/logo/whatsapp-button.webp"
+                        alt=""
+                        class="w-[150px]"
+                    />
                 </a>
-                
             </div>
         </div>
 
@@ -638,7 +672,7 @@ watch(
         </div>
 
         <!-- Dynamic Attributes -->
-        <div v-if="availableAttributes.length > 0" class="space-y-5 pt-4">
+        <div v-if="availableAttributes.length > 0" class="space-y-5 py-3">
             <div v-for="attribute in availableAttributes" :key="attribute.key">
                 <div class="flex justify-between items-center mb-2">
                     <h3
@@ -669,7 +703,7 @@ watch(
                         "
                         @click="
                             isOptionAvailable(attribute.key, attrValue) &&
-                                selectAttribute(attribute.key, attrValue)
+                            selectAttribute(attribute.key, attrValue)
                         "
                         class="group relative transition-opacity duration-200"
                         :class="[
@@ -805,51 +839,60 @@ watch(
                         </svg>
                     </button>
                 </div>
-
             </div>
 
-                            <!-- Action Buttons -->
-                <div class="flex-1 flex gap-3 mt-4">
-                    <button
-                        @click="addToCart"
-                        :disabled="isAddingToCart || !hasStock"
-                        class="flex-1 px-6 py-3.5 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 shadow-lg shadow-gray-200"
+            <!-- Action Buttons -->
+            <div class="flex-1 flex gap-3 mt-4">
+                <button
+                    @click="addToCart"
+                    :disabled="isAddingToCart || !hasStock"
+                    class="flex-1 px-6 py-3.5 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 shadow-lg shadow-gray-200"
+                >
+                    <svg
+                        v-if="isAddingToCart"
+                        class="animate-spin h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
                     >
-                        <svg
-                            v-if="isAddingToCart"
-                            class="animate-spin h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                            ></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                        </svg>
-                        <span v-else>Add to Cart</span>
-                    </button>
-                    <button
-                        @click="buyNow"
-                        :disabled="isAddingToCart || !hasStock"
-                        class="flex-1 px-6 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-lg shadow-primary/20"
-                    >
-                        Buy Now
-                    </button>
-                </div>
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                        ></circle>
+                        <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                    </svg>
+                    <span v-else>Add to Cart</span>
+                </button>
+                <button
+                    @click="buyNow"
+                    :disabled="isAddingToCart || !hasStock"
+                    class="flex-1 px-6 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-lg shadow-primary/20"
+                >
+                    Buy Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Accordion for Product Details -->
+        <div class="mt-6">
+            <details open class="border-t pt-4 product_details">
+                <summary class="font-semibold text-lg mb-2 cursor-pointer">
+                    Product Details
+                </summary>
+                <div v-html="product?.description"></div>
+            </details>
         </div>
 
         <!-- Wishlist & Compare -->
-        <div
+        <!-- <div
             class="flex items-center gap-6 pt-2 text-sm font-medium text-gray-500"
         >
             <button
@@ -905,24 +948,28 @@ watch(
                     isInCompare(product.id) ? "Added to Compare" : "Compare"
                 }}</span>
             </button>
-        </div>
+        </div> -->
     </div>
 </template>
 
 <style scoped>
-details > summary {
-    list-style: none;
-}
-
-details > summary::-webkit-details-marker {
+details summary::-webkit-details-marker {
     display: none;
 }
 
-details[open] > summary span::before {
-    content: "▲ ";
+details summary {
+    position: relative;
+    padding-right: 20px;
 }
 
-details:not([open]) > summary span::before {
-    content: "▼ ";
+details summary::after {
+    content: "+";
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+details[open] summary::after {
+    content: "-";
 }
 </style>
