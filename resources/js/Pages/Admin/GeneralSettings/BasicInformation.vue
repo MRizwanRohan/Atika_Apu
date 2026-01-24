@@ -23,6 +23,36 @@
                     </div>
 
                     <div class="mb-4">
+                        <label class="block text-gray-700">Primary Color</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                v-model="form.primary_color"
+                                type="color"
+                                class="h-10 w-14 p-1 border rounded cursor-pointer"
+                                :class="{
+                                    'border-red-500': form.errors.primary_color,
+                                }"
+                            />
+                            <input
+                                v-model="form.primary_color"
+                                type="text"
+                                class="w-full p-2 border rounded"
+                                :class="{
+                                    'border-red-500': form.errors.primary_color,
+                                }"
+                                placeholder="#000000"
+                            />
+                        </div>
+
+                        <span
+                            v-if="form.errors.primary_color"
+                            class="text-red-500 text-sm"
+                        >
+                            {{ form.errors.primary_color }}
+                        </span>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="block text-gray-700"
                             >Home Page Title</label
                         >
@@ -363,6 +393,7 @@ const props = defineProps({
 // Initialize form with settings data
 const form = useForm({
     app_name: props.settings?.app_name || "",
+    primary_color: props.settings?.primary_color || "#f0512e",
     home_page_title: props.settings?.home_page_title || "",
     product_page_title: props.settings?.product_page_title || "",
     phone_number: props.settings?.phone_number || "",

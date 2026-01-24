@@ -43,6 +43,7 @@ class GeneralSettingRequest extends FormRequest
             'facebook_iframe' => 'nullable|string',
             'facebook_page_id' => 'nullable|string',
             'footer_text' => 'nullable|string',
+            'primary_color' => 'nullable|string|max:7',
         ];
     }
 }

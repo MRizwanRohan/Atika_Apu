@@ -10,6 +10,7 @@ use Illuminate\Contracts\Cache\Store;
 use Illuminate\Support\Facades\Cache;
 use App\Services\Categories\CategoryService;
 use App\Http\Requests\Categories\StoreCategoryRequest;
+use App\Http\Requests\Categories\UpdateCategoryRequest;
 
 class CategoryController extends Controller
 {
@@ -87,7 +88,7 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreCategoryRequest $request, Category $category)
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
         try {
             $categoryService = new CategoryService();

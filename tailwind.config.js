@@ -15,7 +15,7 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#f0512e',
+                primary: 'var(--primary-color)',
             },
             fontFamily: {
                 heebo: ['Heebo', 'sans-serif'],

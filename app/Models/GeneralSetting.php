@@ -28,5 +28,6 @@ class GeneralSetting extends Model
         'facebook_iframe',
         'facebook_page_id',
         'footer_text',
+        'primary_color',
     ];
 }

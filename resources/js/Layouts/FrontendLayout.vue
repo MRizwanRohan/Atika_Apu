@@ -4,8 +4,8 @@ let isInitialLoad = true;
 </script>
 
 <script setup>
-import '../../css/frontend.css';
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import "../../css/frontend.css";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { usePage, Head, router } from "@inertiajs/vue3";
 import FrontendHeader from "@/Components/Frontend/FrontendHeader.vue";
 import FrontendFooter from "@/Components/Frontend/FrontendFooter.vue";
@@ -24,6 +24,16 @@ const settings = computed(() => page.props.settings || {});
 const pages = computed(() => page.props.pages || []);
 const media = computed(() => settings.value.media || {});
 const marketingTools = computed(() => settings.value.marketingTools || []);
+const generalSettings = computed(() => settings.value.generalSettings || {});
+
+const setPrimaryColor = () => {
+    const color = generalSettings.value?.primary_color || "#f0512e";
+    document.documentElement.style.setProperty("--primary-color", color);
+};
+
+watch(generalSettings, () => {
+    setPrimaryColor();
+});
 
 const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -35,6 +45,7 @@ const closeMobileMenu = () => {
 
 // Handle Loading State
 onMounted(() => {
+    setPrimaryColor();
     if (isLoading.value) {
         // Hide initial loader
         setTimeout(() => {
@@ -47,12 +58,12 @@ onMounted(() => {
     injectMarketingTools();
 
     // Add frontend class to body so frontend-only font applies
-    document.body.classList.add('frontend');
+    document.body.classList.add("frontend");
 });
 
 onUnmounted(() => {
     // Remove frontend class when layout is destroyed
-    document.body.classList.remove('frontend');
+    document.body.classList.remove("frontend");
 });
 
 /**
@@ -67,7 +78,7 @@ const injectMarketingTools = () => {
                 try {
                     const range = document.createRange();
                     const fragment = range.createContextualFragment(
-                        tool.script_code
+                        tool.script_code,
                     );
 
                     // Create a wrapper to identify the scripts
@@ -79,7 +90,7 @@ const injectMarketingTools = () => {
                 } catch (error) {
                     console.error(
                         `Failed to inject marketing tool: ${tool.tool_name}`,
-                        error
+                        error,
                     );
                 }
             }
@@ -91,7 +102,10 @@ const injectMarketingTools = () => {
 <template>
     <Head>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
         <link v-if="media?.favicon" rel="icon" :href="media.favicon" />
     </Head>
 
