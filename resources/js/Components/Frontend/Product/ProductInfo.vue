@@ -490,9 +490,6 @@ watch(
         <!-- <pre>{{ whatsappNumberRaw }}</pre> -->
         <!-- Product Title & Code -->
         <div class="mb-4">
-            <div v-if="product.brand && product.brand.brand_image" class="mb-3">
-                <img :src="product.brand.brand_image" alt="brand" class="w-20" />
-            </div>
             <h1
                 class="text-xl md:text-3xl font-bold text-gray-900 leading-tight mb-2"
             >
@@ -520,6 +517,10 @@ watch(
                     class="bg-gray-100 text-gray-600 px-2 py-1 rounded"
                     >Brand: {{ product.brand.brand_name }}</span
                 > -->
+            </div>
+
+            <div v-if="product.brand && product.brand.brand_image" class="my-2">
+                <img :src="product.brand.brand_image" alt="brand" class="w-20" />
             </div>
 
 

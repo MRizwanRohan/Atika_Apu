@@ -42,7 +42,7 @@ const clearActive = () => {
 </script>
 
 <template>
-    <nav class="hidden lg:block bg-black text-white" @mouseleave="clearActive">
+    <nav class="hidden lg:block bg-white text-blacks" @mouseleave="clearActive">
         <div class="container mx-auto px-4">
             <ul class="flex items-center gap-1">
                 <li 
@@ -54,7 +54,7 @@ const clearActive = () => {
                     <!-- Parent Category Link -->
                     <Link 
                         :href="`/category/${category.slug}`"
-                        class="flex items-center gap-1 px-2 py-3 text-sm font-medium text-white hover:text-primary transition-colors"
+                        class="flex items-center gap-1 px-2 py-3 text-sm font-medium text-black hover:bg-primary/10 hover:text-primary transition-colors"
                         :class="{ 'text-primary': activeCategory === category.id }"
                     >
                         <!-- <span v-if="category.icon" v-html="category.icon" class="w-4 h-4"></span> -->

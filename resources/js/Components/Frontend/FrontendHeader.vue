@@ -124,7 +124,7 @@ const closeCartSidebar = () => {
         </transition>
 
         <!-- Main Header -->
-        <div class="bg-[#1a1b21] text-white">
+        <div class="bg-[#000] text-white">
             <div class="container mx-auto px-4 py-3">
                 <div class="flex items-center justify-between gap-4 lg:gap-8">
                     <!-- Mobile Menu Button -->

@@ -68,25 +68,27 @@
                 >
                     <div
                         v-if="isNotificationsOpen"
-                        class="absolute right-0 mt-3 w-80 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-2 z-50 border border-gray-100 dark:border-gray-800"
+                        class="fixed sm:absolute top-20 left-2 right-2 sm:right-0 sm:left-auto mt-0 sm:mt-3 w-auto sm:w-80 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white dark:bg-gray-900 rounded-lg sm:rounded-xl shadow-xl py-2 z-50 border border-gray-100 dark:border-gray-800"
                     >
                         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">Notifications</p>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white text-center sm:text-left">Notifications</p>
                         </div>
 
-                        <div v-if="notifications.length === 0" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                            No notifications
-                        </div>
+                        <div class="px-2 py-2 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1">
+                            <div v-if="notifications.length === 0" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                No notifications
+                            </div>
 
-                        <div v-for="n in notifications" :key="n.id" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <div class="text-sm font-medium text-gray-800 dark:text-white truncate">
-                                {{ n.data.order_number ?? n.data.title ?? n.type }}
+                            <div v-for="n in notifications" :key="n.id" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md">
+                                <div class="text-sm font-medium text-gray-800 dark:text-white truncate">
+                                    {{ n.data.order_number ?? n.data.title ?? n.type }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    <span v-if="n.data.customer_name">{{ n.data.customer_name }} • </span>
+                                    <span v-if="n.data.total">{{ n.data.total }}</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1 truncate">{{ formatDate(n.created_at) }}</div>
                             </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                <span v-if="n.data.customer_name">{{ n.data.customer_name }} • </span>
-                                <span v-if="n.data.total">{{ n.data.total }}</span>
-                            </div>
-                            <div class="text-xs text-gray-400 mt-1 truncate">{{ formatDate(n.created_at) }}</div>
                         </div>
 
                         <div class="border-t p-2 text-center">

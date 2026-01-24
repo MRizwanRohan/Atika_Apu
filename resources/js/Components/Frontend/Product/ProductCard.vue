@@ -196,10 +196,10 @@ const handleCompare = () => {
                 <!-- Discount Badge -->
                 <div
                     v-if="pricing.discountValue > 0 && !isOutOfStock"
-                    class="bg-blue-600 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full"
+                    class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
                 >
                     <span v-if="pricing.discountType === 'percentage'">
-                        {{ Math.round(pricing.discountValue) }}%
+                        {{ Math.round(pricing.discountValue) }}% OFF
                     </span>
                     <span v-else>
                         ৳{{ formatPrice(pricing.discountValue) }} OFF
