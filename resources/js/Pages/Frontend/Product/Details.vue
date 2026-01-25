@@ -246,10 +246,10 @@ onBeforeUnmount(() => {
         <Head :title="pageTitle" />
         <div class="min-h-screen bg-gray-50/30 font-sans pb-12">
             <!-- <pre>{{ props.product }}</pre> -->
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
                 <!-- Breadcrumb -->
                 <nav
-                    class="flex items-center text-sm text-gray-500 mb-8 overflow-x-auto whitespace-nowrap pb-2"
+                    class="md:flex hidden items-center text-sm text-gray-500 overflow-x-auto whitespace-nowrap pb-2"
                     aria-label="Breadcrumb"
                 >
                     <ol class="flex items-center gap-2">
@@ -333,7 +333,7 @@ onBeforeUnmount(() => {
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                     <!-- Left Column: Image Gallery -->
                     <div class="lg:col-span-6 xl:col-span-6">
-                        <div class="sticky top-24">
+                        <div class="sticky top-20">
                             <ImageGallery
                                 :images="productImages"
                                 :selected-variation-image="

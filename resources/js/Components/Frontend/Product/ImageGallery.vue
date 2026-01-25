@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full mx-auto md:p-4">
+    <div class="w-full mx-auto md:px-4">
         <div class="flex gap-4 md:flex-row flex-col">
             <!-- Vertical Thumbnail Gallery (Desktop Only) -->
             <div
@@ -334,7 +334,7 @@ watch(
                 checkScroll();
             });
         }
-    }
+    },
 );
 
 const scrollThumbnailIntoView = (index: number) => {
@@ -358,7 +358,7 @@ watch(
     () => allMedia.value,
     () => {
         nextTick(checkScroll);
-    }
+    },
 );
 
 const handlePrevious = () => {

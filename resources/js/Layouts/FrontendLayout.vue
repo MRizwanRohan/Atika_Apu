@@ -12,6 +12,7 @@ import FrontendFooter from "@/Components/Frontend/FrontendFooter.vue";
 import MobileMenu from "@/Components/Frontend/MobileMenu.vue";
 import Toast from "@/Components/Frontend/Toast.vue";
 import { Toaster } from "@steveyuowo/vue-hot-toast";
+import { useToast } from "@/Composables/useToast";
 
 const page = usePage();
 const isMobileMenuOpen = ref(false);
@@ -66,6 +67,33 @@ onUnmounted(() => {
     document.body.classList.remove("frontend");
 });
 
+// Handle Toast Notifications from Flash Messages
+const {
+    success: showSuccess,
+    error: showError,
+    warning: showWarning,
+    info: showInfo,
+} = useToast();
+
+watch(
+    () => page.props.flash,
+    (flash) => {
+        if (flash.success) {
+            showSuccess(flash.success);
+        }
+        if (flash.error) {
+            showError(flash.error);
+        }
+        if (flash.warning) {
+            showWarning(flash.warning);
+        }
+        if (flash.info) {
+            showInfo(flash.info);
+        }
+    },
+    { deep: true, immediate: true },
+);
+
 /**
  * Inject marketing tool scripts into the head tag
  */
@@ -102,7 +130,10 @@ const injectMarketingTools = () => {
 <template>
     <Head>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        <link
+            href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet"
+        />
         <link v-if="media?.favicon" rel="icon" :href="media.favicon" />
     </Head>
 
@@ -158,7 +189,7 @@ const injectMarketingTools = () => {
         />
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-hidden">
+        <main class="flex-1">
             <slot />
         </main>
 

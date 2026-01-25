@@ -63,13 +63,11 @@ export function useCart() {
             preserveScroll: true,
             onSuccess: () => {
                 isLoading.value = false;
-                success('Product added to cart!');
                 if (onSuccess) onSuccess();
             },
             onError: (errors) => {
                 isLoading.value = false;
                 error.value = errors;
-                showError('Failed to add product to cart');
                 if (onError) onError(errors);
             },
             onFinish: () => {
@@ -96,7 +94,6 @@ export function useCart() {
             },
             onError: (errors) => {
                 error.value = errors;
-                showError('Failed to update quantity');
             },
             onFinish: () => {
                 isLoading.value = false;
@@ -129,7 +126,6 @@ export function useCart() {
             },
             onError: (errors) => {
                 error.value = errors;
-                showError('Failed to update quantity');
             },
             onFinish: () => {
                 isLoading.value = false;
@@ -169,7 +165,6 @@ export function useCart() {
             },
             onError: (errors) => {
                 error.value = errors;
-                showError('Failed to update quantity');
             },
             onFinish: () => {
                 isLoading.value = false;
@@ -190,8 +185,6 @@ export function useCart() {
         }, {
             preserveScroll: true,
             onSuccess: (page) => {
-                success('Item removed from cart');
-                
                 // Check if cart is now empty and we're on checkout page
                 const currentPath = window.location.pathname;
                 const newCartCount = page.props.cartCount || 0;
@@ -205,7 +198,6 @@ export function useCart() {
             },
             onError: (errors) => {
                 error.value = errors;
-                showError('Failed to remove item');
             },
             onFinish: () => {
                 isLoading.value = false;
@@ -223,12 +215,10 @@ export function useCart() {
         router.post(route('cart.clear'), {}, {
             preserveScroll: true,
             onSuccess: () => {
-                success('Cart cleared');
                 if (onSuccess) onSuccess();
             },
             onError: (errors) => {
                 error.value = errors;
-                showError('Failed to clear cart');
             },
             onFinish: () => {
                 isLoading.value = false;

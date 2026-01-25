@@ -83,7 +83,7 @@ class CartController extends Controller
             return redirect()->back()->with('success', 'Product added to cart successfully')->with('session_id', $cart->session_id);
         } catch (\Exception $e) {
             Log::error('Frontend addToCart error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return redirect()->back()->with('error', 'Unable to add product to cart');
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 

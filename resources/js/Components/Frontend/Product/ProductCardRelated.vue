@@ -31,24 +31,36 @@ const activeCampaign = computed(() => {
 
 const pricing = computed(() => {
     // If product is variable, display lowest variation price by default
-    if (props.product.type === 'variable' && props.product.variations && props.product.variations.length > 0) {
-        const numericVars = props.product.variations.map(v => ({
+    if (
+        props.product.type === "variable" &&
+        props.product.variations &&
+        props.product.variations.length > 0
+    ) {
+        const numericVars = props.product.variations.map((v) => ({
             price: parseFloat(v.price || 0),
-            previous_price: v.previous_price !== null && v.previous_price !== undefined ? parseFloat(v.previous_price) : null
+            previous_price:
+                v.previous_price !== null && v.previous_price !== undefined
+                    ? parseFloat(v.previous_price)
+                    : null,
         }));
 
-        const minVar = numericVars.reduce((acc, v) => acc === null || v.price < acc.price ? v : acc, null);
+        const minVar = numericVars.reduce(
+            (acc, v) => (acc === null || v.price < acc.price ? v : acc),
+            null,
+        );
         let main = minVar ? minVar.price : parseFloat(props.product.price);
         let cross = null;
         let discountValue = 0;
         let discountType = null;
 
         if (minVar) {
-            const candidates = numericVars.filter(v => v.previous_price && v.previous_price > main).map(v => v.previous_price);
+            const candidates = numericVars
+                .filter((v) => v.previous_price && v.previous_price > main)
+                .map((v) => v.previous_price);
             if (candidates.length > 0) {
                 cross = Math.max(...candidates);
                 discountValue = ((cross - main) / cross) * 100;
-                discountType = 'percentage';
+                discountType = "percentage";
             }
         }
 
@@ -73,7 +85,8 @@ const pricing = computed(() => {
         }
     } else if (
         props.product.previous_price &&
-        parseFloat(props.product.previous_price) > parseFloat(props.product.price)
+        parseFloat(props.product.previous_price) >
+            parseFloat(props.product.price)
     ) {
         cross = parseFloat(props.product.previous_price);
         main = parseFloat(props.product.price);
@@ -131,7 +144,9 @@ const handleCompare = () => {
             v-if="isOutOfStock"
             class="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-t from-black/40 to-transparent rounded-lg"
         >
-            <span class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">
+            <span
+                class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg"
+            >
                 Out of Stock
             </span>
         </div>
@@ -170,26 +185,22 @@ const handleCompare = () => {
         <!-- Product Image -->
         <div class="w-1/3 flex items-center justify-center p-2 bg-gray-50">
             <Link
-            :href="route('product.details', product.slug)"
-            class="block relative aspect-square overflow-hidden bg-gray-50"
-        >
-            <img
-                :src="product.feature_image"
-                :alt="product.name"
-                class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                @error="$event.target.src = '/assets/placeholder.png'"
-                @load="imageLoaded = true"
-            />
-        </Link>
+                :href="route('product.details', product.slug)"
+                class="block relative aspect-square overflow-hidden bg-gray-50"
+            >
+                <img
+                    :src="product.feature_image"
+                    :alt="product.name"
+                    class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                    @load="imageLoaded = true"
+                />
+            </Link>
         </div>
 
         <!-- Product Info -->
         <div class="flex flex-col flex-1 sm:p-4 p-2 gap-3">
             <!-- Product Name -->
-            <Link
-                :href="route('product.details', product.slug)"
-                class="block"
-            >
+            <Link :href="route('product.details', product.slug)" class="block">
                 <h3
                     class="text-[12px] md:text-[14px] line-clamp-2 font-semibold text-gray-900 hover:text-primary transition-colors leading-snug"
                 >
@@ -198,13 +209,18 @@ const handleCompare = () => {
             </Link>
 
             <!-- Rating -->
-            <div v-if="product.reviews_count > 0" class="flex items-center gap-2">
+            <div
+                v-if="product.reviews_count > 0"
+                class="flex items-center gap-2"
+            >
                 <StarRating
                     :rating="product.avg_rating"
                     size="sm"
                     :show-count="false"
                 />
-                <span class="text-xs text-gray-800">({{ product.reviews_count }})</span>
+                <span class="text-xs text-gray-800"
+                    >({{ product.reviews_count }})</span
+                >
             </div>
 
             <!-- Price Section -->

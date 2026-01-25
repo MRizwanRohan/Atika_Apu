@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { computed, ref } from "vue";
+import { computed, ref, watch, onUnmounted } from "vue";
 import { useWishlist } from "@/Composables/useWishlist";
 import { useCompare } from "@/Composables/useCompare";
 import {
@@ -172,7 +172,28 @@ const activeCampaign = computed(() => {
     });
 });
 
+const selectedVariation = computed(() => getMatchingVariation());
+
 const pricing = computed(() => {
+    // If a variation is explicitly selected, show its prices
+    const selected = selectedVariation.value;
+    if (selected) {
+        let main = parseFloat(selected.price || 0);
+        let cross = null;
+        let discountValue = 0;
+        let discountType = null;
+
+        if (
+            selected.previous_price &&
+            parseFloat(selected.previous_price) > parseFloat(selected.price)
+        ) {
+            cross = parseFloat(selected.previous_price);
+            discountValue = ((cross - main) / cross) * 100;
+            discountType = "percentage";
+        }
+        return { main, cross, discountValue, discountType };
+    }
+
     // If product is variable, display lowest variation price by default
     if (
         props.product.type === "variable" &&
@@ -264,6 +285,23 @@ const handleWishlist = () => {
 const handleCompare = () => {
     toggleCompare(props.product.id);
 };
+
+// Lock body scroll on mobile when options modal is open
+watch(showOptions, (newVal) => {
+    if (typeof window !== "undefined") {
+        if (newVal && window.innerWidth < 768) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+    }
+});
+
+onUnmounted(() => {
+    if (typeof window !== "undefined") {
+        document.body.style.overflow = "";
+    }
+});
 </script>
 
 <template>
@@ -334,10 +372,10 @@ const handleCompare = () => {
                 </div>
             </Link>
 
-            <!-- Quick View Overlay -->
+            <!-- Quick View Overlay (Desktop) -->
             <div
                 v-if="showOptions"
-                class="absolute inset-x-0 bottom-0 bg-white z-[30] p-4 shadow-lg rounded-t-xl border-t border-gray-100 flex flex-col gap-3 animate-in slide-in-from-bottom duration-300"
+                class="hidden md:flex absolute inset-x-0 bottom-0 bg-white z-[30] p-4 shadow-lg rounded-t-xl border-t border-gray-100 flex-col gap-3 animate-in slide-in-from-bottom duration-300"
                 @click.stop.prevent
             >
                 <div class="flex justify-between items-center mb-1">
@@ -423,6 +461,135 @@ const handleCompare = () => {
                     </button>
                 </div>
             </div>
+
+            <!-- Quick View Modal (Mobile Teleport) -->
+            <Teleport to="body">
+                <div
+                    v-if="showOptions"
+                    class="md:hidden fixed inset-0 z-[100] flex flex-col justify-end"
+                    @click.stop
+                >
+                    <!-- Backdrop -->
+                    <div
+                        class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                        @click="showOptions = false"
+                    ></div>
+
+                    <!-- Bottom Sheet -->
+                    <div
+                        class="relative bg-white rounded-t-[2.5rem] p-6 shadow-2xl animate-in slide-in-from-bottom duration-500 max-h-[90vh] overflow-y-auto"
+                    >
+                        <!-- Drag Handle -->
+                        <div
+                            class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"
+                        ></div>
+
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex-1">
+                                <span
+                                    class="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1 block"
+                                    >Quick Add</span
+                                >
+                                <h3
+                                    class="text-lg font-bold text-gray-900 leading-tight"
+                                >
+                                    {{ product.name }}
+                                </h3>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="text-xl font-bold text-primary"
+                                        >৳ {{ formatPrice(pricing.main) }}</span
+                                    >
+                                    <span
+                                        v-if="pricing.cross"
+                                        class="text-sm text-gray-400 line-through"
+                                        >৳
+                                        {{ formatPrice(pricing.cross) }}</span
+                                    >
+                                </div>
+                            </div>
+                            <button
+                                @click="showOptions = false"
+                                class="p-2.5 bg-gray-50 text-gray-400 hover:text-red-500 rounded-2xl transition-all"
+                            >
+                                <X :size="24" />
+                            </button>
+                        </div>
+
+                        <!-- Mobile Attributes -->
+                        <div class="space-y-6 mb-8">
+                            <div
+                                v-for="attr in availableAttributes"
+                                :key="attr.key"
+                            >
+                                <div
+                                    class="flex justify-between items-center mb-3"
+                                >
+                                    <span
+                                        class="text-xs font-bold text-gray-500 uppercase tracking-wider"
+                                        >{{ attr.name }}</span
+                                    >
+                                    <span
+                                        class="text-xs font-medium text-primary bg-primary/5 px-2 py-0.5 rounded-full"
+                                        v-if="selectedAttributes[attr.key]"
+                                    >
+                                        {{ selectedAttributes[attr.key].value }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="val in attr.values"
+                                        :key="val.id"
+                                        @click="selectAttribute(attr.key, val)"
+                                        class="px-4 py-2 text-sm font-semibold border-2 rounded-xl transition-all duration-300"
+                                        :class="
+                                            selectedAttributes[attr.key]?.id ===
+                                            val.id
+                                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105'
+                                                : 'bg-white border-gray-100 text-gray-600 active:scale-95'
+                                        "
+                                    >
+                                        {{ val.value }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Footer Action -->
+                        <div class="flex gap-3 pt-4 border-t border-gray-100">
+                            <div
+                                class="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100"
+                            >
+                                <button
+                                    @click="quantity > 1 ? quantity-- : null"
+                                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:scale-90 transition-transform"
+                                    :disabled="quantity <= 1"
+                                >
+                                    <Minus :size="16" />
+                                </button>
+                                <span
+                                    class="w-8 text-center font-bold text-gray-900"
+                                    >{{ quantity }}</span
+                                >
+                                <button
+                                    @click="quantity++"
+                                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:scale-90 transition-transform"
+                                >
+                                    <Plus :size="16" />
+                                </button>
+                            </div>
+                            <button
+                                @click="performAddToCart"
+                                :disabled="!canAddToCart || addingToCart"
+                                class="flex-1 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/25 hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 h-12 transition-all active:scale-[0.98]"
+                            >
+                                <ShoppingCart v-if="!addingToCart" :size="20" />
+                                <span v-if="addingToCart">Processing...</span>
+                                <span v-else>Add to Cart</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Teleport>
         </div>
 
         <!-- Content -->
@@ -454,12 +621,34 @@ const handleCompare = () => {
                 <!-- Quick Add Button -->
                 <button
                     @click.stop.prevent="handleAddToCartClick"
-                    class="bg-gray-200/80 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+                    class="md:bg-gray-200/80 md:hover:bg-gray-300 md:text-gray-700 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
                     :disabled="isOutOfStock"
                     :title="isVariable ? 'Select Options' : 'Add to Cart'"
                 >
-                    <ShoppingCart :size="14" stroke-width="2.5" />
-                    <span>{{ isOutOfStock ? "Sold Out" : "Add To Cart" }}</span>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="16"
+                        viewBox="0 0 12 16"
+                        fill="currentColor"
+                        class="icon icon-cart"
+                    >
+                        <path
+                            d="M8.46861 14.9963V12.437H5.81787V11.5839H8.46861V9.02457H9.35219V11.5839H12.0029V12.437H9.35219V14.9963H8.46861Z"
+                            fill="currentColor"
+                        ></path>
+                        <path
+                            d="M10.2257 4.68741C11.3251 4.80893 12.1358 5.81656 11.9845 6.94131L11.461 10.8319H10.3507L10.8946 6.79483L10.9024 6.69424C10.9141 6.19668 10.5127 5.77432 10.0021 5.77432H2.05283C1.50823 5.77452 1.08858 6.25506 1.16123 6.79483L2.06748 13.5292C2.12759 13.9758 2.50948 14.3094 2.96006 14.3095H7.22373V15.4091H2.96006L2.77354 15.4013C1.91622 15.3218 1.20382 14.6984 1.01084 13.8593L0.977637 13.6767L0.0704101 6.94131C-0.0807972 5.81681 0.730126 4.80926 1.8292 4.68741L2.05283 4.67471H10.0021L10.2257 4.68741Z"
+                            fill="currentColor"
+                        ></path>
+                        <path
+                            d="M6.20898 0.419098C8.06868 0.513381 9.5476 2.05068 9.54785 3.93375V7.49429H8.44824V3.93375C8.44798 2.59759 7.36447 1.51409 6.02832 1.51382C4.69194 1.51382 3.60769 2.59743 3.60742 3.93375V7.49429H2.50781V3.93375C2.50808 1.98992 4.08443 0.414215 6.02832 0.414215L6.20898 0.419098Z"
+                            fill="currentColor"
+                        ></path>
+                    </svg>
+                    <span class="hidden md:block">{{
+                        isOutOfStock ? "Sold Out" : "Add To Cart"
+                    }}</span>
                 </button>
             </div>
             <!-- Title -->

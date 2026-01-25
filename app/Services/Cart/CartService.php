@@ -35,18 +35,39 @@ class CartService
     {
         Log::info('Adding product to cart', [
             'data' => $data,
-
             'user_or_session' => $userOrSession
         ]);
-        // Validate product availability and stock - include soft-deleted products for historical orders
+
+        // Identify user or session
+        $userId = null;
+        $sessionId = null;
+        if ($userOrSession) {
+            if (is_numeric($userOrSession)) {
+                $userId = $userOrSession;
+                $sessionId = null;
+                Log::info(['user_id' => $userId]);
+            } else {
+                $sessionId = $userOrSession;
+                $userId = null;
+            }
+        }
+
+        // Get active cart to check existing quantities
+        $cart = $this->cartRepository->findActiveCart($userId, $sessionId);
+        
+        $existingQuantity = 0;
+        if ($cart) {
+            $existingItem = $cart->items->where('product_id', $data['product_id'])
+                ->where('product_variation_id', $data['product_variation_id'] ?? null)
+                ->first();
+            if ($existingItem) {
+                $existingQuantity = $existingItem->quantity;
+            }
+        }
+        $totalRequestedQuantity = $existingQuantity + $data['quantity'];
+
+        // Validate product availability and stock
         $product = $this->productRepository->findById($data['product_id']);
-
-        Log::info('Product found', [
-            'product_id' => $data['product_id'],
-            'product' => $product,
-            'product_status' => $product ? $product->status : 'NULL'
-        ]);
-
 
         if (!$product) {
             throw new ProductNotAvailableException('Product not found');
@@ -61,12 +82,6 @@ class CartService
         if (isset($data['product_variation_id'])) {
             $variation = $this->productRepository->findVariationById($data['product_variation_id']);
 
-            Log::info('Variation lookup', [
-                'variation_id' => $data['product_variation_id'],
-                'variation' => $variation,
-                'variation_product_id' => $variation ? $variation->product_id : 'NULL'
-            ]);
-
             if (!$variation) {
                 throw new ProductNotAvailableException('Product variation not found');
             }
@@ -75,42 +90,23 @@ class CartService
                 throw new ProductNotAvailableException('Selected product variation does not belong to this product');
             }
 
-            if (!$product->is_pre_order && $variation->stock < $data['quantity']) {
-                throw new InsufficientStockException('Insufficient stock for selected variation');
+            if (!$product->is_pre_order && $variation->stock < $totalRequestedQuantity) {
+                throw new InsufficientStockException("Insufficient stock for selected variation. You already have {$existingQuantity} in cart.");
             }
 
             $itemPrice = $variation->price + $product->price;
         } else {
-            if (!$product->is_pre_order && $product->stock < $data['quantity']) {
-                throw new InsufficientStockException('Insufficient stock for this product');
+            if (!$product->is_pre_order && $product->stock < $totalRequestedQuantity) {
+                throw new InsufficientStockException("Insufficient stock for this product. You already have {$existingQuantity} in cart.");
             }
 
             $itemPrice = $product->price;
         }
 
-                // Apply campaign discount if available
+        // Apply campaign discount if available
         $itemPrice = $this->applyCampaignDiscount($data['product_id'], $itemPrice);
 
-        // If user is logged in, use user_id; if not, use session_id
-
-        if ($userOrSession) {
-            // Check if $userOrSession is a user ID (integer) or session ID (string)
-            if (is_numeric($userOrSession)) {
-                $userId = $userOrSession;
-                Log::info(['user_id' => $userId]);
-                $sessionId = null;
-            } else {
-                $sessionId = $userOrSession;  // guest user (session ID)
-                $userId = null;
-            }
-        } else {
-            // Handle case where neither user ID nor session ID is available
-            $userId = null;
-            $sessionId = null;
-        }
-        // Get or create cart
-        $cart = $this->cartRepository->findActiveCart($userId, $sessionId);
-
+        // Get or create cart if not exists
         if (!$cart) {
             $cart = $this->cartRepository->create([
                 'user_id' => $userId,
@@ -135,7 +131,6 @@ class CartService
 
         // Refresh cart with relationships
         $cart->refresh();
-        // In your CartService
         $cart->load('items.product', 'items.variation.attributes.attribute', 'items.variation.attributes.value');
 
         return $cart;

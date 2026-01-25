@@ -48,7 +48,7 @@ const goToPage = (page) => {
             onSuccess: () => {
                 loading.value = false;
             },
-        }
+        },
     );
 };
 
@@ -66,7 +66,7 @@ const handleSearch = () => {
                 onSuccess: () => {
                     loading.value = false;
                 },
-            }
+            },
         );
     }, 500);
 };
@@ -200,10 +200,6 @@ const formatDate = (dateString) => {
                                         :src="blog.featured_image"
                                         alt="Blog Image"
                                         class="h-12 w-20 object-cover rounded-md bg-gray-100 dark:bg-gray-600"
-                                        @error="
-                                            $event.target.src =
-                                                '/assets/img/placeholder.png'
-                                        "
                                     />
                                     <span v-else class="text-gray-500 text-sm"
                                         >No Image</span
@@ -259,7 +255,7 @@ const formatDate = (dateString) => {
                                             :href="
                                                 route(
                                                     'admin.blogs.edit',
-                                                    blog.id
+                                                    blog.id,
                                                 )
                                             "
                                             class="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 transition"

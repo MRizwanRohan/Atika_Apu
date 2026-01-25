@@ -191,7 +191,6 @@ onUnmounted(() => {
                         :src="product.feature_image"
                         :alt="product.name"
                         class="w-full h-full object-contain p-1"
-                        @error="$event.target.src = '/assets/placeholder.png'"
                     />
                 </div>
                 <div class="flex-1 min-w-0">

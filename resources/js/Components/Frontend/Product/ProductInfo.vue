@@ -24,7 +24,7 @@ const props = defineProps({
 const { addToCart: addToCartAction, isLoading: cartLoading } = useCart();
 const { toggleWishlist, isInWishlist } = useWishlist();
 const { toggleCompare, isInCompare } = useCompare();
-const { warning } = useToast();
+const { warning, error } = useToast();
 
 const selectedAttributes = ref({});
 const quantity = ref(1);
@@ -334,6 +334,19 @@ watch(
 );
 
 const addToCart = () => {
+    // Check if all attributes are selected
+    if (availableAttributes.value.length > 0) {
+        const selectedCount = Object.keys(selectedAttributes.value).length;
+        if (selectedCount < availableAttributes.value.length) {
+            const missing = availableAttributes.value
+                .filter((attr) => !selectedAttributes.value[attr.key])
+                .map((attr) => attr.name)
+                .join(", ");
+            error(`Please select: ${missing}`);
+            return;
+        }
+    }
+
     // Get matching variation
     const matchingVariation = getMatchingVariation();
 
@@ -343,7 +356,7 @@ const addToCart = () => {
         props.product.variations.length > 0 &&
         !matchingVariation
     ) {
-        warning("Please select all product options");
+        error("Please select all product options");
         return;
     }
 
@@ -370,6 +383,19 @@ const addToCart = () => {
 };
 
 const buyNow = () => {
+    // Check if all attributes are selected
+    if (availableAttributes.value.length > 0) {
+        const selectedCount = Object.keys(selectedAttributes.value).length;
+        if (selectedCount < availableAttributes.value.length) {
+            const missing = availableAttributes.value
+                .filter((attr) => !selectedAttributes.value[attr.key])
+                .map((attr) => attr.name)
+                .join(", ");
+            error(`Please select: ${missing}`);
+            return;
+        }
+    }
+
     const matchingVariation = getMatchingVariation();
 
     if (
@@ -377,7 +403,7 @@ const buyNow = () => {
         props.product.variations.length > 0 &&
         !matchingVariation
     ) {
-        warning("Please select all product options");
+        error("Please select all product options");
         return;
     }
 
@@ -515,7 +541,7 @@ watch(
         <!-- <pre>{{ settings }}</pre> -->
         <!-- <pre>{{ whatsappNumberRaw }}</pre> -->
         <!-- Product Title & Code -->
-        <div class="mb-4">
+        <div class="mb-4 mt-4">
             <h1
                 class="text-xl md:text-3xl font-bold text-gray-900 leading-tight mb-2"
             >
@@ -538,11 +564,29 @@ watch(
                 <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded"
                     >Code: {{ product.product_code }}</span
                 >
-                <!-- <span
-                    v-if="product.brand"
-                    class="bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                    >Brand: {{ product.brand.brand_name }}</span
-                > -->
+
+                <p
+                    v-if="hasStock"
+                    class="text-xs text-green-600 font-medium flex items-center gap-1"
+                >
+                    <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                        />
+                    </svg>
+                    In Stock
+                </p>
+                <p v-else class="text-xs text-red-600 mt-2 font-medium">
+                    * This item is currently unavailable
+                </p>
             </div>
 
             <div v-if="product.brand && product.brand.brand_image" class="my-2">
@@ -552,29 +596,6 @@ watch(
                     class="w-20"
                 />
             </div>
-
-            <p
-                v-if="hasStock"
-                class="text-xs text-green-600 mt-2 font-medium flex items-center gap-1"
-            >
-                <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                    />
-                </svg>
-                In Stock
-            </p>
-            <p v-else class="text-xs text-red-600 mt-2 font-medium">
-                * This item is currently unavailable
-            </p>
 
             <p
                 v-if="product.is_free_delivery"
@@ -841,8 +862,8 @@ watch(
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex-1 flex gap-3 mt-4">
+            <!-- Action Buttons (Desktop) -->
+            <div class="hidden md:flex flex-1 gap-3 mt-4">
                 <button
                     @click="addToCart"
                     :disabled="isAddingToCart || !hasStock"
@@ -879,6 +900,51 @@ watch(
                     Buy Now
                 </button>
             </div>
+
+            <!-- Action Buttons (Mobile Sticky Footer) -->
+            <Teleport to="body">
+                <div
+                    class="md:hidden fixed bottom-16 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 z-[40] animate-in slide-in-from-bottom duration-500"
+                >
+                    <div class="flex gap-3 max-w-screen-sm mx-auto">
+                        <button
+                            @click="addToCart"
+                            :disabled="isAddingToCart || !hasStock"
+                            class="flex-[1.2] px-4 py-3.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-gray-200"
+                        >
+                            <svg
+                                v-if="isAddingToCart"
+                                class="animate-spin h-4 w-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            <span v-else>Add to Cart</span>
+                        </button>
+                        <button
+                            @click="buyNow"
+                            :disabled="isAddingToCart || !hasStock"
+                            class="flex-1 px-4 py-3.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                        >
+                            Buy Now
+                        </button>
+                    </div>
+                </div>
+            </Teleport>
         </div>
 
         <!-- Accordion for Product Details -->
