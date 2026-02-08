@@ -30,7 +30,17 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
-        public function productsByRemark($remark)
+    public function getRecommended()
+    {
+        $products = Product::with(['category', 'variations.attributes.value.attribute'])->where('status', 'Published')
+            ->orderBy('sold_stock', 'desc')
+            ->take(6)
+            ->get();
+            
+        return response()->json($products);
+    }
+
+    public function productsByRemark($remark)
     {
         $cacheKey = "products.remark.{$remark}";
 

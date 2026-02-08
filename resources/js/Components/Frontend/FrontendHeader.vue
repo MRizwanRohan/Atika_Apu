@@ -13,6 +13,7 @@ import {
     LogIn,
     Menu,
     X,
+    Heart,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -129,6 +130,21 @@ const toggleSearch = () => {
                             title="Track Order"
                         >
                             <MapPin class="w-5 h-5 md:w-6 md:h-6" />
+                        </Link>
+
+                        <!-- wishlistCount -->
+                        <Link
+                            href="/wishlist"
+                            class="p-2 hover:text-primary transition-colors text-black hidden lg:block relative"
+                            title="Wishlist"
+                        >
+                            <Heart class="w-5 h-5 md:w-6 md:h-6" />
+                            <span
+                                v-if="wishlistCount > 0"
+                                class="absolute top-0 right-0 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center transform translate-x-1 -translate-y-1"
+                            >
+                                {{ wishlistCount > 99 ? "99+" : wishlistCount }}
+                            </span>
                         </Link>
 
                         <!-- User Menu -->

@@ -13,9 +13,12 @@ const props = defineProps({
     },
 });
 
-const parentCategories = computed(() =>
-    props.categories.filter((c) => !c.parent_id),
-);
+const parentCategories = computed(() => {
+    // copy the array first to avoid mutating the original prop, then filter and sort by `order`
+    return [...props.categories]
+        .filter((c) => !c.parent_id)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+});
 
 const swiperModules = [Autoplay, Navigation];
 
@@ -59,6 +62,7 @@ const swiperBreakpoints = {
 
             <!-- Categories Slider -->
             <div class="relative px-4 md:px-8">
+                <!-- Tip: set :loop="false" while verifying to prevent cloned slides from changing which slide appears first -->
                 <swiper
                     :modules="swiperModules"
                     :slides-per-view="3"

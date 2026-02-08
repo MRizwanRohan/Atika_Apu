@@ -5,7 +5,8 @@ import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 import Campaigns from "@/Components/Frontend/Product/Campaigns.vue";
 import Sliders from "@/Components/Frontend/Slider/Sliders.vue";
 import Features from "@/Components/Frontend/Features/Features.vue";
-import ProductVideo from "@/Components/Frontend/Product/ProductVideo.vue";
+import ProductVideoReel from "@/Components/Frontend/Product/ProductVideoReel.vue";
+import GsapSlider from "@/Components/Frontend/Slider/GsapSlider.vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
 import ProductsGroup from "@/Components/Frontend/Home/ProductsGroup.vue";
@@ -66,12 +67,14 @@ const pageTitle = computed(
 
     <!-- <pre>{{ settings }}</pre> -->
 
-    <Sliders :sliders="sliders" />
+    <!-- <Sliders :sliders="sliders" /> -->
+
+    <GsapSlider :sliders="sliders" />
 
     <!-- Featured Categories -->
     <FeaturedCategories :categories="categories" />
 
-    <ProductVideo :productswithVideo="productswithVideo" />
+    <ProductVideoReel :productswithVideo="productswithVideo" />
 
     <!-- Offers preview (compact) -->
     <!-- <section class="py-8 bg-white">
@@ -148,21 +151,21 @@ const pageTitle = computed(
                 class="pt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             >
                 <ProductCard
-                    v-for="product in group.products.slice(0, 6)"
+                    v-for="product in group.products.slice(0, 8)"
                     :key="product.id"
                     :product="product"
                 />
             </div>
 
             <!-- Show More Button -->
-            <div v-if="group.products.length > 5" class="text-center mt-8">
+            <!-- <div v-if="group.products.length > 5" class="text-center mt-8">
                 <Link
                     :href="`/category/${group.slug}`"
                     class="inline-block px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
                 >
                     View All {{ group.products.length }} Products
                 </Link>
-            </div>
+            </div> -->
         </div>
     </section>
 

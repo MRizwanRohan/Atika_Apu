@@ -11,9 +11,11 @@ import {
     X,
     Plus,
     Minus,
+    Eye,
 } from "lucide-vue-next";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 import { useCart } from "@/Composables/useCart";
+import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
 
 const props = defineProps({
     product: {
@@ -28,6 +30,7 @@ const { toggleWishlist, isInWishlist } = useWishlist();
 const { toggleCompare, isInCompare } = useCompare();
 const { addToCart: addToCartAction } = useCart();
 const showOptions = ref(false);
+const showQuickView = ref(false);
 const selectedAttributes = ref({});
 const quantity = ref(1);
 const addingToCart = ref(false);
@@ -286,6 +289,14 @@ const handleCompare = () => {
     toggleCompare(props.product.id);
 };
 
+const openQuickView = () => {
+    showQuickView.value = true;
+};
+
+const closeQuickView = () => {
+    showQuickView.value = false;
+};
+
 // Lock body scroll on mobile when options modal is open
 watch(showOptions, (newVal) => {
     if (typeof window !== "undefined") {
@@ -349,7 +360,7 @@ onUnmounted(() => {
             <!-- Product Image -->
             <Link
                 :href="route('product.details', product.slug)"
-                class="block relative w-full aspect-[2/3] rounded-xl overflow-hidden"
+                class="block relative w-full aspect-[2/3] rounded-xl overflow-hidden group/image"
             >
                 <img
                     :src="product.feature_image"
@@ -370,6 +381,16 @@ onUnmounted(() => {
                         Sold Out
                     </span>
                 </div>
+
+                <!-- Quick View Button (Hover) -->
+                <button
+                    v-if="!isOutOfStock"
+                    @click.prevent="openQuickView"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 scale-90 group-hover/image:scale-100 bg-white hover:bg-primary text-gray-800 hover:text-white px-4 py-2.5 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2"
+                >
+                    <Eye :size="18" />
+                    <span>Quick View</span>
+                </button>
             </Link>
 
             <!-- Quick View Overlay (Desktop) -->
@@ -708,5 +729,12 @@ onUnmounted(() => {
                 </button> -->
             </div>
         </div>
+
+        <!-- Product Quick View Component -->
+        <ProductQuickView
+            :product="product"
+            :show="showQuickView"
+            @close="closeQuickView"
+        />
     </div>
 </template>

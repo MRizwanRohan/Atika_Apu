@@ -119,7 +119,7 @@ class CategoryController extends Controller
             $category = $this->categoryService->updateStatus($id, $request->status);
 
             // Clear categories cache
-            Cache::forget('categories.all');
+            Cache::flush();
 
             return response()->json([
                 'success' => true,
@@ -146,7 +146,7 @@ class CategoryController extends Controller
         ]);
 
         // Clear categories cache
-        Cache::forget('categories.all');
+        Cache::flush();
 
         return response()->json(['success' => true, 'message' => 'Order updated successfully']);
     }

@@ -22,6 +22,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::get('/products/recommended', [ProductController::class, 'getRecommended']);
+
 
 // Courier API routes
 Route::prefix('couriers')->group(function () {

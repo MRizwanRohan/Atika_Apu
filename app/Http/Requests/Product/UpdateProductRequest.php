@@ -76,6 +76,7 @@ class UpdateProductRequest extends FormRequest
             'previous_price' => 'nullable|numeric|min:0',
             'youtube_video' => 'nullable|string',
             'feature_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'upload_video' => 'nullable|mimetypes:video/mp4,video/ogg,video/webm|max:51200',
             'gallery_images' => 'nullable|array',
             'gallery_images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
             'product_tags' => 'nullable|array',
@@ -141,6 +142,30 @@ class UpdateProductRequest extends FormRequest
             'previous_price.numeric' => 'Previous price must be a valid number.',
             'previous_price.min' => 'Previous price cannot be negative.',
             'previous_price.gt' => 'Previous price must be greater than regular price. (Example: If regular price is 100, previous price should be 150)',
+
+            'upload_video.mimetypes' => 'Video must be of type: mp4, ogg, webm.',
+            'upload_video.max' => 'Video size cannot exceed 50MB.',
+        ];
+    }
+
+    /**
+     * Get custom attribute names for validation errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'product name',
+            'product_code' => 'product code',
+            'category_id' => 'category',
+            'brand_id' => 'brand',
+            'short_description' => 'short description',
+            'type' => 'product type',
+            'previous_price' => 'previous price',
+            'feature_image' => 'feature image',
+            'upload_video' => 'video',
+            'gallery_images' => 'gallery images',
         ];
     }
 }

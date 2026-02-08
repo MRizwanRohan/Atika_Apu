@@ -244,35 +244,24 @@ onBeforeUnmount(() => {
 <template>
     <FrontendLayout>
         <Head :title="pageTitle" />
-        <div class="min-h-screen bg-gray-50/30 font-sans pb-12">
-            <!-- <pre>{{ props.product }}</pre> -->
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
+        <div class="min-h-screen bg-white font-sans pb-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
                 <!-- Breadcrumb -->
                 <nav
-                    class="md:flex hidden items-center text-sm text-gray-500 overflow-x-auto whitespace-nowrap pb-2"
+                    class="md:flex hidden items-center text-sm text-gray-500 overflow-x-auto whitespace-nowrap mb-12"
                     aria-label="Breadcrumb"
                 >
-                    <ol class="flex items-center gap-2">
+                    <ol class="flex items-center gap-3">
                         <li>
                             <Link
                                 href="/"
-                                class="hover:text-primary transition-colors flex items-center gap-1"
+                                class="hover:text-black transition-colors"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="h-4 w-4"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
-                                    />
-                                </svg>
-                                Home
+                                Homepage
                             </Link>
                         </li>
 
-                        <li class="text-gray-300 pointer-events-none">/</li>
+                        <li class="text-gray-300 pointer-events-none">></li>
 
                         <!-- Parent category (if any) -->
                         <li v-if="props.product?.category?.parent_recursive">
@@ -286,7 +275,7 @@ onBeforeUnmount(() => {
                                           )
                                         : `/category/${props.product.category.parent_recursive.slug}`
                                 "
-                                class="hover:text-primary transition-colors"
+                                class="hover:text-black transition-colors"
                             >
                                 {{
                                     props.product.category.parent_recursive.name
@@ -298,7 +287,7 @@ onBeforeUnmount(() => {
                             v-if="props.product?.category?.parent_recursive"
                             class="text-gray-300 pointer-events-none"
                         >
-                            /
+                            >
                         </li>
 
                         <!-- Category -->
@@ -312,46 +301,43 @@ onBeforeUnmount(() => {
                                           )
                                         : `/category/${props.product.category.slug}`
                                 "
-                                class="hover:text-primary transition-colors"
+                                class="hover:text-black transition-colors"
                             >
                                 {{ props.product.category.name }}
                             </Link>
                         </li>
 
-                        <li class="text-gray-300 pointer-events-none">/</li>
+                        <li class="text-gray-300 pointer-events-none">></li>
 
                         <!-- Current product -->
                         <li
                             aria-current="page"
-                            class="text-gray-900 font-medium truncate max-w-[200px] md:max-w-xs"
+                            class="text-gray-900 font-semibold truncate max-w-[200px] md:max-w-xs"
                         >
                             {{ props.product.name }}
                         </li>
                     </ol>
                 </nav>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                     <!-- Left Column: Image Gallery -->
-                    <div class="lg:col-span-6 xl:col-span-6">
-                        <div class="sticky top-20">
+                    <div class="lg:col-span-7">
+                        <div class="sticky top-24">
                             <ImageGallery
                                 :images="productImages"
-                                :selected-variation-image="
-                                    selectedVariationImage
-                                "
-                                :video="
-                                    product.youtube_video ||
-                                    product.upload_video
-                                "
+                                :selected-variation-image="selectedVariationImage"
+                                :video="product.youtube_video || product.upload_video"
+                                :product-id="product.id"
                             />
                         </div>
                     </div>
 
-                    <!-- Right Column: Product Info + Similar Products -->
-                    <div class="lg:col-span-6 xl:col-span-6">
+                    <!-- Right Column: Product Info -->
+                    <div class="lg:col-span-5">
                         <ProductInfo
                             :product="product"
                             @variation-change="handleVariationChange"
+                            @scroll-to-description="scrollToSection('description')"
                             :settings="settings"
                         />
                     </div>
@@ -371,36 +357,36 @@ onBeforeUnmount(() => {
                                 <button
                                     v-if="hasSpecification"
                                     @click.prevent="scrollToSection('specs')"
-                                    class="pb-4 text-sm font-semibold transition-all whitespace-nowrap border-b-2"
+                                    class="pb-4 text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
                                     :class="[
                                         activeTab === 'specs'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                            ? 'border-black text-black'
+                                            : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300',
                                     ]"
                                 >
                                     Specification
                                 </button>
 
-                                <!-- <button
+                                <button
                                     v-if="product.description"
                                     @click.prevent="scrollToSection('description')"
-                                    class="pb-4 text-sm font-semibold transition-all whitespace-nowrap border-b-2"
+                                    class="pb-4 text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
                                     :class="[
                                         activeTab === 'description'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                            ? 'border-black text-black'
+                                            : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300',
                                     ]"
                                 >
                                     Description
-                                </button> -->
+                                </button>
 
                                 <button
                                     @click.prevent="scrollToSection('reviews')"
-                                    class="pb-4 text-sm font-semibold transition-all whitespace-nowrap border-b-2"
+                                    class="pb-4 text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
                                     :class="[
                                         activeTab === 'reviews'
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                            ? 'border-black text-black'
+                                            : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300',
                                     ]"
                                 >
                                     Reviews ({{ reviews.length }})
@@ -450,20 +436,18 @@ onBeforeUnmount(() => {
                         </section>
 
                         <!-- Description -->
-                        <!-- <section
+                        <section
                             v-if="product.description"
                             ref="descriptionSection"
                             id="description"
                             class="mb-16 scroll-mt-28"
                         >
-                            <h2 class="text-2xl font-bold text-gray-900 mb-6">
-                                Descriptions
-                            </h2>
+                            <h2 class="text-2xl font-bold mb-6">Description</h2>
                             <div
-                                class="prose prose-lg max-w-none text-gray-600 leading-relaxed bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
+                                class="prose prose-sm max-w-none text-gray-600 leading-relaxed bg-white p-8 rounded-2xl border border-gray-100"
                                 v-html="product.description"
                             ></div>
-                        </section> -->
+                        </section>
 
                         <!-- Reviews (anchor target) -->
                         <section
@@ -471,6 +455,7 @@ onBeforeUnmount(() => {
                             id="reviews"
                             class="mb-16 scroll-mt-28"
                         >
+                            <h2 class="text-2xl font-bold mb-6">Customer Reviews</h2>
                             <ProductReviews
                                 :product-id="product.id"
                                 :reviews="reviews"
@@ -480,22 +465,41 @@ onBeforeUnmount(() => {
                         </section>
                     </div>
 
-                    <!-- recent view products (display as a vertical list on right side) -->
-                    <!-- recent view products (display as a vertical list on right side) -->
+                    <!-- side Column: Recently Viewed -->
                     <div
                         v-if="recentProducts && recentProducts.length"
-                        class="mt-6 w-full lg:w-1/3"
+                        class="w-full lg:w-1/4"
                     >
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                            Recently Viewed
-                        </h3>
-                        <div class="space-y-3">
-                            <div
-                                v-for="rp in recentProducts"
-                                :key="rp.id"
-                                class="flex items-center gap-3 bg-white rounded-lg border border-gray-100 p-3"
-                            >
-                                <ProductCardRelated :product="rp" />
+                        <div class="sticky top-24">
+                            <h3 class="text-lg font-bold text-gray-900 mb-6 uppercase tracking-wider">
+                                Recently Viewed
+                            </h3>
+                            <div class="space-y-6">
+                                <div 
+                                    v-for="recent in recentProducts" 
+                                    :key="recent.id"
+                                    class="flex gap-4 group cursor-pointer bg-white p-3 rounded-2xl border border-gray-100 hover:shadow-md transition-all"
+                                >
+                                    <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
+                                        <img 
+                                            :src="recent.feature_image" 
+                                            :alt="recent.name"
+                                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                    </div>
+                                    <div class="flex flex-col justify-center min-w-0">
+                                        <Link 
+                                            :href="route('product.details', recent.slug)"
+                                            class="text-sm font-bold text-gray-900 hover:text-black line-clamp-2 mb-1"
+                                        >
+                                            {{ recent.name }}
+                                        </Link>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-bold">৳{{ parseFloat(recent.price).toFixed(0) }}</span>
+                                            <span v-if="recent.previous_price" class="text-xs text-gray-400 line-through">৳{{ parseFloat(recent.previous_price).toFixed(0) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

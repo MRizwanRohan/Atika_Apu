@@ -47,7 +47,7 @@ const clearActive = () => {
         @mouseleave="clearActive"
     >
         <div class="container mx-auto px-4">
-            <ul class="flex items-center gap-1">
+            <ul class="flex items-center justify-center gap-1">
                 <li
                     v-for="category in parentCategories"
                     :key="category.id"

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import MessageOptions from './Footer/MessageOptions.vue';
 
 const props = defineProps({
     settings: {
@@ -158,5 +159,8 @@ const termsPage = computed(() => pagesList.value.find(p => p.slug === 'terms' ||
                 </div>
             </div>
         </div>
+
+        <!-- <MessageOptions /> -->
+
     </footer>
 </template>
