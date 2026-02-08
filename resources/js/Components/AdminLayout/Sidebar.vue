@@ -330,6 +330,11 @@ const navigationItems = [
                 route: "admin.product-groups.index",
                 permission: "admin.product-groups.index",
             },
+            {
+                label: "Product Videos",
+                route: "admin.product-videos.index",
+                permission: "admin.product-videos.index",
+            },
         ],
     },
     {

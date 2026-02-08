@@ -89,7 +89,7 @@ const handleOverlayClick = () => {
         >
             <!-- <pre>{{ recommendedProducts }}</pre> -->
             <!-- Left Side: YOU MAY ALSO LIKE -->
-            <div v-if="cartCount > 0" class="hidden md:flex flex-col w-[300px] border-r border-gray-100 bg-[#F9F9F9]" >
+            <div class="hidden md:flex flex-col w-[300px] border-r border-gray-100 bg-[#F9F9F9]" >
                 <div class="p-6 border-b border-gray-100 bg-white">
                     <h3 class="text-xs font-black uppercase font-heebo text-gray-900">You May Also Like</h3>
                 </div>

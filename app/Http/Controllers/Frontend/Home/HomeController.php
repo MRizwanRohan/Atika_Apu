@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Product\ProductService;
 use App\Services\ProductGroup\ProductGroupService;
 use App\Models\Slider;
+use App\Models\ProductVideo;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Product;
 
@@ -28,7 +29,7 @@ class HomeController extends Controller
         $activeCampaigns = $this->productService->getActiveCampaigns();
         $productGroups = $this->productGroupService->getAllWithProducts();
         $sliders = $this->sliders();
-        $productswithVideo = $this->productswithVideo();
+        $productVideos = $this->productVideos();
 
         // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [
@@ -36,7 +37,7 @@ class HomeController extends Controller
             'activeCampaigns' => $activeCampaigns,
             'productGroups' => $productGroups,
             'sliders' => $sliders,
-            'productswithVideo' => $productswithVideo,
+            'productswithVideo' => $productVideos,
         ]);
     }
 
@@ -49,15 +50,20 @@ class HomeController extends Controller
         return $sliders;
     }
 
-    private function productswithVideo()
+    private function productVideos()
     {
-        $products = Product::select('id', 'name', 'product_code', 'slug', 'price', 'previous_price', 'feature_image', 'upload_video')
-                    ->where('status', 'published')
-                    ->whereNotNull('upload_video')
-                    ->take(30)
-                    ->orderBy('created_at','desc')
-                    ->get();
-
-        return $products;
+        return ProductVideo::whereHas('product', function($query) {
+            $query->where('status', 'published');
+        })
+        ->with(['product' => function($query) {
+            $query->select('id', 'name', 'product_code', 'slug', 'price', 'previous_price', 'feature_image', 'type')
+                  ->with(['variations' => function($v) {
+                      $v->select('id', 'product_id', 'price');
+                  }]);
+        }])
+        ->whereNotNull('video')
+        ->orderBy('created_at', 'desc')
+        ->take(30)
+        ->get();
     }
 }

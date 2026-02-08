@@ -26,6 +26,16 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\ProductGroupRepositoryInterface::class,
             \App\Repository\ProductGroup\ProductGroupRepository::class
         );
+
+        $this->app->bind(
+            \App\Contracts\ProductVideoRepositoryInterface::class,
+            \App\Repository\ProductVideoRepository::class
+        );
+
+        $this->app->bind(
+            \App\Contracts\ProductVideoServiceInterface::class,
+            \App\Services\ProductVideoService::class
+        );
     }
 
     /**

@@ -64,6 +64,19 @@ const toggleLike = () => {
     }
 };
 
+const getDisplayPrice = (product) => {
+    if (!product) return 0;
+    
+    if (product.type === 'variable' && product.variations && product.variations.length > 0) {
+        const prices = product.variations.map(v => parseFloat(v.price)).filter(p => !isNaN(p));
+        if (prices.length > 0) {
+            return Math.min(...prices);
+        }
+    }
+    
+    return product.price;
+};
+
 // Get previous and next product indices
 const getPrevIndex = () => {
     return currentIndex.value === 0
@@ -106,13 +119,13 @@ onUnmounted(() => {
                 class="flex gap-1 md:gap-2 overflow-x-auto pb-6 snap-x hide-scrollbar"
             >
                 <div
-                    v-for="(product, index) in productswithVideo"
-                    :key="product.id"
+                    v-for="(item, index) in productswithVideo"
+                    :key="item.id"
                     @click="openModal(index)"
                     class="relative flex-none w-[45%] sm:w-[30%] md:w-[20%] aspect-[9/16] overflow-hidden cursor-pointer group snap-start rounded-lg"
                 >
                     <video
-                        :src="product.upload_video"
+                        :src="item.video"
                         class="w-full h-full object-cover"
                         autoplay
                         muted
@@ -166,20 +179,12 @@ onUnmounted(() => {
                         class="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 ml-24 h-[70vh] w-[330px] cursor-pointer group overflow-hidden rounded-2xl shadow-2xl transition-transform"
                     >
                         <video
-                            :src="productswithVideo[getPrevIndex()].upload_video"
+                            :src="productswithVideo[getPrevIndex()].video"
                             class="w-full h-full object-cover"
                             muted
                             loop
                             playsinline
                         ></video>
-                        <!-- <div
-                            class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-                        >
-                            <ChevronLeft
-                                :size="36"
-                                class="text-white drop-shadow-lg"
-                            />
-                        </div> -->
                     </div>
 
                     <!-- Center Video Container -->
@@ -188,7 +193,7 @@ onUnmounted(() => {
                     >
                         <video
                             :key="productswithVideo[currentIndex].id"
-                            :src="productswithVideo[currentIndex].upload_video"
+                            :src="productswithVideo[currentIndex].video"
                             class="w-full h-full object-cover"
                             autoplay
                             loop
@@ -205,40 +210,6 @@ onUnmounted(() => {
                             <VolumeX v-else :size="22" />
                         </button>
 
-                        <!-- Interaction Buttons (Right Side) -->
-                        <div
-                            class="absolute bottom-40 right-4 flex flex-col gap-6 items-center z-20"
-                        >
-                            <!-- Like Button -->
-                            <!-- <div class="flex flex-col items-center gap-1">
-                                <button
-                                    @click="toggleLike"
-                                    class="w-12 h-12 flex items-center justify-center rounded-full bg-black/40 hover:bg-red-500 backdrop-blur-md text-white transition-all hover:scale-110 active:scale-95"
-                                    :class="{ 'bg-red-500': isLiked }"
-                                >
-                                    <Heart
-                                        :size="24"
-                                        :fill="isLiked ? 'currentColor' : 'none'"
-                                    />
-                                </button>
-                                <span class="text-white text-sm font-bold">{{
-                                    likesCount
-                                }}</span>
-                            </div> -->
-
-                            <!-- Share Button -->
-                            <!-- <div class="flex flex-col items-center gap-1">
-                                <button
-                                    class="w-12 h-12 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white transition-all hover:scale-110"
-                                >
-                                    <Share2 :size="24" />
-                                </button>
-                                <span class="text-white text-sm font-bold">{{
-                                    sharesCount
-                                }}</span>
-                            </div> -->
-                        </div>
-
                         <!-- Product Card Overlay -->
                         <div class="absolute bottom-6 left-4 right-4 z-20">
                             <div
@@ -250,7 +221,7 @@ onUnmounted(() => {
                                     >
                                         <img
                                             :src="
-                                                productswithVideo[currentIndex]
+                                                productswithVideo[currentIndex].product
                                                     .feature_image
                                             "
                                             alt="Product"
@@ -262,26 +233,25 @@ onUnmounted(() => {
                                             class="text-gray-900 font-semibold text-sm leading-tight line-clamp-2"
                                         >
                                             {{
-                                                productswithVideo[currentIndex]
+                                                productswithVideo[currentIndex].product
                                                     .name
                                             }}
                                         </h4>
                                         <div
                                             class="inline-block bg-gray-900 text-white px-2.5 py-1 rounded mt-2 font-bold text-xs"
                                         >
-                                            ${{
-                                                productswithVideo[currentIndex]
-                                                    .price
-                                            }}
+                                            <span v-if="productswithVideo[currentIndex].product.type === 'variable'">Starts at </span>
+                                            ${{ getDisplayPrice(productswithVideo[currentIndex].product) }}
                                         </div>
                                     </div>
                                 </div>
 
-                                <button
+                                <Link
+                                    :href="route('product.details', productswithVideo[currentIndex].product.slug)"
                                     class="w-full bg-gray-900 hover:bg-black text-white text-center py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-colors"
                                 >
                                     SHOP NOW
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -301,20 +271,12 @@ onUnmounted(() => {
                         class="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 mr-24 h-[70vh] w-[330px] cursor-pointer group overflow-hidden rounded-2xl shadow-2xl transition-transform z-[-1] "
                     >
                         <video
-                            :src="productswithVideo[getNextIndex()].upload_video"
+                            :src="productswithVideo[getNextIndex()].video"
                             class="w-full h-full object-cover"
                             muted
                             loop
                             playsinline
                         ></video>
-                        <!-- <div
-                            class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-                        >
-                            <ChevronRight
-                                :size="36"
-                                class="text-white drop-shadow-lg"
-                            />
-                        </div> -->
                     </div>
 
                     <!-- Mobile Navigation Arrows -->

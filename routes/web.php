@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\Review\ReviewController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\Campaign\CampaignController;
 use App\Http\Controllers\Admin\CorporateClient\CorporateClientController;
+use App\Http\Controllers\Admin\Product\ProductVideoController;
 use App\Http\Controllers\Admin\Banner\BannerController;
 use App\Http\Controllers\Admin\ProductGroup\ProductGroupController;
 
@@ -99,6 +100,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::get('/reports', [InventoryManagementController::class, 'generateReport'])->name('reports.generateReport');
 
     Route::resource('products', ProductController::class);
+    Route::resource('product-videos', ProductVideoController::class);
     Route::post('/products/{id}/quick-edit', [ProductController::class, 'quickEdit'])->name('products.quick-edit');
     Route::resource('attributes', AttributeController::class);
     Route::post('/products/bulk-delete', [ProductController::class, 'bulkDeleteProducts'])->name('products.bulk-delete');
