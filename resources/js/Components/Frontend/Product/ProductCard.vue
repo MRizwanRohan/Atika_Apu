@@ -15,6 +15,7 @@ import {
 } from "lucide-vue-next";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 import { useCart } from "@/Composables/useCart";
+import { useMetaPixel } from "@/Composables/useMetaPixel";
 import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
 
 const props = defineProps({
@@ -29,6 +30,7 @@ const imageLoaded = ref(false);
 const { toggleWishlist, isInWishlist } = useWishlist();
 const { toggleCompare, isInCompare } = useCompare();
 const { addToCart: addToCartAction } = useCart();
+const { trackAddToCart: pixelTrackAddToCart } = useMetaPixel();
 const showOptions = ref(false);
 const showQuickView = ref(false);
 const selectedAttributes = ref({});
@@ -157,6 +159,9 @@ const performAddToCart = () => {
             addingToCart.value = false;
             showOptions.value = false;
             quantity.value = 1;
+            // Track AddToCart via Meta Pixel (fbq)
+            const matchedVariation = isVariable.value ? getMatchingVariation() : null;
+            pixelTrackAddToCart(props.product, matchedVariation, quantity.value);
         },
         onError: () => {
             addingToCart.value = false;

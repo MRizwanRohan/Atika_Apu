@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
+use App\Events\OrderUpdated;
 use App\Services\Order\OrderInterface;
 use App\Services\Product\ProductService;
 use App\Exceptions\InvalidOrderDataException;
@@ -76,17 +77,18 @@ class OrderController extends Controller
 
         $statusCounts = $this->orderService->getStatusCounts();
 
-        //$cities = $this->pathaoService->getCities();
-
-
-        //return $orders;
-
-        //return $statusCounts;
+        // Collect IDs of current page orders that already have a sent Purchase event
+        $orderIds = collect($orders->items())->pluck('id');
+        $sentOrderIds = \App\Models\MetaEventLog::whereIn('order_id', $orderIds)
+            ->where('event_name', 'Purchase')
+            ->where('status', 'sent')
+            ->pluck('order_id')
+            ->toArray();
 
         return Inertia::render('Admin/Orders/Index', [
-            'orders' => $orders,
+            'orders'       => $orders,
             'statusCounts' => $statusCounts,
-            // 'cities' => $cities,
+            'sentOrderIds' => $sentOrderIds,
         ]);
     }
 
@@ -363,7 +365,8 @@ class OrderController extends Controller
 
         $this->orderService->calculateOrderTotals($order);
 
-
+        // Dispatch so Meta CAPI listener can react to status changes
+        event(new OrderUpdated($order->fresh()));
 
         Cache::flush();
 

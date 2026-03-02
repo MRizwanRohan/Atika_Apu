@@ -1345,6 +1345,9 @@ class OrderService implements OrderInterface
         // Update the order status
         $order->update(['status' => $newStatus]);
 
+        // Dispatch event so Meta CAPI and other listeners can react
+        event(new OrderUpdated($order));
+
         return $order;
     }
 

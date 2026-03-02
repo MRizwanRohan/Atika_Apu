@@ -27,6 +27,10 @@ const props = defineProps({
     orders: Object,
     statusCounts: Object,
     cities: Array,
+    sentOrderIds: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const showDeleteModal = ref(false);
@@ -42,6 +46,61 @@ const loading = ref(false);
 const isDownloading = ref(false); // New loading state for invoice download
 const showAdminNotesModal = ref(false);
 const selectedOrderForNotes = ref(null);
+
+// ── Meta Tracking ──────────────────────────────────────────
+const metaFiringOrderId = ref(null);
+const isBulkFiringMeta = ref(false);
+// Tracks orders that have had a Purchase event sent (merges server + session state)
+const localSentOrderIds = ref(new Set(props.sentOrderIds));
+
+async function fireMetaEvent(order) {
+    metaFiringOrderId.value = order.id;
+    try {
+        const { data } = await axios.post(
+            route("admin.meta-tracking.orders.fire", order.id)
+        );
+        if (data.success) {
+            localSentOrderIds.value.add(order.id);
+            localSentOrderIds.value = new Set(localSentOrderIds.value); // trigger reactivity
+            toast.success("Purchase event sent to Meta! ✅");
+        } else {
+            toast.error(data.message || "Could not fire event.");
+        }
+    } catch (err) {
+        const msg = err.response?.data?.message || "Failed to fire Meta event.";
+        toast.error(msg);
+    } finally {
+        metaFiringOrderId.value = null;
+    }
+}
+
+async function bulkFireMetaEvent() {
+    if (selectedOrders.value.length === 0) {
+        toast.error("No orders selected.");
+        return;
+    }
+    isBulkFiringMeta.value = true;
+    try {
+        const { data } = await axios.post(
+            route("admin.meta-tracking.orders.bulk-fire"),
+            { order_ids: selectedOrders.value }
+        );
+        // Mark all newly sent orders with badge
+        data.sent.forEach((id) => localSentOrderIds.value.add(id));
+        localSentOrderIds.value = new Set(localSentOrderIds.value);
+
+        const parts = [];
+        if (data.sent_count)    parts.push(`${data.sent_count} sent`);
+        if (data.skipped_count) parts.push(`${data.skipped_count} skipped (already sent)`);
+        if (data.failed_count)  parts.push(`${data.failed_count} failed`);
+        toast.success(`Meta Bulk Fire: ${parts.join(", ")} ✅`);
+    } catch (err) {
+        toast.error(err.response?.data?.message || "Bulk fire failed.");
+    } finally {
+        isBulkFiringMeta.value = false;
+    }
+}
+// ───────────────────────────────────────────────────────────
 
 // Pagination computed values
 const currentPage = ref(props.orders.current_page || 1);
@@ -869,6 +928,16 @@ const handleNotesSaved = (newNotes) => {
             <div class="mb-6 flex justify-end items-center space-x-2">
                 <button
                     v-if="selectedOrders.length > 0"
+                    @click="bulkFireMetaEvent"
+                    :disabled="isBulkFiringMeta"
+                    class="px-2 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800 disabled:opacity-60 flex items-center gap-1"
+                >
+                    <span v-if="isBulkFiringMeta" class="loading loading-spinner loading-xs"></span>
+                    <span v-else>📡</span>
+                    {{ isBulkFiringMeta ? 'Sending...' : `Send ${selectedOrders.length} to Meta` }}
+                </button>
+                <button
+                    v-if="selectedOrders.length > 0"
                     @click="sendBulkToSteadfast"
                     class="px-2 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600"
                     :disabled="isDownloading"
@@ -1032,6 +1101,14 @@ const handleNotesSaved = (newNotes) => {
                                         N
                                     </span>
                                 </p>
+                                <!-- Meta event sent badge -->
+                                <span
+                                    v-if="localSentOrderIds.has(order.id)"
+                                    class="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800 border border-blue-300"
+                                    title="Purchase event sent to Meta"
+                                >
+                                    📡 Meta Sent
+                                </span>
                                 <p class="mt-1 text-black flex items-center gap-1">
                                     <span v-if="isToday(order.date)" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-800 border border-green-300">
                                         TODAY
@@ -1363,6 +1440,21 @@ const handleNotesSaved = (newNotes) => {
                                                 <SquarePen class="w-4 h-4" />
                                                 Edit Order
                                             </Link>
+
+                                            <div
+                                                class="border-t border-gray-100 my-1"
+                                            ></div>
+
+                                            <!-- ── Meta Tracking Actions ── -->
+                                            <button
+                                                @click="fireMetaEvent(order); toggleActionMenu(order.id);"
+                                                :disabled="metaFiringOrderId === order.id"
+                                                class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"
+                                            >
+                                                <span v-if="metaFiringOrderId === order.id" class="loading loading-spinner loading-xs"></span>
+                                                <span v-else>📡</span>
+                                                Send to Meta
+                                            </button>
 
                                             <div
                                                 class="border-t border-gray-100 my-1"

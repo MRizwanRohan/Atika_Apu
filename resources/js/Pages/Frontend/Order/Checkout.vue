@@ -6,6 +6,7 @@ import { useCart } from "@/Composables/useCart";
 import { useToast } from "@/Composables/useToast";
 import axios from "axios";
 import { trackCheckout, trackPurchase } from "@/Composables/gtm";
+import { useMetaPixel } from "@/Composables/useMetaPixel";
 
 const toast = useToast();
 
@@ -272,8 +273,12 @@ const submitOrder = () => {
 
 
 
+const { trackInitiateCheckout } = useMetaPixel();
+
 onMounted(() => {
     trackCheckout(props.cart);
+    // Track InitiateCheckout via Meta Pixel (fbq)
+    trackInitiateCheckout(props.cart);
 });
 
 

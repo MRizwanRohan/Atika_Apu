@@ -36,6 +36,16 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\ProductVideoServiceInterface::class,
             \App\Services\ProductVideoService::class
         );
+
+        // Meta Conversion API
+        $this->app->bind(
+            \App\Contracts\MetaConversionInterface::class,
+            \App\Services\MetaConversion\MetaConversionService::class
+        );
+
+        $this->app->singleton(
+            \App\Services\MetaConversion\MetaConversionService::class
+        );
     }
 
     /**

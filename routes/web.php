@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\Campaign\CampaignController;
 use App\Http\Controllers\Admin\CorporateClient\CorporateClientController;
 use App\Http\Controllers\Admin\Product\ProductVideoController;
 use App\Http\Controllers\Admin\Banner\BannerController;
+use App\Http\Controllers\Admin\MetaTracking\MetaTrackingController;
 use App\Http\Controllers\Admin\ProductGroup\ProductGroupController;
 
 /*
@@ -217,7 +218,22 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::get('/transaction-history/export-csv', [App\Http\Controllers\Admin\TransactionHistoryController::class, 'exportCsv'])->name('transaction-history.export-csv');
     Route::get('/transaction-history/export-pdf', [App\Http\Controllers\Admin\TransactionHistoryController::class, 'exportPdf'])->name('transaction-history.export-pdf');
 
+    // ── Meta Tracking ─────────────────────────────────────────────
+    Route::prefix('meta-tracking')->name('meta-tracking.')->group(function () {
+        Route::get('/settings', [MetaTrackingController::class, 'settingsIndex'])->name('settings');
+        Route::post('/settings', [MetaTrackingController::class, 'settingsUpdate'])->name('settings.update');
+        Route::post('/test-event', [MetaTrackingController::class, 'sendTestEvent'])->name('test-event');
+        Route::get('/logs', [MetaTrackingController::class, 'logsIndex'])->name('logs');
+        Route::post('/orders/bulk-fire', [MetaTrackingController::class, 'bulkFire'])->name('orders.bulk-fire');
+        Route::post('/orders/{order}/fire', [MetaTrackingController::class, 'manualFire'])->name('orders.fire');
+        Route::post('/orders/{order}/resend', [MetaTrackingController::class, 'resend'])->name('orders.resend');
+        Route::get('/orders/{order}/status', [MetaTrackingController::class, 'orderStatus'])->name('orders.status');
+    });
+
 });
+
+// Public endpoint: pixel config for frontend (no auth needed)
+Route::get('/api/meta/pixel-config', [MetaTrackingController::class, 'pixelConfig'])->name('meta.pixel-config');
 
 
 // route group for guest user

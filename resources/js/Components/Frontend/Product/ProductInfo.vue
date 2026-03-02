@@ -8,6 +8,7 @@ import { GitCompare, Truck } from "lucide-vue-next";
 import { router, usePage } from "@inertiajs/vue3";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 import { trackViewItem, trackAddToCart } from "@/Composables/gtm";
+import { useMetaPixel } from "@/Composables/useMetaPixel";
 
 const props = defineProps({
     product: {
@@ -22,6 +23,7 @@ const props = defineProps({
 
 // Use centralized cart composable
 const { addToCart: addToCartAction, isLoading: cartLoading } = useCart();
+const { trackViewContent, trackAddToCart: pixelTrackAddToCart } = useMetaPixel();
 const { toggleWishlist, isInWishlist } = useWishlist();
 const { toggleCompare, isInCompare } = useCompare();
 const { warning, error } = useToast();
@@ -375,6 +377,8 @@ const addToCart = () => {
             isAddingToCart.value = false;
             // Track add_to_cart in Google Tag Manager
             trackAddToCart(props.product, matchingVariation, quantity.value);
+            // Track add_to_cart via Meta Pixel (fbq)
+            pixelTrackAddToCart(props.product, matchingVariation, quantity.value);
         },
         onError: () => {
             isAddingToCart.value = false;
@@ -420,6 +424,8 @@ const buyNow = () => {
         onSuccess: () => {
             isAddingToCart.value = false;
             trackAddToCart(props.product, matchingVariation, quantity.value);
+            // Track add_to_cart via Meta Pixel (fbq)
+            pixelTrackAddToCart(props.product, matchingVariation, quantity.value);
             router.visit("/order/checkout");
         },
         onError: () => {
@@ -530,6 +536,8 @@ watch(
             //console.log("Tracking view_item for:", newProduct);
             // Pass the computed main price for accurate ecommerce value
             trackViewItem(newProduct, pricing.value.main);
+            // Track ViewContent via Meta Pixel (fbq)
+            trackViewContent(newProduct, pricing.value.main);
         }
     },
     { immediate: true }, // Run immediately if product is already loaded

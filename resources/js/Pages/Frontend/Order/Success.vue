@@ -1,17 +1,38 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import FrontendLayout from '@/Layouts/FrontendLayout.vue';
+import { useMetaPixel } from '@/Composables/useMetaPixel';
 
 const props = defineProps({
     order: {
         type: Object,
         required: true
+    },
+    // Server-generated event_id for Pixel+CAPI deduplication
+    meta_event_id: {
+        type: String,
+        default: null
+    },
+    // Only true when purchase_fire_mode === 'on_order_created'
+    fire_pixel_now: {
+        type: Boolean,
+        default: false
     }
 });
 
 const page = usePage();
 const isAuthenticated = computed(() => !!page.props.auth?.user);
+
+const { trackPurchase } = useMetaPixel();
+
+// Fire Purchase Pixel only when mode is on_order_created.
+// For on_confirmed / on_delivered, CAPI handles it server-side when admin acts.
+onMounted(() => {
+    if (props.fire_pixel_now) {
+        trackPurchase(props.order, props.meta_event_id);
+    }
+});
 
 // Format date
 const formatDate = (dateString) => {

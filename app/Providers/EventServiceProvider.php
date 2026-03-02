@@ -7,6 +7,8 @@ use App\Events\OrderUpdated;
 use App\Listeners\ClearOrderCache;
 use App\Listeners\CreateOrderNotificationRecord;
 use App\Listeners\ClearOrderUpdateCache;
+use App\Listeners\SendMetaConversionOnOrderCreated;
+use App\Listeners\SendMetaConversionOnOrderUpdated;
 use Illuminate\Support\ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -24,11 +26,13 @@ class EventServiceProvider extends ServiceProvider
         OrderCreated::class => [
             ClearOrderCache::class,
             CreateOrderNotificationRecord::class,
+            SendMetaConversionOnOrderCreated::class,
         ],
 
         // Add other events and listeners here
         OrderUpdated::class => [
             ClearOrderUpdateCache::class,
+            SendMetaConversionOnOrderUpdated::class,
         ],
     ];
     public function register(): void

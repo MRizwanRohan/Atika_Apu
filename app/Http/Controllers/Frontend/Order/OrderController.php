@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend\Order;
 use App\Http\Controllers\Controller;
 use App\Services\Order\OrderInterface;
 use App\Services\Cart\CartService;
+use App\Services\MetaConversion\MetaConversionService;
 use App\Http\Resources\Cart\CartResource;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,11 +15,16 @@ class OrderController extends Controller
 {
     protected $orderService;
     protected $cartService;
+    protected $metaService;
 
-    public function __construct(OrderInterface $orderService, CartService $cartService)
-    {
+    public function __construct(
+        OrderInterface $orderService,
+        CartService $cartService,
+        MetaConversionService $metaService
+    ) {
         $this->orderService = $orderService;
-        $this->cartService = $cartService;
+        $this->cartService  = $cartService;
+        $this->metaService  = $metaService;
     }
 
     /**
@@ -111,8 +117,22 @@ class OrderController extends Controller
             ])
             ->firstOrFail();
 
+        // Generate the same event_id the CAPI job will use (for Pixel deduplication)
+        $metaEventId = $this->metaService->generateEventId(
+            $orderData->order_number,
+            'Purchase'
+        );
+
+        // Browser-side pixel Purchase should only fire when mode is on_order_created.
+        // For on_confirmed / on_delivered, CAPI fires later (server-side only).
+        $settings = \App\Models\TrackingSettings::getSettings();
+        $firePixelNow = $settings->pixel_enabled
+            && in_array($settings->purchase_fire_mode, ['on_order_created']);
+
         return Inertia::render('Frontend/Order/Success', [
-            'order' => $orderData
+            'order'          => $orderData,
+            'meta_event_id'  => $metaEventId,
+            'fire_pixel_now' => $firePixelNow,
         ]);
     }
     /**

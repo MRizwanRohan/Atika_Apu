@@ -511,6 +511,11 @@ const navigationItems = [
                 route: "admin.marketing-tools.index",
                 permission: "admin.marketing-tools.index",
             },
+            {
+                label: "Meta Tracking",
+                route: "admin.meta-tracking.settings",
+                permission: "admin.meta-tracking.settings",
+            },
         ],
     },
 ];
