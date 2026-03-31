@@ -500,6 +500,11 @@ const navigationItems = [
                 route: "admin.banners.index",
                 permission: "admin.banners.index",
             },
+            {
+                label: "Instagram Feed",
+                route: "admin.instagram-feeds.index",
+                permission: "admin.instagram-feeds.index",
+            },
             // { label: "Promotional Sliders", route: "admin.promotional-sliders.index", permission: "admin.promotional-sliders.index" },
             {
                 label: "Social Links",

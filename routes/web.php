@@ -41,6 +41,7 @@ use App\Http\Controllers\Admin\Product\ProductVideoController;
 use App\Http\Controllers\Admin\Banner\BannerController;
 use App\Http\Controllers\Admin\MetaTracking\MetaTrackingController;
 use App\Http\Controllers\Admin\ProductGroup\ProductGroupController;
+use App\Http\Controllers\Admin\InstagramFeed\InstagramFeedController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,6 +141,9 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::delete('/banners/random-banner', [BannerController::class, 'deleteRandomBanner']);
     Route::delete('/banners/delete-banner', [BannerController::class, 'deleteBanner']);
     Route::delete('/banners/random-banner-image', [BannerController::class, 'deleteRandomBannerImage'])->name('admin.banners.delete-random-image');
+    Route::resource('instagram-feeds', InstagramFeedController::class);
+    Route::put('/instagram-feeds/{id}/status', [InstagramFeedController::class, 'toggleStatus'])->name('instagram-feeds.toggleStatus');
+    Route::post('/instagram-feeds/reorder', [InstagramFeedController::class, 'reorder'])->name('instagram-feeds.reorder');
 
 
     // GeneralSetting

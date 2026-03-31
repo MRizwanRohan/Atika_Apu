@@ -293,22 +293,6 @@ onMounted(() => {
              <!-- <pre>{{ cart }}</pre> -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Page Header -->
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900">Checkout</h1>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Complete your order by filling in the details below.
-                    </p>
-                    <!-- Mobile quick coupon action -->
-                    <div class="mt-4 lg:hidden">
-                        <button
-                            type="button"
-                            @click="focusCoupon"
-                            class="inline-flex items-center px-3 py-2 bg-primary text-white rounded-md text-sm"
-                        >
-                            Have a coupon? Apply
-                        </button>
-                    </div>
-                </div>
 
                 <!-- Empty Cart Message -->
                 <div
@@ -472,10 +456,42 @@ onMounted(() => {
                                             Bangladesh format: 01XXXXXXXXX
                                         </p>
                                     </div>
+
+                                    <!-- Full Address (Moved here) -->
+                                    <div class="md:col-span-2">
+                                        <label
+                                            for="shipping_address"
+                                            class="block text-sm font-medium text-gray-700 mb-1"
+                                        >
+                                            Full Address
+                                            <span class="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            id="shipping_address"
+                                            v-model="form.shipping_address"
+                                            rows="2"
+                                            placeholder="House no, Road, Area, District"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
+                                            :class="{
+                                                'border-red-500':
+                                                    form.errors.shipping_address,
+                                            }"
+                                            required
+                                        ></textarea>
+                                        <p
+                                            v-if="form.errors.shipping_address"
+                                            class="mt-1 text-sm text-red-500"
+                                        >
+                                            {{ form.errors.shipping_address }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Shipping Information Card -->
+                            <!-- Payment Method Card (Address removed from here) -->
+
+
+                            <!-- Shipping Information Card (Only Notes left here) -->
                             <div
                                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
                             >
@@ -501,110 +517,11 @@ onMounted(() => {
                                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                         />
                                     </svg>
-                                    Shipping Address
+                                    Delivery Note
                                 </h2>
 
-                                <!-- Delivery Area Selection -->
-                                <div class="mb-4">
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Delivery Area</label
-                                    >
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <label
-                                            class="relative flex items-center p-4 border rounded-lg cursor-pointer transition-all"
-                                            :class="
-                                                form.area === 'inside_dhaka'
-                                                    ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                                                    : 'border-gray-300 hover:border-gray-400'
-                                            "
-                                        >
-                                            <input
-                                                type="radio"
-                                                v-model="form.area"
-                                                value="inside_dhaka"
-                                                class="sr-only"
-                                            />
-                                            <div>
-                                                <span
-                                                    class="block font-medium text-gray-900"
-                                                    >Inside Dhaka</span
-                                                >
-                                                <span
-                                                    class="block text-sm text-gray-500"
-                                                    >৳{{
-                                                        settings
-                                                            ?.generalSettings
-                                                            ?.shipping_charge_inside_dhaka ||
-                                                        60
-                                                    }}</span
-                                                >
-                                            </div>
-                                        </label>
-                                        <label
-                                            class="relative flex items-center p-4 border rounded-lg cursor-pointer transition-all"
-                                            :class="
-                                                form.area === 'outside_dhaka'
-                                                    ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                                                    : 'border-gray-300 hover:border-gray-400'
-                                            "
-                                        >
-                                            <input
-                                                type="radio"
-                                                v-model="form.area"
-                                                value="outside_dhaka"
-                                                class="sr-only"
-                                            />
-                                            <div>
-                                                <span
-                                                    class="block font-medium text-gray-900"
-                                                    >Outside Dhaka</span
-                                                >
-                                                <span
-                                                    class="block text-sm text-gray-500"
-                                                    >৳{{
-                                                        settings
-                                                            ?.generalSettings
-                                                            ?.shipping_charge_outside_dhaka ||
-                                                        120
-                                                    }}</span
-                                                >
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Full Address -->
-                                <div>
-                                    <label
-                                        for="shipping_address"
-                                        class="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        Full Address
-                                        <span class="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        id="shipping_address"
-                                        v-model="form.shipping_address"
-                                        rows="3"
-                                        placeholder="House no, Road, Area, District"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
-                                        :class="{
-                                            'border-red-500':
-                                                form.errors.shipping_address,
-                                        }"
-                                        required
-                                    ></textarea>
-                                    <p
-                                        v-if="form.errors.shipping_address"
-                                        class="mt-1 text-sm text-red-500"
-                                    >
-                                        {{ form.errors.shipping_address }}
-                                    </p>
-                                </div>
-
                                 <!-- Customer Notes -->
-                                <div class="mt-4">
+                                <div>
                                     <label
                                         for="customer_notes"
                                         class="block text-sm font-medium text-gray-700 mb-1"
@@ -976,6 +893,38 @@ onMounted(() => {
                                             cart.data.coupon_code
                                         }}</strong>
                                     </span>
+                                </div>
+                            </div>
+
+                            <!-- Delivery Area Selection (Compact Radio Buttons) -->
+                            <div class="mt-4 pb-4 border-b border-gray-100">
+                                <label
+                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2"
+                                    >Delivery Area</label
+                                >
+                                <div class="flex gap-4">
+                                    <label class="flex items-center cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            v-model="form.area"
+                                            value="inside_dhaka"
+                                            class="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+                                        />
+                                        <span class="ml-2 text-sm text-gray-700 group-hover:text-primary transition-colors">
+                                            Inside Dhaka (৳{{ settings?.generalSettings?.shipping_charge_inside_dhaka || 60 }})
+                                        </span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            v-model="form.area"
+                                            value="outside_dhaka"
+                                            class="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+                                        />
+                                        <span class="ml-2 text-sm text-gray-700 group-hover:text-primary transition-colors">
+                                            Outside Dhaka (৳{{ settings?.generalSettings?.shipping_charge_outside_dhaka || 120 }})
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
 
