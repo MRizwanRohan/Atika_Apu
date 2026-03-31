@@ -119,9 +119,6 @@ class InstagramFeedController extends Controller
 
         $this->service->reorder($request->ids);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order updated successfully.'
-        ]);
+        return back()->with('success', 'Order updated successfully.');
     }
 }

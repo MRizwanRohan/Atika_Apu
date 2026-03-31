@@ -194,7 +194,7 @@ const injectMarketingTools = () => {
         </main>
 
         <!-- Footer -->
-        <FrontendFooter :settings="settings" :pages="pages" />
+        <FrontendFooter :settings="settings" :pages="pages" :categories="categories" />
 
         <!-- Toast Notifications -->
         <Toast />

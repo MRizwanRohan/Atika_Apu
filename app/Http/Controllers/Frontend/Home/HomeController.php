@@ -12,6 +12,8 @@ use App\Models\ProductVideo;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Product;
 
+use App\Models\InstagramFeed;
+
 class HomeController extends Controller
 {
     public function __construct(
@@ -30,6 +32,7 @@ class HomeController extends Controller
         $productGroups = $this->productGroupService->getAllWithProducts();
         $sliders = $this->sliders();
         $productVideos = $this->productVideos();
+        $instagramFeeds = InstagramFeed::active()->orderBy('sort_order', 'asc')->get();
 
         // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [
@@ -38,6 +41,7 @@ class HomeController extends Controller
             'productGroups' => $productGroups,
             'sliders' => $sliders,
             'productswithVideo' => $productVideos,
+            'instagramFeeds' => $instagramFeeds,
         ]);
     }
 

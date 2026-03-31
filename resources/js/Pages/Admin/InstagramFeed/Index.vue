@@ -30,71 +30,74 @@
                                         <th class="px-4 py-4 font-medium text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                    <tr 
-                                        v-for="(feed, index) in localFeeds" 
-                                        :key="feed.id" 
-                                        class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group cursor-move"
-                                        draggable="true"
-                                        @dragstart="onDragStart(index)"
-                                        @dragover="onDragOver"
-                                        @drop="onDrop(index)"
-                                    >
-                                        <td class="px-4 py-4">
-                                            <div class="text-gray-300 group-hover:text-gray-500 transition-colors">
-                                                <GripVertical class="w-5 h-5" />
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <div class="flex items-center">
-                                                <div class="h-16 w-16 flex-shrink-0">
-                                                    <img v-if="feed.image" :src="feed.image" class="h-16 w-16 rounded-lg object-cover shadow-sm ring-1 ring-gray-100 dark:ring-gray-700" alt="" />
-                                                    <div v-else class="h-16 w-16 bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg border border-gray-100 dark:border-gray-600">
-                                                        <Instagram class="w-8 h-8 text-gray-300 dark:text-gray-500" />
+                                <draggable 
+                                    v-model="localFeeds" 
+                                    tag="tbody" 
+                                    item-key="id" 
+                                    handle=".drag-handle"
+                                    @end="onDragEnd"
+                                    class="divide-y divide-gray-100 dark:divide-gray-700"
+                                >
+                                    <template #item="{ element }">
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
+                                            <td class="px-4 py-4">
+                                                <div class="drag-handle cursor-move text-gray-300 group-hover:text-gray-500 transition-colors">
+                                                    <GripVertical class="w-5 h-5" />
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <div class="flex items-center">
+                                                    <div class="h-16 w-16 flex-shrink-0">
+                                                        <img v-if="element.image" :src="element.image" class="h-16 w-16 rounded-lg object-cover shadow-sm ring-1 ring-gray-100 dark:ring-gray-700" alt="" />
+                                                        <div v-else class="h-16 w-16 bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg border border-gray-100 dark:border-gray-600">
+                                                            <Instagram class="w-8 h-8 text-gray-300 dark:text-gray-500" />
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <a :href="feed.link" target="_blank" class="text-blue-500 hover:text-blue-600 text-sm truncate max-w-xs block font-medium">
-                                                {{ feed.link || '---' }}
-                                            </a>
-                                        </td>
-                                        <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                            <span class="inline-flex items-center px-2 py-1 bg-gray-50 dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 font-mono text-xs">
-                                                {{ feed.sort_order }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-4 text-center">
-                                            <button 
-                                                @click="toggleStatus(feed.id)"
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200"
-                                                :class="feed.status ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
-                                            >
-                                                <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="feed.status ? 'bg-green-500' : 'bg-red-500'"></span>
-                                                {{ feed.status ? 'Active' : 'Inactive' }}
-                                            </button>
-                                        </td>
-                                        <td class="px-4 py-4 text-right">
-                                            <div class="flex items-center justify-end space-x-1">
-                                                <Link
-                                                    :href="route('admin.instagram-feeds.edit', feed.id)"
-                                                    class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                    title="Edit"
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <a :href="element.link" target="_blank" class="text-blue-500 hover:text-blue-600 text-sm truncate max-w-xs block font-medium">
+                                                    {{ element.link || '---' }}
+                                                </a>
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                                <span class="inline-flex items-center px-2 py-1 bg-gray-50 dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 font-mono text-xs">
+                                                    {{ element.sort_order }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-4 text-center">
+                                                <button 
+                                                    @click="toggleStatus(element.id)"
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200"
+                                                    :class="element.status ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
                                                 >
-                                                    <Edit class="w-5 h-5" />
-                                                </Link>
-                                                <button
-                                                    @click="openDeleteModal(feed.id)"
-                                                    class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 class="w-5 h-5" />
+                                                    <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="element.status ? 'bg-green-500' : 'bg-red-500'"></span>
+                                                    {{ element.status ? 'Active' : 'Inactive' }}
                                                 </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="localFeeds.length === 0">
+                                            </td>
+                                            <td class="px-4 py-4 text-right">
+                                                <div class="flex items-center justify-end space-x-1">
+                                                    <Link
+                                                        :href="route('admin.instagram-feeds.edit', element.id)"
+                                                        class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit class="w-5 h-5" />
+                                                    </Link>
+                                                    <button
+                                                        @click="openDeleteModal(element.id)"
+                                                        class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 class="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </draggable>
+                                <tbody v-if="localFeeds.length === 0">
+                                    <tr>
                                         <td colspan="6" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
                                             <div class="flex flex-col items-center">
                                                 <Instagram class="w-12 h-12 mb-3 opacity-20" />
@@ -128,7 +131,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import DeleteModal from '@/Components/Modal/DeleteModal.vue';
 import { Plus, Edit, Trash2, Instagram, GripVertical } from 'lucide-vue-next';
-import axios from 'axios';
+import draggable from 'vuedraggable';
 import { toast } from "@steveyuowo/vue-hot-toast";
 
 const props = defineProps({
@@ -141,45 +144,29 @@ watch(() => props.feeds, (newVal) => {
     localFeeds.value = [...newVal];
 }, { deep: true });
 
-// Drag and drop state
-const draggedItemIndex = ref(null);
-
-const onDragStart = (index) => {
-    draggedItemIndex.value = index;
-};
-
-const onDragOver = (event) => {
-    event.preventDefault();
-};
-
-const onDrop = (index) => {
-    const items = [...localFeeds.value];
-    const draggedItem = items.splice(draggedItemIndex.value, 1)[0];
-    items.splice(index, 0, draggedItem);
-    
+const onDragEnd = () => {
     // Update local order indices visually for immediate feedback
-    items.forEach((item, i) => {
+    localFeeds.value.forEach((item, i) => {
         item.sort_order = i;
     });
-
-    localFeeds.value = items;
-    draggedItemIndex.value = null;
     
     // Save new order
     saveOrder();
 };
 
-const saveOrder = async () => {
-    try {
-        const ids = localFeeds.value.map(item => item.id);
-        const response = await axios.post(route('admin.instagram-feeds.reorder'), { ids });
-        if (response.data.success) {
-            toast.success(response.data.message);
+const saveOrder = () => {
+    const ids = localFeeds.value.map(item => item.id);
+    
+    router.post(route('admin.instagram-feeds.reorder'), { ids }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            toast.success('Order updated successfully');
+        },
+        onError: () => {
+            toast.error('Failed to update order');
         }
-    } catch (error) {
-        toast.error('Failed to update order');
-        router.reload();
-    }
+    });
 };
 
 const showDeleteModal = ref(false);

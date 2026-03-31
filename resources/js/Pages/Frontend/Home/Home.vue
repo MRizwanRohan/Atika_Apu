@@ -10,6 +10,7 @@ import GsapSlider from "@/Components/Frontend/Slider/GsapSlider.vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
 import ProductsGroup from "@/Components/Frontend/Home/ProductsGroup.vue";
+import InstagramFeed from "@/Components/Frontend/Home/InstagramFeed.vue";
 import { computed, toRef } from "vue";
 
 defineOptions({
@@ -42,6 +43,10 @@ const props = defineProps({
         default: () => ({}),
     },
     productswithVideo: {
+        type: Array,
+        default: () => [],
+    },
+    instagramFeeds: {
         type: Array,
         default: () => [],
     },
@@ -198,6 +203,7 @@ const pageTitle = computed(
             </div>
         </div>
     </section> -->
+    <InstagramFeed :instagramFeeds="instagramFeeds" :settings="settings" />
     <!-- Features Section -->
     <!-- <Features /> -->
 </template>
