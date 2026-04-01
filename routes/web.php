@@ -242,6 +242,7 @@ Route::get('/api/meta/pixel-config', [MetaTrackingController::class, 'pixelConfi
 
 // route group for guest user
 Route::put('/orders/{orderId}/status', [OrderController::class, 'OderupdateStatus']);
+Route::put('/orders/{orderId}/partial-delivery', [OrderController::class, 'processPartialDelivery'])->name('orders.partial-delivery');
 
 
 

@@ -22,6 +22,7 @@ import axios from "axios";
 import StatusDropdown from "@/Components/Order/StatusDropdown.vue";
 import FraudCheckerModal from "@/Components/Couriers/FraudCheckerModal.vue";
 import AdminNotesModal from "@/Components/Order/AdminNotesModal.vue";
+import PartialDeliveryModal from "@/Components/Order/PartialDeliveryModal.vue";
 
 const props = defineProps({
     orders: Object,
@@ -46,6 +47,9 @@ const loading = ref(false);
 const isDownloading = ref(false); // New loading state for invoice download
 const showAdminNotesModal = ref(false);
 const selectedOrderForNotes = ref(null);
+
+const showPartialModal = ref(false);
+const selectedOrderForPartial = ref(null);
 
 // ── Meta Tracking ──────────────────────────────────────────
 const metaFiringOrderId = ref(null);
@@ -300,8 +304,9 @@ const statusOptions = [
     "incomplete",
     "on_hold",
     "confirmed",
+    "partially_delivered",
 ];
-const paymentStatusOptions = ["unpaid", "paid", "refunded"];
+const paymentStatusOptions = ["unpaid", "paid", "refunded", "partially_paid"];
 const availableStatuses = [
     "pending",
     "processing",
@@ -312,6 +317,7 @@ const availableStatuses = [
     "incomplete",
     "on_hold",
     "confirmed",
+    "partially_delivered",
 ];
 
 // Helper to determine if a date string is today (date portion only)
@@ -473,6 +479,17 @@ const updatingOrders = ref({});
 
 // Status update function using Composition API
 const updateOrderStatus = async (orderId, newStatus) => {
+    if (newStatus === "partially_delivered" || newStatus === "returned") {
+        const order = props.orders?.data?.find(o => o.id === orderId);
+        if (order) {
+            selectedOrderForPartial.value = order;
+            showPartialModal.value = true;
+        } else {
+            toast.error("Order details not found.");
+        }
+        return; // Stop here, modal will handle the rest
+    }
+
     updatingOrders.value[orderId] = true;
 
     try {
@@ -560,6 +577,11 @@ const toggleActionMenu = (orderId) => {
 const openAdminNotesModal = (order) => {
     selectedOrderForNotes.value = order;
     showAdminNotesModal.value = true;
+};
+
+const openPartialModal = (order) => {
+    selectedOrderForPartial.value = order;
+    showPartialModal.value = true;
 };
 
 const closeAdminNotesModal = () => {
@@ -1218,10 +1240,17 @@ const handleNotesSaved = (newNotes) => {
                                                     Pre-Order
                                                 </span>
                                             </div>
-                                            <p class="text-xs text-gray-600">
-                                                Qty: {{ item.quantity }} |
-                                                Price: ৳{{ item.price }}
+                                            <p class="text-xs text-gray-600 font-medium">
+                                                Qty: {{ item.quantity }} | Price: ৳{{ item.price }}
                                             </p>
+                                            <div v-if="order.status === 'partially_delivered' || order.status === 'returned' || item.returned_quantity > 0" class="flex flex-wrap gap-1 mt-1">
+                                                <span v-if="item.quantity - item.returned_quantity > 0" class="text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold">
+                                                    Delivered: {{ item.quantity - item.returned_quantity }}
+                                                </span>
+                                                <span v-if="item.returned_quantity > 0" class="text-[10px] bg-red-100 text-red-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold">
+                                                    Returned: {{ item.returned_quantity }}
+                                                </span>
+                                            </div>
                                             <p
                                                 v-if="item.variation"
                                                 class="text-xs text-gray-600 truncate"
@@ -1265,8 +1294,19 @@ const handleNotesSaved = (newNotes) => {
                                 </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
-                                <div class="flex items-center">
-                                    <span class="text-lg font-bold text-gray-900">৳{{ order.total }}</span>
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-xs text-gray-500 w-10">Total:</span>
+                                        <span class="text-sm font-bold text-gray-900">৳{{ order.total }}</span>
+                                    </div>
+                                    <div v-if="order.status === 'partially_delivered' || order.paid_amount > 0" class="flex items-center gap-1 mt-0.5">
+                                        <span class="text-[10px] text-gray-500 w-10">Paid:</span>
+                                        <span class="text-[10px] font-semibold text-green-600">৳{{ order.paid_amount || 0 }}</span>
+                                    </div>
+                                    <div v-if="order.return_charge > 0" class="flex items-center gap-1 mt-0.5">
+                                        <span class="text-[10px] text-gray-500 w-10">R-Chrg:</span>
+                                        <span class="text-[10px] font-semibold text-red-500">৳{{ order.return_charge }}</span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
@@ -1277,14 +1317,16 @@ const handleNotesSaved = (newNotes) => {
                                     @status-change="updateOrderStatus"
                                 />
                             </td>
-                            <td class="px-1 py-3 text-sm">
+                            <td class="px-1 py-3 text-sm flex flex-col gap-1 items-start">
                                 <span
                                     :class="{
-                                        'px-2 py-1 rounded-full text-xs font-medium': true,
+                                        'px-2 py-1 rounded-full text-xs font-medium inline-block text-center': true,
                                         'bg-red-100 text-red-800':
                                             order.payment_status === 'unpaid',
                                         'bg-green-100 text-green-800':
                                             order.payment_status === 'paid',
+                                        'bg-blue-100 text-blue-800':
+                                            order.payment_status === 'partially_paid',
                                         'bg-gray-100 text-black':
                                             order.payment_status === 'refunded',
                                     }"
@@ -1428,6 +1470,7 @@ const handleNotesSaved = (newNotes) => {
                                                 Couriers
                                             </button>
 
+                                            <!-- Partial Delivery Button -->
                                             <Link
                                                 :href="
                                                     route(
@@ -1580,6 +1623,8 @@ const handleNotesSaved = (newNotes) => {
                         »
                     </button>
                 </div>
+
+                <!-- <pre>{{ selectedOrderForPartial }}</pre> -->
             </div>
 
             <!-- Delete Confirmation Modal -->
@@ -1618,6 +1663,13 @@ const handleNotesSaved = (newNotes) => {
             :customer-note="selectedOrderForNotes?.customer?.note"
             @close="closeAdminNotesModal"
             @saved="handleNotesSaved"
+        />
+
+        <!-- Partial Delivery logic Modal -->
+        <PartialDeliveryModal
+            :visible="showPartialModal"
+            :order="selectedOrderForPartial"
+            @close="showPartialModal = false"
         />
     </AdminLayout>
 </template>

@@ -1400,6 +1400,85 @@ class OrderService implements OrderInterface
         }
     }
 
+    /**
+     * Process partial delivery and returns for an order
+     *
+     * @param int $orderId
+     * @param array $data
+     * @return Order
+     * @throws OrderNotFoundException|\Exception
+     */
+    public function processPartialDelivery(int $orderId, array $data): Order
+    {
+        try {
+            DB::beginTransaction();
+
+            $order = Order::with(['items.product', 'items.product.variations'])->find($orderId);
+            if (!$order) {
+                throw new OrderNotFoundException("Order {$orderId} not found");
+            }
+
+            foreach ($data['items'] as $itemData) {
+                $orderItem = collect($order->items)->where('id', $itemData['order_item_id'])->first();
+                if ($orderItem) {
+                    $oldReturnedQuantity = $orderItem->returned_quantity ?? 0;
+                    $newReturnedQuantity = (int)$itemData['returned_qty'];
+                    $deliveredQuantity = (int)$itemData['delivered_qty'];
+                    
+                    $orderItem->returned_quantity = $newReturnedQuantity;
+                    
+                    if ($newReturnedQuantity > 0 && $deliveredQuantity == 0) {
+                        $orderItem->status = 'returned';
+                    } elseif ($newReturnedQuantity == 0 && $deliveredQuantity > 0) {
+                        $orderItem->status = 'delivered';
+                    } elseif ($newReturnedQuantity > 0 && $deliveredQuantity > 0) {
+                        $orderItem->status = 'partially_delivered'; 
+                    }
+                    $orderItem->save();
+
+                    // Restore stock for newly returned quantity (delta)
+                    $quantityToReturn = $newReturnedQuantity - $oldReturnedQuantity;
+                    
+                    if ($quantityToReturn != 0) {
+                        $product = $orderItem->product;
+                        if ($product) {
+                            $variation = $orderItem->product_variation_id ?
+                                $product->variations->where('id', $orderItem->product_variation_id)->first() : null;
+                            
+                            if ($quantityToReturn > 0) {
+                                $this->returnProductStock($product, $variation, $quantityToReturn);
+                            } else {
+                                // If they changed their mind and re-delivered, deduct stock again
+                                $this->reduceProductStock($product, $variation, abs($quantityToReturn));
+                            }
+                        }
+                    }
+                }
+            }
+
+            $order->status = $data['final_status'] ?? 'partially_delivered';
+            $order->paid_amount = $data['collected_amount'] ?? 0;
+            $order->return_charge = $data['return_charge'] ?? 0;
+            
+            if ($order->paid_amount >= $order->total && $order->status === 'delivered') {
+                $order->payment_status = 'paid';
+            } elseif ($order->paid_amount > 0 && $order->paid_amount < $order->total) {
+                $order->payment_status = 'partially_paid'; 
+            } elseif ($order->paid_amount <= 0) {
+                $order->payment_status = 'unpaid';
+            }
+
+            $order->save();
+
+            DB::commit();
+            return $order;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Partial Delivery process failed: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
     // updateNewOrder($orderId, $request->all()); mmmamun
 
     /**

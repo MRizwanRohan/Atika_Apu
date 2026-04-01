@@ -47,15 +47,17 @@ class Order extends Model
         'area_id',
         'is_courier',
         'consignment_id',
-        'delivery_status'
+        'delivery_status',
+        'paid_amount',
+        'return_charge'
     ];
 
     protected $casts = [
         'shipping_cost' => 'decimal:2',
         'date' => 'datetime',
-
-
         'total' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'return_charge' => 'decimal:2',
         'pos_discount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'is_courier' => 'boolean'

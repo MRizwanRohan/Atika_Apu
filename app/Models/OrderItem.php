@@ -24,6 +24,8 @@ class OrderItem extends Model
         'coupon_code',
         'options',
         'is_pre_order',
+        'status',
+        'returned_quantity',
     ];
 
 

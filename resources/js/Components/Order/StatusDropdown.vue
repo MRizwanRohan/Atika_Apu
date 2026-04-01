@@ -122,6 +122,11 @@ const statusOptions = [
         label: "Confirmed",
         bgClass: "bg-indigo-500 text-white",
     },
+    {
+        value: "partially_delivered",
+        label: "Partially Delivered",
+        bgClass: "bg-stone-500 text-white",
+    },
 ];
 
 // Computed property to get the appropriate styling based on status
@@ -194,6 +199,10 @@ select option[value="on_hold"] {
 }
 select option[value="confirmed"] {
     background-color: rgb(99, 102, 241); /* indigo-500 */
+    color: white;
+}
+select option[value="partially_delivered"] {
+    background-color: rgb(120, 113, 108); /* stone-500 */
     color: white;
 }
 </style>

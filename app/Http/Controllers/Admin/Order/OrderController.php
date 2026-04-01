@@ -579,6 +579,50 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * Handle partial delivery of an order
+     *
+     * @param Request $request
+     * @param int $orderId
+     * @return JsonResponse
+     */
+    public function processPartialDelivery(Request $request, $orderId)
+    {
+        try {
+            $validated = $request->validate([
+                'items' => 'required|array',
+                'items.*.order_item_id' => 'required|integer',
+                'items.*.delivered_qty' => 'required|integer|min:0',
+                'items.*.returned_qty' => 'required|integer|min:0',
+                'collected_amount' => 'required|numeric|min:0',
+                'return_charge' => 'required|numeric|min:0',
+                'final_status' => 'required|string|in:delivered,partially_delivered,returned',
+            ]);
+
+            $order = $this->orderService->processPartialDelivery((int)$orderId, $validated);
+
+            $this->updateOrderCache();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Partial delivery processed successfully',
+                'order' => $order
+            ], 200);
+
+        } catch (\App\Exceptions\OrderNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process partial delivery',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function updateOrderCache()
     {
 
