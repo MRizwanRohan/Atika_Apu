@@ -51,10 +51,11 @@ class BusinessDashboardController extends Controller
 
         // Revenue calculation (paid orders)
         $revenue = Order::where('payment_status', 'paid')
+            ->orWhere('payment_status', 'partially_paid')
             ->where(function($query) use ($dateRange) {
                 $dateRange($query);
             })
-            ->sum('total');
+            ->sum('paid_amount');
 
         // Expenses calculation (from expenses table)
         $expenses = Expense::where(function($query) use ($dateRange) {
@@ -74,6 +75,7 @@ class BusinessDashboardController extends Controller
 
         // Total orders count
         $totalOrders = Order::where('payment_status', 'paid')
+            ->orWhere('payment_status', 'partially_paid')
             ->where(function($query) use ($dateRange) {
                 $dateRange($query);
             })

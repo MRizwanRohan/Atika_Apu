@@ -61,7 +61,7 @@ async function fireMetaEvent(order) {
     metaFiringOrderId.value = order.id;
     try {
         const { data } = await axios.post(
-            route("admin.meta-tracking.orders.fire", order.id)
+            route("admin.meta-tracking.orders.fire", order.id),
         );
         if (data.success) {
             localSentOrderIds.value.add(order.id);
@@ -87,16 +87,17 @@ async function bulkFireMetaEvent() {
     try {
         const { data } = await axios.post(
             route("admin.meta-tracking.orders.bulk-fire"),
-            { order_ids: selectedOrders.value }
+            { order_ids: selectedOrders.value },
         );
         // Mark all newly sent orders with badge
         data.sent.forEach((id) => localSentOrderIds.value.add(id));
         localSentOrderIds.value = new Set(localSentOrderIds.value);
 
         const parts = [];
-        if (data.sent_count)    parts.push(`${data.sent_count} sent`);
-        if (data.skipped_count) parts.push(`${data.skipped_count} skipped (already sent)`);
-        if (data.failed_count)  parts.push(`${data.failed_count} failed`);
+        if (data.sent_count) parts.push(`${data.sent_count} sent`);
+        if (data.skipped_count)
+            parts.push(`${data.skipped_count} skipped (already sent)`);
+        if (data.failed_count) parts.push(`${data.failed_count} failed`);
         toast.success(`Meta Bulk Fire: ${parts.join(", ")} ✅`);
     } catch (err) {
         toast.error(err.response?.data?.message || "Bulk fire failed.");
@@ -224,7 +225,7 @@ const sendBulkToPathao = () => {
         onError: (errors) => {
             toast.error(
                 "Failed to create shipment: " +
-                    (errors.error || "Unknown error")
+                    (errors.error || "Unknown error"),
             );
         },
     });
@@ -268,7 +269,7 @@ const downloadBulkInvoice = async () => {
         const response = await axios.post(
             "/admin/bulk-invoice/download",
             { order_ids: selectedOrders.value },
-            { responseType: "blob" }
+            { responseType: "blob" },
         );
 
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -276,7 +277,7 @@ const downloadBulkInvoice = async () => {
         link.href = url;
         link.setAttribute(
             "download",
-            `bulk-invoices-${new Date().toISOString()}.pdf`
+            `bulk-invoices-${new Date().toISOString()}.pdf`,
         );
         document.body.appendChild(link);
         link.click();
@@ -288,7 +289,7 @@ const downloadBulkInvoice = async () => {
         console.error("Error downloading invoices:", error);
         toast.error(
             "Failed to download invoices: " +
-                (error.response?.data?.message || "Unknown error")
+                (error.response?.data?.message || "Unknown error"),
         );
     } finally {
         isDownloading.value = false; // Reset loading state
@@ -355,7 +356,7 @@ const applyFilters = () => {
                 onError: () => {
                     loading.value = false;
                 },
-            }
+            },
         );
     }, 500);
 };
@@ -447,7 +448,7 @@ const goToPage = (page) => {
             onError: () => {
                 loading.value = false;
             },
-        }
+        },
     );
 };
 
@@ -461,8 +462,8 @@ watch(
         const currentOrderIds = props.orders.data.map((order) => order.id);
         savedOrderData.value = Object.fromEntries(
             Object.entries(savedOrderData.value).filter(([id]) =>
-                currentOrderIds.includes(Number(id))
-            )
+                currentOrderIds.includes(Number(id)),
+            ),
         );
         // Update pagination values
         currentPage.value = props.orders.current_page || 1;
@@ -471,7 +472,7 @@ watch(
         to.value = props.orders.to || 0;
         total.value = props.orders.total || 0;
     },
-    { deep: true }
+    { deep: true },
 );
 
 // Create a loading state map to track which orders are being updated
@@ -480,7 +481,7 @@ const updatingOrders = ref({});
 // Status update function using Composition API
 const updateOrderStatus = async (orderId, newStatus) => {
     if (newStatus === "partially_delivered" || newStatus === "returned") {
-        const order = props.orders?.data?.find(o => o.id === orderId);
+        const order = props.orders?.data?.find((o) => o.id === orderId);
         if (order) {
             selectedOrderForPartial.value = order;
             showPartialModal.value = true;
@@ -497,13 +498,13 @@ const updateOrderStatus = async (orderId, newStatus) => {
             status: newStatus,
         });
         toast.success(
-            response.data.message || "Order status updated successfully"
+            response.data.message || "Order status updated successfully",
         );
         router.reload();
     } catch (error) {
         console.error("Error updating order status:", error);
         toast.error(
-            error.response?.data?.message || "Failed to update order status"
+            error.response?.data?.message || "Failed to update order status",
         );
     } finally {
         updatingOrders.value[orderId] = false;
@@ -550,14 +551,14 @@ const printBulkInvoice = () => {
             screen.width +
             ",height=" +
             screen.height +
-            ",scrollbars=yes,resizable=yes,fullscreen=yes"
+            ",scrollbars=yes,resizable=yes,fullscreen=yes",
     );
 
     if (printWindow) {
         printWindow.focus();
     } else {
         toast.error(
-            "Failed to open print window. Please allow popups for this site."
+            "Failed to open print window. Please allow popups for this site.",
         );
     }
 };
@@ -591,7 +592,7 @@ const closeAdminNotesModal = () => {
 
 const handleNotesSaved = (newNotes) => {
     // The page will be refreshed by Inertia after successful save
-    toast.success('Admin notes saved successfully');
+    toast.success("Admin notes saved successfully");
 };
 
 // Close menu when clicking outside (optional but good for UX)
@@ -617,22 +618,44 @@ const handleNotesSaved = (newNotes) => {
                     <h1 class="text-2xl font-bold text-gray-800">
                         Order Management
                     </h1>
-                    <Link :href="route('admin.orders.incomplete')" class="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-semibold shadow hover:bg-amber-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
+                    <Link
+                        :href="route('admin.orders.incomplete')"
+                        class="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-semibold shadow hover:bg-amber-200"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8v4l3 3"
+                            />
                         </svg>
-                        Incomplete: {{ props.statusCounts.find(s => s.status === 'incomplete')?.count || 0 }}
+                        Incomplete:
+                        {{
+                            props.statusCounts.find(
+                                (s) => s.status === "incomplete",
+                            )?.count || 0
+                        }}
                     </Link>
                 </div>
-                <button @click="resetFilters" class="btn bg-white border px-3 py-1 rounded text-sm">Reset Filters</button>
+                <button
+                    @click="resetFilters"
+                    class="btn bg-white border px-3 py-1 rounded text-sm"
+                >
+                    Reset Filters
+                </button>
             </div>
 
             <!-- Status Cards -->
             <div
                 class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6"
             >
-
-
                 <!-- Total Orders Card -->
                 <div
                     @click="selectStatus('')"
@@ -644,7 +667,7 @@ const handleNotesSaved = (newNotes) => {
                             filters.status !== '',
                     }"
                 >
-                    <div class="p-5 relative z-10">
+                    <div class="px-3 py-2 relative z-10">
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
                                 <h3
@@ -667,7 +690,7 @@ const handleNotesSaved = (newNotes) => {
                                 >
                                     {{
                                         props.statusCounts.find(
-                                            (s) => s.status === "total"
+                                            (s) => s.status === "total",
                                         )?.count || 0
                                     }}
                                 </p>
@@ -679,9 +702,6 @@ const handleNotesSaved = (newNotes) => {
                                             : 'text-gray-600'
                                     "
                                 >
-                                    ৳{{ Number(props.statusCounts.find(
-                                        (s) => s.status === "total"
-                                    )?.sales || 0).toFixed(2) }}
                                 </p>
                             </div>
                             <div
@@ -711,10 +731,10 @@ const handleNotesSaved = (newNotes) => {
                     </div>
                 </div>
 
-
-
                 <div
-                    v-for="status in availableStatuses.filter(s => s !== 'incomplete')"
+                    v-for="status in availableStatuses.filter(
+                        (s) => s !== 'incomplete',
+                    )"
                     :key="status"
                     @click="selectStatus(status)"
                     class="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
@@ -740,11 +760,15 @@ const handleNotesSaved = (newNotes) => {
                         'bg-gradient-to-br from-violet-500 to-violet-700 text-white ring-2 ring-violet-400 ring-offset-2':
                             filters.status === status && status === 'confirmed',
 
+                            'bg-gradient-to-br from-slate-600 to-slate-800 text-white ring-2 ring-slate-400 ring-offset-2':
+                            filters.status === status &&
+                            status === 'partially_delivered',
+
                         'bg-white hover:bg-gray-50 border border-gray-200':
                             filters.status !== status,
                     }"
                 >
-                    <div class="p-5 relative z-10">
+                    <div class="px-3 py-2 relative z-10">
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
                                 <h3
@@ -770,21 +794,9 @@ const handleNotesSaved = (newNotes) => {
                                 >
                                     {{
                                         props.statusCounts.find(
-                                            (s) => s.status === status
+                                            (s) => s.status === status,
                                         )?.count || 0
                                     }}
-                                </p>
-                                <p
-                                    class="text-sm mt-1"
-                                    :class="
-                                        filters.status === status
-                                            ? 'text-white/80'
-                                            : 'text-gray-600'
-                                    "
-                                >
-                                    ৳{{ Number(props.statusCounts.find(
-                                        (s) => s.status === status
-                                    )?.sales || 0).toFixed(2) }}
                                 </p>
                             </div>
                             <!-- Icon based on status -->
@@ -954,9 +966,16 @@ const handleNotesSaved = (newNotes) => {
                     :disabled="isBulkFiringMeta"
                     class="px-2 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800 disabled:opacity-60 flex items-center gap-1"
                 >
-                    <span v-if="isBulkFiringMeta" class="loading loading-spinner loading-xs"></span>
+                    <span
+                        v-if="isBulkFiringMeta"
+                        class="loading loading-spinner loading-xs"
+                    ></span>
                     <span v-else>📡</span>
-                    {{ isBulkFiringMeta ? 'Sending...' : `Send ${selectedOrders.length} to Meta` }}
+                    {{
+                        isBulkFiringMeta
+                            ? "Sending..."
+                            : `Send ${selectedOrders.length} to Meta`
+                    }}
                 </button>
                 <button
                     v-if="selectedOrders.length > 0"
@@ -1100,11 +1119,10 @@ const handleNotesSaved = (newNotes) => {
                             class="hover:bg-gray-50 transition-colors duration-150"
                             :class="{
                                 'bg-blue-50/50': selectedOrders.includes(
-                                    order.id
+                                    order.id,
                                 ),
                             }"
                         >
-
                             <td class="px-1 py-3 text-sm">
                                 <input
                                     type="checkbox"
@@ -1119,7 +1137,11 @@ const handleNotesSaved = (newNotes) => {
                                     class="font-semibold text-sm bg-green-500 text-white px-2 py-1 rounded inline-flex items-center gap-1"
                                 >
                                     {{ order.order_number }}
-                                    <span v-if="order.admin_notes" class="inline-flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full text-white text-[10px] font-bold" title="Has admin notes">
+                                    <span
+                                        v-if="order.admin_notes"
+                                        class="inline-flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full text-white text-[10px] font-bold"
+                                        title="Has admin notes"
+                                    >
                                         N
                                     </span>
                                 </p>
@@ -1131,8 +1153,13 @@ const handleNotesSaved = (newNotes) => {
                                 >
                                     📡 Meta Sent
                                 </span>
-                                <p class="mt-1 text-black flex items-center gap-1">
-                                    <span v-if="isToday(order.date)" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-800 border border-green-300">
+                                <p
+                                    class="mt-1 text-black flex items-center gap-1"
+                                >
+                                    <span
+                                        v-if="isToday(order.date)"
+                                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-800 border border-green-300"
+                                    >
                                         TODAY
                                     </span>
                                     Date: {{ formatOrderDate(order.date) }}
@@ -1149,38 +1176,73 @@ const handleNotesSaved = (newNotes) => {
                                     <p
                                         class="truncate flex items-center flex-wrap font-medium text-gray-800"
                                     >
-                                        <User class="w-4 h-4 mr-1 text-blue-600" />{{
+                                        <User
+                                            class="w-4 h-4 mr-1 text-blue-600"
+                                        />{{
                                             truncateText(order.customer.name, 2)
                                         }}
                                     </p>
-                                    <p class="text-gray-600 flex items-center text-xs mt-1">
-                                        <Mail class="w-3 h-3 mr-1 text-gray-500" />{{
-                                            order.customer?.email
-                                        }}
+                                    <p
+                                        class="text-gray-600 flex items-center text-xs mt-1"
+                                    >
+                                        <Mail
+                                            class="w-3 h-3 mr-1 text-gray-500"
+                                        />{{ order.customer?.email }}
                                     </p>
-                                    <p class="text-gray-600 flex items-center text-xs mt-1">
-                                        <Phone class="w-3 h-3 mr-1 text-gray-500" />{{
-                                            order.customer?.phone
-                                        }}
+                                    <p
+                                        class="text-gray-600 flex items-center text-xs mt-1"
+                                    >
+                                        <Phone
+                                            class="w-3 h-3 mr-1 text-gray-500"
+                                        />{{ order.customer?.phone }}
                                     </p>
-                                    <p class="text-gray-600 flex items-center text-xs mt-1">
-                                        <MapPin class="w-3 h-3 mr-1 text-gray-500" />{{
-                                            order.customer?.address
-                                        }}
+                                    <p
+                                        class="text-gray-600 flex items-center text-xs mt-1"
+                                    >
+                                        <MapPin
+                                            class="w-3 h-3 mr-1 text-gray-500"
+                                        />{{ order.customer?.address }}
                                     </p>
-                                    <p v-if="order.customer?.note && order.customer.note !== 'N/A'" class="flex text-green-800 bg-green-200 py-1 rounded text-sm mt-1 items-center">
+                                    <p
+                                        v-if="
+                                            order.customer?.note &&
+                                            order.customer.note !== 'N/A'
+                                        "
+                                        class="flex text-green-800 bg-green-200 py-1 rounded text-sm mt-1 items-center"
+                                    >
                                         <Hash class="w-4 h-4 mr-1" />Note:
                                         {{ order.customer?.note || "N/A" }}
                                     </p>
                                     <div v-if="order.admin_notes" class="mt-2">
-                                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-2">
+                                        <div
+                                            class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-2"
+                                        >
                                             <div class="flex items-start gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                    />
                                                 </svg>
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-xs font-semibold text-blue-800 mb-0.5">Admin Notes:</p>
-                                                    <p class="text-xs text-blue-700 line-clamp-2">{{ order.admin_notes }}</p>
+                                                    <p
+                                                        class="text-xs font-semibold text-blue-800 mb-0.5"
+                                                    >
+                                                        Admin Notes:
+                                                    </p>
+                                                    <p
+                                                        class="text-xs text-blue-700 line-clamp-2"
+                                                    >
+                                                        {{ order.admin_notes }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1188,12 +1250,31 @@ const handleNotesSaved = (newNotes) => {
                                     <button
                                         @click="openAdminNotesModal(order)"
                                         class="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all"
-                                        :class="order.admin_notes ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                        :class="
+                                            order.admin_notes
+                                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        "
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="w-3.5 h-3.5"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                            />
                                         </svg>
-                                        {{ order.admin_notes ? 'Edit Notes' : 'Add Notes' }}
+                                        {{
+                                            order.admin_notes
+                                                ? "Edit Notes"
+                                                : "Add Notes"
+                                        }}
                                     </button>
                                 </div>
                             </td>
@@ -1229,7 +1310,7 @@ const handleNotesSaved = (newNotes) => {
                                                     {{
                                                         truncateText(
                                                             item.product.name,
-                                                            2
+                                                            2,
                                                         )
                                                     }}
                                                 </p>
@@ -1240,15 +1321,45 @@ const handleNotesSaved = (newNotes) => {
                                                     Pre-Order
                                                 </span>
                                             </div>
-                                            <p class="text-xs text-gray-600 font-medium">
-                                                Qty: {{ item.quantity }} | Price: ৳{{ item.price }}
+                                            <p
+                                                class="text-xs text-gray-600 font-medium"
+                                            >
+                                                Qty: {{ item.quantity }} |
+                                                Price: ৳{{ item.price }}
                                             </p>
-                                            <div v-if="order.status === 'partially_delivered' || order.status === 'returned' || item.returned_quantity > 0" class="flex flex-wrap gap-1 mt-1">
-                                                <span v-if="item.quantity - item.returned_quantity > 0" class="text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold">
-                                                    Delivered: {{ item.quantity - item.returned_quantity }}
+                                            <div
+                                                v-if="
+                                                    order.status ===
+                                                        'partially_delivered' ||
+                                                    order.status ===
+                                                        'returned' ||
+                                                    item.returned_quantity > 0
+                                                "
+                                                class="flex flex-wrap gap-1 mt-1"
+                                            >
+                                                <span
+                                                    v-if="
+                                                        item.quantity -
+                                                            item.returned_quantity >
+                                                        0
+                                                    "
+                                                    class="text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold"
+                                                >
+                                                    Delivered:
+                                                    {{
+                                                        item.quantity -
+                                                        item.returned_quantity
+                                                    }}
                                                 </span>
-                                                <span v-if="item.returned_quantity > 0" class="text-[10px] bg-red-100 text-red-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold">
-                                                    Returned: {{ item.returned_quantity }}
+                                                <span
+                                                    v-if="
+                                                        item.returned_quantity >
+                                                        0
+                                                    "
+                                                    class="text-[10px] bg-red-100 text-red-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold"
+                                                >
+                                                    Returned:
+                                                    {{ item.returned_quantity }}
                                                 </span>
                                             </div>
                                             <p
@@ -1265,11 +1376,11 @@ const handleNotesSaved = (newNotes) => {
                                                         v-if="
                                                             Object.keys(
                                                                 item.variation
-                                                                    .attributes
+                                                                    .attributes,
                                                             ).indexOf(key) <
                                                             Object.keys(
                                                                 item.variation
-                                                                    .attributes
+                                                                    .attributes,
                                                             ).length -
                                                                 1
                                                         "
@@ -1296,16 +1407,43 @@ const handleNotesSaved = (newNotes) => {
                             <td class="px-1 py-3 text-sm">
                                 <div class="flex flex-col">
                                     <div class="flex items-center gap-1">
-                                        <span class="text-xs text-gray-500 w-10">Total:</span>
-                                        <span class="text-sm font-bold text-gray-900">৳{{ order.total }}</span>
+                                        <span class="text-xs text-gray-500 w-10"
+                                            >Total:</span
+                                        >
+                                        <span
+                                            class="text-sm font-bold text-gray-900"
+                                            >৳{{ order.total }}</span
+                                        >
                                     </div>
-                                    <div v-if="order.status === 'partially_delivered' || order.paid_amount > 0" class="flex items-center gap-1 mt-0.5">
-                                        <span class="text-[10px] text-gray-500 w-10">Paid:</span>
-                                        <span class="text-[10px] font-semibold text-green-600">৳{{ order.paid_amount || 0 }}</span>
+                                    <div
+                                        v-if="
+                                            order.status ===
+                                                'partially_delivered' ||
+                                            order.paid_amount > 0
+                                        "
+                                        class="flex items-center gap-1 mt-0.5"
+                                    >
+                                        <span
+                                            class="text-[10px] text-gray-500 w-10"
+                                            >Paid:</span
+                                        >
+                                        <span
+                                            class="text-[10px] font-semibold text-green-600"
+                                            >৳{{ order.paid_amount || 0 }}</span
+                                        >
                                     </div>
-                                    <div v-if="order.return_charge > 0" class="flex items-center gap-1 mt-0.5">
-                                        <span class="text-[10px] text-gray-500 w-10">R-Chrg:</span>
-                                        <span class="text-[10px] font-semibold text-red-500">৳{{ order.return_charge }}</span>
+                                    <div
+                                        v-if="order.return_charge > 0"
+                                        class="flex items-center gap-1 mt-0.5"
+                                    >
+                                        <span
+                                            class="text-[10px] text-gray-500 w-10"
+                                            >R-Chrg:</span
+                                        >
+                                        <span
+                                            class="text-[10px] font-semibold text-red-500"
+                                            >৳{{ order.return_charge }}</span
+                                        >
                                     </div>
                                 </div>
                             </td>
@@ -1317,8 +1455,10 @@ const handleNotesSaved = (newNotes) => {
                                     @status-change="updateOrderStatus"
                                 />
                             </td>
-                            <td class="px-1 py-3 text-sm flex flex-col gap-1 items-start">
-                                <span
+                            <td
+                                class="px-1 py-3 text-sm gap-1"
+                            >
+                                <div
                                     :class="{
                                         'px-2 py-1 rounded-full text-xs font-medium inline-block text-center': true,
                                         'bg-red-100 text-red-800':
@@ -1326,13 +1466,14 @@ const handleNotesSaved = (newNotes) => {
                                         'bg-green-100 text-green-800':
                                             order.payment_status === 'paid',
                                         'bg-blue-100 text-blue-800':
-                                            order.payment_status === 'partially_paid',
+                                            order.payment_status ===
+                                            'partially_paid',
                                         'bg-gray-100 text-black':
                                             order.payment_status === 'refunded',
                                     }"
                                 >
                                     {{ order.payment_status }}
-                                </span>
+                                </div>
                             </td>
                             <td class="px-2 py-2 text-sm">
                                 <div
@@ -1433,7 +1574,7 @@ const handleNotesSaved = (newNotes) => {
                                             <button
                                                 @click="
                                                     checkFraud(
-                                                        order?.customer?.phone
+                                                        order?.customer?.phone,
                                                     );
                                                     toggleActionMenu(order.id);
                                                 "
@@ -1460,7 +1601,7 @@ const handleNotesSaved = (newNotes) => {
                                                 @click="
                                                     openCourierModal(
                                                         order,
-                                                        order.id
+                                                        order.id,
                                                     );
                                                     toggleActionMenu(order.id);
                                                 "
@@ -1475,7 +1616,7 @@ const handleNotesSaved = (newNotes) => {
                                                 :href="
                                                     route(
                                                         'admin.orders.edit',
-                                                        order.id
+                                                        order.id,
                                                     )
                                                 "
                                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-600 flex items-center gap-2 transition-colors"
@@ -1490,11 +1631,23 @@ const handleNotesSaved = (newNotes) => {
 
                                             <!-- ── Meta Tracking Actions ── -->
                                             <button
-                                                @click="fireMetaEvent(order); toggleActionMenu(order.id);"
-                                                :disabled="metaFiringOrderId === order.id"
+                                                @click="
+                                                    fireMetaEvent(order);
+                                                    toggleActionMenu(order.id);
+                                                "
+                                                :disabled="
+                                                    metaFiringOrderId ===
+                                                    order.id
+                                                "
                                                 class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"
                                             >
-                                                <span v-if="metaFiringOrderId === order.id" class="loading loading-spinner loading-xs"></span>
+                                                <span
+                                                    v-if="
+                                                        metaFiringOrderId ===
+                                                        order.id
+                                                    "
+                                                    class="loading loading-spinner loading-xs"
+                                                ></span>
                                                 <span v-else>📡</span>
                                                 Send to Meta
                                             </button>

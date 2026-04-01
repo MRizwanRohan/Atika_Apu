@@ -17,7 +17,7 @@ class DashboardController extends Controller
     {
         // Summary Metrics
         $totalSales = Order::sum('total');
-        $deliveredSales = Order::where('status', 'delivered')->sum('total');
+        $deliveredSales = Order::sum('paid_amount');
         $totalOrders = Order::count();
         $totalCustomers = User::count();
         $pendingOrders = Order::where('status', 'pending')->count();
@@ -96,6 +96,8 @@ class DashboardController extends Controller
             'recentOrders' => $recentOrders,
             'locations' => $locations,
         ];
+
+        //return $data;
         return Inertia::render('Admin/Dashboard/Index', [
             'data' => $data,
         ]);
