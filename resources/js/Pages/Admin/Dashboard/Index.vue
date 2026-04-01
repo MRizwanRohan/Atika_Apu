@@ -641,11 +641,6 @@ const activeTab = ref("all");
                             >
                                 Top Products
                             </h3>
-                            <button
-                                class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
-                            >
-                                View All
-                            </button>
                         </div>
                         <VueApexCharts
                             height="300"

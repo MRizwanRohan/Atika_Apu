@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useCart } from "@/Composables/useCart";
+import { useCartSidebar } from "@/Composables/useCartSidebar";
 import { useWishlist } from "@/Composables/useWishlist";
 import { useCompare } from "@/Composables/useCompare";
 import { useToast } from "@/Composables/useToast";
@@ -23,6 +24,7 @@ const props = defineProps({
 
 // Use centralized cart composable
 const { addToCart: addToCartAction, isLoading: cartLoading } = useCart();
+const { openCart } = useCartSidebar();
 const { trackViewContent, trackAddToCart: pixelTrackAddToCart } = useMetaPixel();
 const { toggleWishlist, isInWishlist } = useWishlist();
 const { toggleCompare, isInCompare } = useCompare();
@@ -375,6 +377,8 @@ const addToCart = () => {
         },
         onSuccess: () => {
             isAddingToCart.value = false;
+            // Open the cart sidebar
+            openCart();
             // Track add_to_cart in Google Tag Manager
             trackAddToCart(props.product, matchingVariation, quantity.value);
             // Track add_to_cart via Meta Pixel (fbq)

@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { useCart } from '@/Composables/useCart';
+import { useCartSidebar } from '@/Composables/useCartSidebar';
 import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
 import { Plus, Minus } from 'lucide-vue-next';
 import axios from 'axios';
@@ -14,6 +15,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
+
+// Use centralized cart sidebar composable
+const { isCartSidebarOpen, closeCart } = useCartSidebar();
+
+// Sync props.isOpen with global state (if needed for parent-child flow)
+watch(() => props.isOpen, (newVal) => {
+    isCartSidebarOpen.value = newVal;
+});
 
 // Use centralized cart composable
 const { 
@@ -58,7 +67,7 @@ const getLowestPrice = (product) => {
 };
 
 // Handle body scroll when sidebar opens/closes
-watch(() => props.isOpen, (newVal) => {
+watch(isCartSidebarOpen, (newVal) => {
     if (newVal) {
         document.body.style.overflow = 'hidden';
     } else {
@@ -67,6 +76,12 @@ watch(() => props.isOpen, (newVal) => {
 });
 
 const handleOverlayClick = () => {
+    closeCart();
+    emit('close');
+};
+
+const handleClose = () => {
+    closeCart();
     emit('close');
 };
 </script>
@@ -75,7 +90,7 @@ const handleOverlayClick = () => {
     <!-- Overlay -->
     <Transition name="fade">
         <div 
-            v-if="isOpen" 
+            v-if="isCartSidebarOpen" 
             class="fixed inset-0 bg-black/50 z-50"
             @click="handleOverlayClick"
         ></div>
@@ -84,7 +99,7 @@ const handleOverlayClick = () => {
     <!-- Sidebar -->
     <Transition name="slide-left">
         <div 
-            v-if="isOpen" 
+            v-if="isCartSidebarOpen" 
             class="fixed top-0 right-0 h-full w-[850px] max-w-[95vw] bg-white z-50 shadow-xl flex overflow-hidden"
         >
             <!-- <pre>{{ recommendedProducts }}</pre> -->
@@ -142,7 +157,7 @@ const handleOverlayClick = () => {
                         <span v-if="cartCount > 0" class="text-[10px] font-normal text-gray-400 ml-2">({{ cartCount }} items)</span>
                     </h2>
                     <button 
-                        @click="emit('close')"
+                        @click="handleClose"
                         class="p-1 hover:rotate-90 transition-transform duration-300"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -167,7 +182,7 @@ const handleOverlayClick = () => {
                     <p class="text-xs text-gray-400 mb-8 max-w-[200px] leading-relaxed italic">Explore our collections and add something beautiful to your cart.</p>
                     <Link 
                         href="/" 
-                        @click="emit('close')"
+                        @click="handleClose"
                         class="px-8 py-4 bg-black text-white text-[10px] font-black uppercase font-heebo hover:bg-black/90 transition-all rounded"
                     >
                         Continue Shopping
@@ -248,7 +263,7 @@ const handleOverlayClick = () => {
                         
                         <Link 
                             :href="route('order.create')" 
-                            @click="emit('close')"
+                            @click="handleClose"
                             class="block w-full py-5 bg-black text-white text-[11px] font-black uppercase font-heebo hover:bg-black/90 transition-all rounded mb-4"
                         >
                             Checkout • ৳{{ cartTotal }}
@@ -256,7 +271,7 @@ const handleOverlayClick = () => {
                         
                         <Link 
                             href="/cart" 
-                            @click="emit('close')"
+                            @click="handleClose"
                             class="text-[9px] font-black uppercase font-heebo text-gray-400 hover:text-black border-b border-gray-200 pb-0.5 transition-all"
                         >
                             View Cart
@@ -269,7 +284,6 @@ const handleOverlayClick = () => {
 
     <!-- Product Quick View -->
     <ProductQuickView
-        v-if="quickViewProduct"
         :show="showQuickView"
         :product="quickViewProduct"
         @close="showQuickView = false"

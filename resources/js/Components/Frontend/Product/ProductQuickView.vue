@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useCart } from "@/Composables/useCart";
+import { useCartSidebar } from "@/Composables/useCartSidebar";
+import { useWishlist } from "@/Composables/useWishlist";
 import { X, Plus, Minus, ShoppingCart } from "lucide-vue-next";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 
@@ -18,6 +20,8 @@ const props = defineProps({
 const emit = defineEmits(["close"]);
 
 const { addToCart: addToCartAction } = useCart();
+const { openCart } = useCartSidebar();
+const { toggleWishlist, isInWishlist } = useWishlist();
 
 const selectedAttributes = ref({});
 const quantity = ref(1);
@@ -244,6 +248,8 @@ const performAddToCart = () => {
             emit("close");
             quantity.value = 1;
             selectedAttributes.value = {};
+            // Open the cart sidebar after adding
+            openCart();
         },
         onError: () => {
             isAddingToCart.value = false;
@@ -506,12 +512,14 @@ onUnmounted(() => {
                                     </button>
 
                                     <button
+                                        @click="toggleWishlist(product.id)"
                                         class="w-full bg-white border border-gray-300 text-gray-900 font-medium py-3 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
+                                        :class="{ 'text-primary border-primary': isInWishlist(product.id) }"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'fill-current': isInWishlist(product.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                         </svg>
-                                        Add to Wishlist
+                                        {{ isInWishlist(product.id) ? 'In Wishlist' : 'Add to Wishlist' }}
                                     </button>
                                 </div>
 

@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import CategoryNav from "./CategoryNav.vue";
 import CartSidebar from "./CartSidebar.vue";
+import { useCartSidebar } from "@/Composables/useCartSidebar";
 import SearchBar from "../Header/SearchBar.vue";
 import MobileBottomNav from "./MobileBottomNav.vue";
 import {
@@ -34,8 +35,9 @@ const props = defineProps({
 const emit = defineEmits(["toggle-mobile-menu"]);
 
 const page = usePage();
+const { isCartSidebarOpen, toggleCart: toggleCartSidebar, closeCart: closeCartSidebar } = useCartSidebar();
+
 const isSearchOpen = ref(false);
-const isCartSidebarOpen = ref(false);
 
 const user = computed(() => page.props.auth?.user);
 const cartCount = computed(() => page.props.cartCount || 0);
@@ -58,14 +60,6 @@ const logoUrl = computed(() => {
 const siteName = computed(() => {
     return props.settings?.site_name || "E-Shop";
 });
-
-const toggleCartSidebar = () => {
-    isCartSidebarOpen.value = !isCartSidebarOpen.value;
-};
-
-const closeCartSidebar = () => {
-    isCartSidebarOpen.value = false;
-};
 
 const toggleSearch = () => {
     isSearchOpen.value = !isSearchOpen.value;
