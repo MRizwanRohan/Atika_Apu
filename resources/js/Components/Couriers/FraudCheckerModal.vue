@@ -1,109 +1,112 @@
 <template>
   <div
     v-if="visible"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
   >
-    <div class="bg-white rounded-lg shadow-lg w-[900px] p-6 relative">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden relative animate-in fade-in zoom-in duration-200">
       <!-- Close Button -->
       <button
-        class="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl font-bold"
+        class="absolute top-4 right-4 z-10 p-2 bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors"
         @click="$emit('close')"
       >
-        ✕
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
 
-      <div class="flex gap-6">
+      <div class="flex flex-col md:flex-row max-h-[90vh] overflow-y-auto">
         <!-- Left Side - Logo and Success Rate -->
-        <div class="w-[350px] border border-gray-200 rounded-lg p-6 text-center">
-          <!-- Logo -->
-          <div class="mb-6">
-            <img src="/assets/img/logo/logo.png" alt="logo" class="mx-auto h-10">
+        <div class="w-full md:w-[350px] bg-gray-50/50 p-8 text-center border-b md:border-b-0 md:border-r border-gray-100">
+          <div class="mb-8">
+            <img src="/assets/img/logo/logo.png" alt="logo" class="mx-auto h-12 object-contain">
           </div>
 
-          <!-- Title -->
-          <h2 class="text-xl font-semibold mb-6 text-gray-800">Delivery Success Ratio</h2>
+          <h2 class="text-xl font-bold mb-8 text-gray-900 tracking-tight">Delivery Success Ratio</h2>
 
-          <!-- Success Rate Circle -->
-          <div class="flex justify-center mb-6">
-            <div class="relative w-32 h-32 rounded-full border-8 border-green-500 flex items-center justify-center">
-              <span class="text-2xl font-bold text-gray-800">{{ aggregated.success_rate.toFixed(1) }}%</span>
+          <div class="flex justify-center mb-8">
+            <div class="relative w-40 h-40 rounded-full border-[12px] border-green-500/20 flex items-center justify-center shadow-inner">
+              <div 
+                class="absolute inset-0 rounded-full border-[12px] border-green-500 transition-all duration-1000"
+                :style="{ clipPath: `polygon(50% 50%, -50% -50%, ${aggregated.success_rate > 50 ? '150% -50%, 150% 150%, -50% 150%' : '50% -50%'}, -50% -50%)` }"
+              ></div>
+              <div class="text-center">
+                <span class="text-4xl font-black text-gray-900 tracking-tighter">{{ aggregated.success_rate.toFixed(1) }}%</span>
+                <div class="text-[10px] uppercase font-bold text-gray-500 mt-1">Reliability</div>
+              </div>
             </div>
           </div>
 
-          <!-- Status -->
-          <div class="text-xl font-bold text-gray-800 mb-2">Excellent</div>
-          <div class="text-sm text-gray-600">এটি একটি নির্ভরযোগ্য ডেলিভারি।</div>
-
+          <div class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full font-black text-sm uppercase mb-4">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            Excellent
+          </div>
+          <p class="text-sm font-medium text-gray-600 leading-relaxed px-4">
+            এটি একটি নির্ভরযোগ্য ডেলিভারি। গ্রাহকের সফল ডেলিভারির হার অনেক বেশি।
+          </p>
         </div>
 
-        <!-- Right Side - Phone Number and Details -->
-        <div class="flex-1">
-          <!-- Phone Number Input Section -->
-          <div class="mb-6 p-4">
-            <div class="text-center text-sm text-gray-600">
-              Number: <span class="font-semibold"><strong>{{ customerNumber }}</strong></span>
+        <!-- Right Side - Content -->
+        <div class="flex-1 p-6 md:p-10">
+          <!-- Phone Header -->
+          <div class="bg-gray-900 rounded-2xl p-6 text-white mb-8 shadow-xl shadow-gray-200">
+            <div class="text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1">Checking Number</div>
+            <div class="text-2xl font-black tracking-tight font-mono">{{ customerNumber }}</div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+              <div class="text-2xl font-black text-blue-700">{{ aggregated.total_success + aggregated.total_cancel }}</div>
+              <div class="text-[10px] font-bold text-blue-500 uppercase">মোট অর্ডার</div>
+            </div>
+            <div class="bg-green-50 rounded-2xl p-4 border border-green-100">
+              <div class="text-2xl font-black text-green-700">{{ aggregated.total_success }}</div>
+              <div class="text-[10px] font-bold text-green-500 uppercase">ডেলিভারি</div>
+            </div>
+            <div class="bg-red-50 rounded-2xl p-4 border border-red-100">
+              <div class="text-2xl font-black text-red-700">{{ aggregated.total_cancel }}</div>
+              <div class="text-[10px] font-bold text-red-500 uppercase">বাতিল</div>
             </div>
           </div>
 
-          <!-- Stats Summary -->
-          <div class="grid grid-cols-3 gap-4 mb-6">
-            <div class="text-center bg-yellow-500 text-white rounded-lg p-4">
-              <div class="text-3xl font-bold">{{ aggregated.total_success }}</div>
-              <div class="text-sm ">মোট অর্ডার</div>
+          <!-- Details Table -->
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="bg-gray-50 border-b border-gray-100">
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500">Courier</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-center">Orders</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-center">Delivered</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-center">Cancelled</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-right">Cancel Rate</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-4 py-4"><span class="font-bold text-gray-900">SteadFast</span></td>
+                    <td class="px-4 py-4 text-center font-bold">{{ steadfastData.total }}</td>
+                    <td class="px-4 py-4 text-center font-bold text-green-600">{{ steadfastData.success }}</td>
+                    <td class="px-4 py-4 text-center font-bold text-red-600">{{ steadfastData.cancel }}</td>
+                    <td class="px-4 py-4 text-right">
+                      <span class="bg-red-50 text-red-600 px-2 py-1 rounded-lg text-xs font-black">{{ steadfastCancelRate }}%</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-4"><span class="font-bold text-red-500">Pathao</span></td>
+                    <td colspan="4" class="px-4 py-4 text-right text-[10px] font-bold text-gray-400 italic">
+                      Private API - Data restricted
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-4"><span class="font-black text-red-600">REDX</span></td>
+                    <td colspan="4" class="px-4 py-4 text-right text-[10px] font-bold text-gray-400 italic">
+                      Private API - Data restricted
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="text-center bg-green-500 text-white rounded-lg p-4">
-              <div class="text-3xl font-bold ">{{ aggregated.total_success }}</div>
-              <div class="text-sm ">মোট ডেলিভারি</div>
-            </div>
-            <div class="text-center bg-red-500 text-white rounded-lg p-4">
-              <div class="text-3xl font-bold">{{ aggregated.total_cancel }}</div>
-              <div class="text-sm ">মোট বাতিল</div>
-            </div>
-          </div>
-
-          <!-- Courier Details Table -->
-          <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <!-- Table Header -->
-            <div class="grid grid-cols-5 gap-4 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 border-b border-gray-200">
-              <div>কুরিয়ার</div>
-              <div class="text-center">অর্ডার</div>
-              <div class="text-center">ডেলিভারি</div>
-              <div class="text-center">বাতিল</div>
-              <div class="text-center">বাতিল হার</div>
-            </div>
-
-            <!-- Steadfast Row -->
-            <div class="grid grid-cols-5 gap-4 px-4 py-3 text-sm border-b border-gray-200 items-center">
-              <div class="flex items-center gap-2">
-                <span class="font-medium">SteadFast</span>
-              </div>
-              <div class="text-center">{{ steadfastData.total }}</div>
-              <div class="text-center">{{ steadfastData.success }}</div>
-              <div class="text-center">{{ steadfastData.cancel }}</div>
-              <div class="text-center">{{ steadfastCancelRate }}%</div>
-            </div>
-
-            <!-- Pathao Row -->
-            <div class="grid grid-cols-5 gap-4 px-4 py-3 text-sm border-b border-gray-200 items-center">
-              <div class="flex items-center gap-2">
-                <span class="font-medium text-red-500">Pathao</span>
-              </div>
-              <div colspan="4" class="col-span-4 text-center text-red-500 italic">
-                Pathao does not share this API data publicly
-              </div>
-            </div>
-
-            <!-- REDX Row -->
-            <div class="grid grid-cols-5 gap-4 px-4 py-3 text-sm border-b border-gray-200 items-center">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-red-600">REDX</span>
-              </div>
-              <div colspan="4" class="col-span-4 text-center text-red-500 italic">
-                REDX does not share this API data publicly
-              </div>
-            </div>
-
-
           </div>
         </div>
       </div>

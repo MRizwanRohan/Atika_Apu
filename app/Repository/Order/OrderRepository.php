@@ -339,6 +339,7 @@ public function getPaginatedOrders(
             $search = $filters['customer_search'];
             $query->where(function ($q) use ($search) {
                 $q->where('customer_email', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%")
                     ->orWhere('customer_name', 'like', "%{$search}%");
             });
         }

@@ -369,6 +369,74 @@ const resetFilters = () => {
     applyFilters();
 };
 
+// Helper functions for Status Chips
+const getStatusChipClass = (status) => {
+    const isActive = filters.value.status === status;
+    
+    if (isActive) {
+        const activeClasses = {
+            pending: 'bg-blue-600 text-white border-blue-600 scale-105 shadow-blue-100',
+            confirmed: 'bg-violet-600 text-white border-violet-600 scale-105 shadow-violet-100',
+            processing: 'bg-emerald-600 text-white border-emerald-600 scale-105 shadow-emerald-100',
+            shipped: 'bg-amber-600 text-white border-amber-600 scale-105 shadow-amber-100',
+            delivered: 'bg-indigo-600 text-white border-indigo-600 scale-105 shadow-indigo-100',
+            cancelled: 'bg-rose-600 text-white border-rose-600 scale-105 shadow-rose-100',
+            returned: 'bg-primary text-white border-primary scale-105 shadow-primary/20',
+            on_hold: 'bg-cyan-600 text-white border-cyan-600 scale-105 shadow-cyan-100',
+            partially_delivered: 'bg-slate-700 text-white border-slate-700 scale-105 shadow-slate-200'
+        };
+        return activeClasses[status] || 'bg-gray-900 text-white border-gray-900 scale-105';
+    }
+
+    // Default colorful (soft versions)
+    const softClasses = {
+        pending: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
+        confirmed: 'bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100',
+        processing: 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100',
+        shipped: 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100',
+        delivered: 'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100',
+        cancelled: 'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100',
+        returned: 'bg-primary/5 text-primary border-primary/10 hover:bg-primary/10',
+        on_hold: 'bg-cyan-50 text-cyan-700 border-cyan-100 hover:bg-cyan-100',
+        partially_delivered: 'bg-slate-50 text-slate-700 border-slate-100 hover:bg-slate-100'
+    };
+    return softClasses[status] || 'bg-white text-gray-500 border-gray-100';
+};
+
+const getStatusDotClass = (status) => {
+    const classes = {
+        pending: 'bg-white',
+        confirmed: 'bg-white',
+        processing: 'bg-white',
+        shipped: 'bg-white',
+        delivered: 'bg-white',
+        cancelled: 'bg-white',
+        returned: 'bg-white',
+        on_hold: 'bg-white',
+        partially_delivered: 'bg-white'
+    };
+    return filters.value.status === status ? (classes[status] || 'bg-white') : 
+           (status === 'pending' ? 'bg-blue-500' : 
+            status === 'confirmed' ? 'bg-violet-500' :
+            status === 'processing' ? 'bg-emerald-500' :
+            status === 'shipped' ? 'bg-amber-500' :
+            status === 'delivered' ? 'bg-indigo-500' :
+            status === 'cancelled' ? 'bg-rose-500' :
+            status === 'returned' ? 'bg-primary' :
+            status === 'on_hold' ? 'bg-cyan-500' : 'bg-gray-400');
+};
+
+const activeFilterCount = computed(() => {
+    let count = 0;
+    if (filters.value.payment_status) count++;
+    if (filters.value.date_from) count++;
+    if (filters.value.date_to) count++;
+    if (filters.value.order_number) count++;
+    if (filters.value.min_total) count++;
+    if (filters.value.max_total) count++;
+    return count;
+});
+
 // Handle status card click
 const selectStatus = (status) => {
     filters.value.status = status === filters.value.status ? "" : status;
@@ -415,6 +483,16 @@ const getSortIcon = (column) => {
 };
 
 // Format date
+const expandedOrders = ref(new Set());
+
+const toggleOrderExpand = (orderId) => {
+    if (expandedOrders.value.has(orderId)) {
+        expandedOrders.value.delete(orderId);
+    } else {
+        expandedOrders.value.add(orderId);
+    }
+};
+
 const formatOrderDate = (dateString) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleString();
@@ -646,8 +724,8 @@ const sendToSteadfastSingle = async (order) => {
         <!-- <pre>{{ orders }}</pre> -->
 
         <div class="order_management p-1 rounded-lg">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-4">
+            <div class="flex items-center flex-wrap justify-between mb-6">
+                <div class="flex flex-wrap items-center gap-4">
                     <h1 class="text-2xl font-bold text-gray-800">
                         Order Management
                     </h1>
@@ -685,314 +763,157 @@ const sendToSteadfastSingle = async (order) => {
                 </button>
             </div>
 
-            <!-- Status Cards -->
-            <div
-                class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6"
-            >
-                <!-- Total Orders Card -->
-                <div
-                    @click="selectStatus('')"
-                    class="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 group"
-                    :class="{
-                        'bg-gradient-to-br from-blue-600 to-blue-800 text-white ring-2 ring-blue-400 ring-offset-2':
-                            filters.status === '',
-                        'bg-white hover:bg-gray-50 border border-gray-200':
-                            filters.status !== '',
-                    }"
-                >
-                    <div class="px-3 py-2 relative z-10">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h3
-                                    class="text-sm font-medium mb-1"
-                                    :class="
-                                        filters.status === ''
-                                            ? 'text-blue-100'
-                                            : 'text-gray-500'
-                                    "
-                                >
-                                    Total Orders
-                                </h3>
-                                <p
-                                    class="text-3xl font-bold"
-                                    :class="
-                                        filters.status === ''
-                                            ? 'text-white'
-                                            : 'text-gray-800'
-                                    "
-                                >
-                                    {{
-                                        props.statusCounts.find(
-                                            (s) => s.status === "total",
-                                        )?.count || 0
-                                    }}
-                                </p>
-                                <p
-                                    class="text-sm mt-1"
-                                    :class="
-                                        filters.status === ''
-                                            ? 'text-blue-100'
-                                            : 'text-gray-600'
-                                    "
-                                >
-                                </p>
-                            </div>
-                            <div
-                                class="p-2 rounded-lg"
-                                :class="
-                                    filters.status === ''
-                                        ? 'bg-blue-500/30 text-white'
-                                        : 'bg-blue-100 text-blue-600'
-                                "
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="h-6 w-6"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    v-for="status in availableStatuses.filter(
-                        (s) => s !== 'incomplete',
-                    )"
-                    :key="status"
-                    @click="selectStatus(status)"
-                    class="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
-                    :class="{
-                        'bg-gradient-to-br from-blue-600 to-blue-800 text-white ring-2 ring-blue-400 ring-offset-2':
-                            filters.status === status && status === 'pending',
-                        'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-2':
-                            filters.status === status &&
-                            status === 'processing',
-                        'bg-gradient-to-br from-rose-500 to-rose-700 text-white ring-2 ring-rose-400 ring-offset-2':
-                            filters.status === status && status === 'cancelled',
-                        'bg-gradient-to-br from-amber-500 to-amber-700 text-white ring-2 ring-amber-400 ring-offset-2':
-                            filters.status === status && status === 'shipped',
-                        'bg-gradient-to-br from-indigo-500 to-indigo-700 text-white ring-2 ring-indigo-400 ring-offset-2':
-                            filters.status === status && status === 'delivered',
-                        'bg-gradient-to-br from-primary to-primary text-white ring-2 ring-primary ring-offset-2':
-                            filters.status === status && status === 'returned',
-                        'bg-gradient-to-br from-slate-600 to-slate-800 text-white ring-2 ring-slate-400 ring-offset-2':
-                            filters.status === status &&
-                            status === 'incomplete',
-                        'bg-gradient-to-br from-cyan-500 to-cyan-700 text-white ring-2 ring-cyan-400 ring-offset-2':
-                            filters.status === status && status === 'on_hold',
-                        'bg-gradient-to-br from-violet-500 to-violet-700 text-white ring-2 ring-violet-400 ring-offset-2':
-                            filters.status === status && status === 'confirmed',
-
-                            'bg-gradient-to-br from-slate-600 to-slate-800 text-white ring-2 ring-slate-400 ring-offset-2':
-                            filters.status === status &&
-                            status === 'partially_delivered',
-
-                        'bg-white hover:bg-gray-50 border border-gray-200':
-                            filters.status !== status,
-                    }"
-                >
-                    <div class="px-3 py-2 relative z-10">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h3
-                                    class="text-sm font-medium mb-1"
-                                    :class="
-                                        filters.status === status
-                                            ? 'text-white/90'
-                                            : 'text-gray-500'
-                                    "
-                                >
-                                    {{
-                                        status.charAt(0).toUpperCase() +
-                                        status.slice(1)
-                                    }}
-                                </h3>
-                                <p
-                                    class="text-3xl font-bold"
-                                    :class="
-                                        filters.status === status
-                                            ? 'text-white'
-                                            : 'text-gray-800'
-                                    "
-                                >
-                                    {{
-                                        props.statusCounts.find(
-                                            (s) => s.status === status,
-                                        )?.count || 0
-                                    }}
-                                </p>
-                            </div>
-                            <!-- Icon based on status -->
-                            <div
-                                class="p-2 rounded-lg"
-                                :class="{
-                                    'bg-white/20 text-white':
-                                        filters.status === status,
-                                    'bg-blue-100 text-blue-600':
-                                        filters.status !== status &&
-                                        status === 'pending',
-                                    'bg-emerald-100 text-emerald-600':
-                                        filters.status !== status &&
-                                        status === 'processing',
-                                    'bg-rose-100 text-rose-600':
-                                        filters.status !== status &&
-                                        status === 'cancelled',
-                                    'bg-amber-100 text-amber-600':
-                                        filters.status !== status &&
-                                        status === 'shipped',
-                                    'bg-indigo-100 text-indigo-600':
-                                        filters.status !== status &&
-                                        status === 'delivered',
-                                    'bg-primary/10 text-primary':
-                                        filters.status !== status &&
-                                        status === 'returned',
-                                    'bg-slate-100 text-slate-600':
-                                        filters.status !== status &&
-                                        status === 'incomplete',
-                                    'bg-cyan-100 text-cyan-600':
-                                        filters.status !== status &&
-                                        status === 'on_hold',
-                                    'bg-violet-100 text-violet-600':
-                                        filters.status !== status &&
-                                        status === 'confirmed',
-                                }"
-                            >
-                                <span class="text-xs font-bold">
-                                    {{ status.substring(0, 2).toUpperCase() }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Toggle Button -->
-            <div class="mb-4">
-                <button
-                    @click="toggleFilters"
-                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                >
-                    {{ showFilters ? "Hide Filters" : "Show Filters" }}
-                </button>
-            </div>
-
-            <!-- Filters -->
-            <div
-                v-show="showFilters"
-                class="mb-6 bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-lg shadow"
-            >
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-                >
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Payment Status</label
-                        >
-                        <select
-                            v-model="filters.payment_status"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        >
-                            <option value="">All</option>
-                            <option
-                                v-for="paymentStatus in paymentStatusOptions"
-                                :key="paymentStatus"
-                                :value="paymentStatus"
-                            >
-                                {{
-                                    paymentStatus.charAt(0).toUpperCase() +
-                                    paymentStatus.slice(1)
-                                }}
-                            </option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Date From</label
-                        >
-                        <input
-                            v-model="filters.date_from"
-                            type="date"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Date To</label
-                        >
-                        <input
-                            v-model="filters.date_to"
-                            type="date"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Customer Search</label
-                        >
-                        <input
-                            v-model="filters.customer_search"
-                            type="text"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                            placeholder="Name or email"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Order Number</label
-                        >
-                        <input
-                            v-model="filters.order_number"
-                            type="text"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                            placeholder="Search by order #"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Min Total</label
-                        >
-                        <input
-                            v-model="filters.min_total"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Max Total</label
-                        >
-                        <input
-                            v-model="filters.max_total"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        />
-                    </div>
-                </div>
-                <div class="flex justify-between items-center mt-4">
+            <!-- Status Horizontal Scroll (Minimalist Chips) -->
+            <div class="mb-8 mt-4 ">
+                <div class="flex items-center flex-wrap  gap-2 pb-2">
+                    <!-- Total Orders Chip -->
                     <button
-                        @click="resetFilters"
-                        class="px-2 py-2 bg-gray-2000 hover:bg-gray-300 rounded-md text-sm font-medium"
+                        @click="selectStatus('')"
+                        class="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 font-black text-[11px] uppercase tracking-tighter border shadow-sm"
+                        :class="filters.status === '' 
+                            ? 'bg-gray-900 text-white border-gray-900 shadow-gray-200 scale-105' 
+                            : 'bg-white text-gray-500 border-gray-100 hover:border-gray-300 hover:bg-gray-50'"
                     >
-                        Reset Filters
+                        <div class="w-1.5 h-1.5 rounded-full" :class="filters.status === '' ? 'bg-blue-400' : 'bg-gray-300'"></div>
+                        Total
+                        <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" :class="filters.status === '' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-400'">
+                            {{ props.statusCounts.find(s => s.status === 'total')?.count || 0 }}
+                        </span>
+                    </button>
+
+                    <!-- Dynamic Status Chips -->
+                    <button
+                        v-for="status in availableStatuses.filter(s => s !== 'incomplete')"
+                        :key="status"
+                        @click="selectStatus(status)"
+                        class="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 font-black text-[11px] uppercase tracking-tighter border shadow-sm"
+                        :class="getStatusChipClass(status)"
+                    >
+                        <div class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(status)"></div>
+                        {{ status.replace('_', ' ') }}
+                        <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" :class="filters.status === status ? 'bg-white/20 text-white' : 'bg-black/5 text-black/40'">
+                            {{ props.statusCounts.find(s => s.status === status)?.count || 0 }}
+                        </span>
                     </button>
                 </div>
             </div>
 
-            <div class="mb-6 flex justify-end items-center space-x-2">
+            <!-- Filter Toggle & Search Bar -->
+            <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    <input
+                        v-model="filters.customer_search"
+                        type="text"
+                        placeholder="Search customer name, phone or email..."
+                        class="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+                    />
+                </div>
+                
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <button
+                        @click="toggleFilters"
+                        class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                        :class="showFilters 
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Advanced Filters
+                        <span v-if="activeFilterCount > 0" class="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600 text-[10px] font-black">
+                            {{ activeFilterCount }}
+                        </span>
+                    </button>
+                    
+                    <button
+                        @click="resetFilters"
+                        class="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-gray-100"
+                        title="Reset all filters"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Filters Panel -->
+            <div
+                v-show="showFilters"
+                class="mb-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300"
+            >
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Date Range -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Order Date</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                v-model="filters.date_from"
+                                type="date"
+                                class="flex-1 px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
+                            />
+                            <span class="text-gray-300">to</span>
+                            <input
+                                v-model="filters.date_to"
+                                type="date"
+                                class="flex-1 px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Payment Status -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Payment Status</label>
+                        <select
+                            v-model="filters.payment_status"
+                            class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                        >
+                            <option value="">All Payments</option>
+                            <option v-for="status in paymentStatusOptions" :key="status" :value="status">
+                                {{ status.toUpperCase().replace('_', ' ') }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Order ID -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Order ID</label>
+                        <input
+                            v-model="filters.order_number"
+                            type="text"
+                            placeholder="ORD-XXXX..."
+                            class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
+                        />
+                    </div>
+
+                    <!-- Amount Range -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Total Amount</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                v-model="filters.min_total"
+                                type="number"
+                                placeholder="Min"
+                                class="flex-1 px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
+                            />
+                            <input
+                                v-model="filters.max_total"
+                                type="number"
+                                placeholder="Max"
+                                class="flex-1 px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6 flex justify-end flex-wrap gap-1 items-center space-x-2">
                 <button
                     v-if="selectedOrders.length > 0"
                     @click="bulkFireMetaEvent"
@@ -1071,9 +992,9 @@ const sendToSteadfastSingle = async (order) => {
 
             <!-- <pre>{{ orders }}</pre> -->
 
-            <!-- Orders Table -->
+            <!-- Orders Table (Desktop) -->
             <div
-                class="overflow-x-auto rounded-xl shadow-lg border border-gray-100"
+                class="hidden md:block overflow-x-auto rounded-xl shadow-lg border border-gray-100"
             >
                 <table class="min-w-full divide-y table-auto">
                     <thead class="bg-gray-900 text-white">
@@ -1216,6 +1137,7 @@ const sendToSteadfastSingle = async (order) => {
                                         }}
                                     </p>
                                     <p
+                                        v-if="order.customer?.email && order.customer?.email !== 'N/A'"
                                         class="text-gray-600 flex items-center text-xs mt-1"
                                     >
                                         <Mail
@@ -1666,6 +1588,214 @@ const sendToSteadfastSingle = async (order) => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Bulk Actions & Select All -->
+            <div class="md:hidden mb-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-xl border border-gray-200">
+                        <input
+                            type="checkbox"
+                            :checked="selectAll"
+                            @change="toggleSelectAll"
+                            class="rounded text-blue-500 w-5 h-5 border-gray-300 focus:ring-offset-0"
+                        />
+                        <span class="text-xs font-black text-gray-700 uppercase tracking-tighter">Select All</span>
+                    </div>
+                    <span v-if="selectedOrders.length > 0" class="text-[10px] font-black bg-blue-600 text-white px-2 py-1 rounded-lg">
+                        {{ selectedOrders.length }} SELECTED
+                    </span>
+                </div>
+            </div>
+
+            <!-- Mobile Orders View -->
+            <div class="md:hidden space-y-3">
+                <div 
+                    v-for="order in visibleOrders" 
+                    :key="order.id"
+                    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300"
+                    :class="{ 'ring-2 ring-blue-500/20 shadow-md': expandedOrders.has(order.id) }"
+                >
+                    <!-- Compact Header (Always Visible) -->
+                    <div 
+                        @click="toggleOrderExpand(order.id)"
+                        class="p-3 flex items-center justify-between cursor-pointer active:bg-gray-50 bg-white"
+                    >
+                        <div class="flex items-center gap-2.5">
+                            <input
+                                type="checkbox"
+                                :value="order.id"
+                                :checked="selectedOrders.includes(order.id)"
+                                @change.stop="toggleOrderSelection(order.id)"
+                                class="rounded text-blue-500 w-5 h-5 border-gray-300 focus:ring-offset-0"
+                            />
+                            <div class="flex flex-col">
+                                <span class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tight w-fit">
+                                    {{ order.order_number }}
+                                </span>
+                                <span class="text-[11px] font-bold text-gray-900 mt-0.5">
+                                    {{ order.customer.name }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-[12px] font-black text-gray-900">৳{{ order.total }}</span>
+                                <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                                    <!-- Payment Status -->
+                                    <span 
+                                        class="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded shadow-sm border"
+                                        :class="order.payment_status === 'paid' 
+                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                                            : 'bg-rose-50 text-rose-600 border-rose-200'"
+                                    >
+                                        {{ order.payment_status }}
+                                    </span>
+                                    <!-- Delivery Status -->
+                                    <span 
+                                        class="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-blue-50 text-blue-600 border-blue-200"
+                                    >
+                                        {{ order.status.replace('_', ' ') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <ChevronDown 
+                                class="w-5 h-5 text-gray-400 transition-transform duration-300"
+                                :class="{ 'rotate-180': expandedOrders.has(order.id) }"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Section -->
+                    <div 
+                        v-show="expandedOrders.has(order.id)"
+                        class="border-t border-gray-50 bg-white"
+                    >
+                        <!-- Date & Status Bar -->
+                        <div class="px-4 py-2 bg-gray-50/50 flex items-center justify-between border-b border-gray-50">
+                            <span class="text-[10px] text-gray-500 font-bold">
+                                {{ formatOrderDate(order.date) }} {{ new Date(order.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                            </span>
+                            <div class="w-28 scale-90 origin-right">
+                                <StatusDropdown
+                                    v-model="order.status"
+                                    :order-id="order.id"
+                                    :is-loading="updatingOrders[order.id]"
+                                    @status-change="updateOrderStatus"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Customer Details -->
+                        <div class="px-4 py-3 flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs shrink-0">
+                                {{ order.customer.name.charAt(0).toUpperCase() }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5 text-gray-700 text-[12px] font-bold">
+                                    <Phone class="w-3.5 h-3.5" />
+                                    <span>{{ order.customer.phone }}</span>
+                                </div>
+                                <div class="flex items-start gap-1.5 mt-1 text-gray-500 text-[11px] font-medium leading-normal">
+                                    <MapPin class="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                    <span class="line-clamp-2 uppercase">{{ order.customer.address }}</span>
+                                </div>
+                            </div>
+                            <!-- Courier Mini Card -->
+                            <div v-if="order.is_courier" class="bg-blue-50/80 px-2 py-1.5 rounded-xl flex flex-col items-center gap-1 border border-blue-100 min-w-[65px]">
+                                <Truck class="w-3.5 h-3.5 text-blue-600" />
+                                <span class="text-[8px] font-black text-blue-700 uppercase tracking-tighter line-clamp-1">{{ order.courier_name }}</span>
+                                <a 
+                                    v-if="order.tracking_number"
+                                    :href="order.courier_name === 'pathao' ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}` : `https://steadfast.com.bd/t/${order.tracking_number}`"
+                                    target="_blank"
+                                    class="text-[8px] font-black text-blue-600 border-t border-blue-200 pt-0.5 mt-0.5 tracking-tighter"
+                                >
+                                    TRACK
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Product Items -->
+                        <div class="px-4 py-3 space-y-2 bg-white">
+                            <div 
+                                v-for="item in order.items" 
+                                :key="item.id"
+                                class="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-gray-100"
+                            >
+                                <div class="relative shrink-0">
+                                    <img :src="item.product.image || ''" class="w-10 h-10 rounded-lg object-cover border border-white shadow-sm" />
+                                    <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[9px] font-bold text-white ring-1 ring-white">
+                                        {{ item.quantity }}
+                                    </span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-[11px] font-bold text-gray-800 line-clamp-1 uppercase">{{ item.product.name }}</h4>
+                                    <div class="text-[10px] text-blue-600 font-black mt-0.5">
+                                        ৳{{ item.price }}
+                                        <span v-if="item.variation" class="text-gray-400 font-normal ml-1 border-l border-gray-300 pl-1 uppercase">
+                                            <span v-for="(v, k, i) in item.variation.attributes" :key="k">
+                                                {{ v }}{{ i < Object.keys(item.variation.attributes).length - 1 ? ',' : '' }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <!-- Status badges (Mobile Mini) -->
+                                    <div v-if="order.status === 'partially_delivered' || order.status === 'returned' || item.returned_quantity > 0" class="flex gap-1 mt-1">
+                                        <span v-if="item.quantity - item.returned_quantity > 0" class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[8px] font-black">
+                                            ✓ {{ item.quantity - item.returned_quantity }} DEL
+                                        </span>
+                                        <span v-if="item.returned_quantity > 0" class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[8px] font-black">
+                                            ↺ {{ item.returned_quantity }} RET
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Bar -->
+                        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between border-t border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">STATUS:</span>
+                                <div class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-white border border-gray-200 text-blue-700 shadow-sm">
+                                    {{ order.payment_status }}
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <button 
+                                    @click.stop="toggleActionMenu(order.id)"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-gray-200 shadow-sm text-[11px] font-black text-gray-700 active:scale-95 transition-all"
+                                >
+                                    OPTIONS
+                                    <MoreVertical class="w-3.5 h-3.5" />
+                                </button>
+                                
+                                <div v-if="activeActionMenu === order.id" class="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 py-1">
+                                    <button @click="checkFraud(order?.customer?.phone); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2">
+                                        <User class="w-4 h-4 text-orange-500" /> Fraud Check
+                                    </button>
+                                    <button @click="sendToPathao(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
+                                        <Truck class="w-4 h-4 text-emerald-500" /> Pathao
+                                    </button>
+                                    <button @click="sendToSteadfastSingle(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
+                                        <Truck class="w-4 h-4 text-blue-500" /> Steadfast
+                                    </button>
+                                    <Link :href="route('admin.orders.edit', order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
+                                        <SquarePen class="w-4 h-4 text-amber-500" /> Edit Order
+                                    </Link>
+                                    <button @click="openDeleteModal(order.id); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-50">
+                                        <Trash2Icon class="w-4 h-4" /> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="visibleOrders.length === 0" class="md:hidden py-10 text-center text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300">
+                No orders found matching your filters.
             </div>
 
             <!-- Pagination -->
