@@ -14,6 +14,8 @@ import {
     X,
     Hash,
     Truck,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-vue-next";
 import CourierSelectionModal from "@/Components/Couriers/CourierSelectionModal.vue";
 import DeleteModal from "@/Components/Modal/DeleteModal.vue";
@@ -210,24 +212,22 @@ const sendBulkToPathao = () => {
     const payload = {
         orders: selectedOrders.value.map((orderId) => ({
             orderId,
-            ...savedOrderData.value[orderId],
+            specialInstruction: savedOrderData.value[orderId]?.specialInstruction || "Need to Delivery before 5 PM",
         })),
     };
 
     router.post("/admin/couriers/pathao/shipments/bulk", payload, {
         preserveState: true,
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
             selectedOrders.value = [];
             selectAll.value = false;
             savedOrderData.value = {};
-            toast.success("Shipments created successfully");
+            toast.success(page.props.flash?.message || "Bulk shipments created successfully");
         },
         onError: (errors) => {
-            toast.error(
-                "Failed to create shipment: " +
-                    (errors.error || "Unknown error"),
-            );
+            const firstError = Object.values(errors)[0];
+            toast.error(firstError || "Failed to create bulk shipments");
         },
     });
 };
@@ -598,6 +598,38 @@ const handleNotesSaved = (newNotes) => {
 
 // Close menu when clicking outside (optional but good for UX)
 // For simplicity in this step, we'll just rely on the toggle or clicking another one.
+
+
+
+const sendToPathao = (order) => {
+    router.post(route('admin.couriers.pathao.shipment'), {
+        orderId: order.id,
+        specialInstruction: "Need to Delivery before 5 PM"
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: (page) => {
+            toast.success(page.props.flash?.message || "Order sent to Pathao successfully");
+        },
+        onError: (errors) => {
+            toast.error(errors.message || "Failed to send order to Pathao");
+        },
+    });
+};
+
+const sendToSteadfastSingle = async (order) => {
+    try {
+        const response = await axios.post('/api/courier/orders', {
+            oders_id: order.id.toString()
+        });
+        toast.success(response.data.message || 'Order sent to Steadfast successfully');
+        router.reload();
+    } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to send order to Steadfast');
+    }
+};
+
+
 </script>
 
 <template>
@@ -1280,171 +1312,122 @@ const handleNotesSaved = (newNotes) => {
                                 </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
-                                <div class="flex flex-wrap gap-1">
+                                <div class="flex flex-col gap-2">
                                     <div
                                         v-if="order.items.length === 0"
-                                        class="text-black italic"
+                                        class="text-gray-400 italic text-xs py-2 px-3 border border-dashed border-gray-300 rounded-lg bg-gray-50"
                                     >
                                         No items
                                     </div>
-                                    <div
-                                        v-for="(item, index) in order.items"
-                                        :key="item.id"
-                                        v-show="
-                                            index <
-                                            (showAllItems
-                                                ? order.items.length
-                                                : 2)
-                                        "
-                                        class="flex items-center mb-2 flex-wrap border border-gray-200 rounded-lg p-2"
-                                    >
-                                        <img
-                                            :src="item.product.image || ''"
-                                            alt="Product Image"
-                                            class="w-16 h-16 object-cover mr-3 rounded"
-                                        />
-                                        <div class="flex-1 min-w-0">
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <p class="font-medium truncate">
-                                                    {{
-                                                        truncateText(
-                                                            item.product.name,
-                                                            2,
-                                                        )
-                                                    }}
-                                                </p>
-                                                <span
-                                                    v-if="item.is_pre_order"
-                                                    class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
-                                                >
-                                                    Pre-Order
+
+                                    <div class="space-y-2">
+                                        <div
+                                            v-for="(item, index) in order.items"
+                                            :key="item.id"
+                                            v-show="index < (showAllItems ? order.items.length : 2)"
+                                            class="group relative flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-xl p-2.5 hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md transition-all duration-200"
+                                        >
+                                            <div class="relative flex-shrink-0">
+                                                <img
+                                                    :src="item.product.image || ''"
+                                                    alt="Product Image"
+                                                    class="w-14 h-14 object-cover rounded-lg border border-gray-300 shadow-sm"
+                                                />
+                                                <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shadow-md ring-2 ring-white">
+                                                    {{ item.quantity }}
                                                 </span>
                                             </div>
-                                            <p
-                                                class="text-xs text-gray-600 font-medium"
-                                            >
-                                                Qty: {{ item.quantity }} |
-                                                Price: ৳{{ item.price }}
-                                            </p>
-                                            <div
-                                                v-if="
-                                                    order.status ===
-                                                        'partially_delivered' ||
-                                                    order.status ===
-                                                        'returned' ||
-                                                    item.returned_quantity > 0
-                                                "
-                                                class="flex flex-wrap gap-1 mt-1"
-                                            >
-                                                <span
-                                                    v-if="
-                                                        item.quantity -
-                                                            item.returned_quantity >
-                                                        0
-                                                    "
-                                                    class="text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold"
-                                                >
-                                                    Delivered:
-                                                    {{
-                                                        item.quantity -
-                                                        item.returned_quantity
-                                                    }}
-                                                </span>
-                                                <span
-                                                    v-if="
-                                                        item.returned_quantity >
-                                                        0
-                                                    "
-                                                    class="text-[10px] bg-red-100 text-red-800 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap truncate font-semibold"
-                                                >
-                                                    Returned:
-                                                    {{ item.returned_quantity }}
-                                                </span>
-                                            </div>
-                                            <p
-                                                v-if="item.variation"
-                                                class="text-xs text-gray-600 truncate"
-                                            >
-                                                <span
-                                                    v-for="(value, key) in item
-                                                        .variation.attributes"
-                                                    :key="key"
-                                                >
-                                                    {{ key }}: {{ value }}
+
+                                            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                                    <p class="text-[13px] font-bold text-gray-900 leading-tight group-hover:text-blue-700 transition-colors">
+                                                        {{ truncateText(item.product.name, 3) }}
+                                                    </p>
                                                     <span
-                                                        v-if="
-                                                            Object.keys(
-                                                                item.variation
-                                                                    .attributes,
-                                                            ).indexOf(key) <
-                                                            Object.keys(
-                                                                item.variation
-                                                                    .attributes,
-                                                            ).length -
-                                                                1
-                                                        "
-                                                        >,
+                                                        v-if="item.is_pre_order"
+                                                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-orange-100 text-orange-700 border border-orange-200 uppercase tracking-tight"
+                                                    >
+                                                        Pre-Order
                                                     </span>
-                                                </span>
-                                            </p>
+                                                </div>
+
+                                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                    <span class="text-[11px] font-bold text-blue-700 bg-blue-100/50 px-1.5 py-0.5 rounded">
+                                                        ৳{{ item.price }}
+                                                    </span>
+                                                    
+                                                    <div v-if="item.variation" class="flex items-center gap-1 text-[11px] text-gray-600 font-semibold bg-gray-200/50 px-1.5 py-0.5 rounded">
+                                                        <span v-for="(value, key, i) in item.variation.attributes" :key="key">
+                                                            {{ value }}{{ i < Object.keys(item.variation.attributes).length - 1 ? ', ' : '' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Status badges for partial delivery -->
+                                                <div
+                                                    v-if="order.status === 'partially_delivered' || order.status === 'returned' || item.returned_quantity > 0"
+                                                    class="flex gap-1.5 mt-2"
+                                                >
+                                                    <span
+                                                        v-if="item.quantity - item.returned_quantity > 0"
+                                                        class="px-2 py-0.5 rounded-lg bg-emerald-600 text-white text-[10px] font-black shadow-sm"
+                                                    >
+                                                        DELIVERED: {{ item.quantity - item.returned_quantity }}
+                                                    </span>
+                                                    <span
+                                                        v-if="item.returned_quantity > 0"
+                                                        class="px-2 py-0.5 rounded-lg bg-rose-600 text-white text-[10px] font-black shadow-sm"
+                                                    >
+                                                        RETURNED: {{ item.returned_quantity }}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="order.items.length > 2" class="mt-2">
+
+                                <div v-if="order.items.length > 2" class="mt-2.5 pl-1">
                                     <button
                                         @click="showAllItems = !showAllItems"
-                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                        class="inline-flex items-center gap-1.5 text-[12px] font-black text-white px-3 py-1.5 bg-gray-800 hover:bg-blue-600 rounded-lg shadow-sm transition-all active:scale-95"
                                     >
-                                        {{
-                                            showAllItems
-                                                ? "Show Less"
-                                                : "See More"
-                                        }}
+                                        {{ showAllItems ? 'Show Less' : `+${order.items.length - 2} More Items` }}
+                                        <ChevronDown v-if="!showAllItems" class="w-3.5 h-3.5" />
+                                        <ChevronUp v-else class="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
-                                <div class="flex flex-col">
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-xs text-gray-500 w-10"
-                                            >Total:</span
-                                        >
-                                        <span
-                                            class="text-sm font-bold text-gray-900"
-                                            >৳{{ order.total }}</span
-                                        >
+                                <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-2.5 space-y-1.5">
+                                    <!-- Total -->
+                                    <div class="flex items-center justify-between gap-3">
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</span>
+                                        <span class="text-sm font-black text-gray-900">৳{{ order.total }}</span>
                                     </div>
-                                    <div
-                                        v-if="
-                                            order.status ===
-                                                'partially_delivered' ||
-                                            order.paid_amount > 0
-                                        "
-                                        class="flex items-center gap-1 mt-0.5"
-                                    >
-                                        <span
-                                            class="text-[10px] text-gray-500 w-10"
-                                            >Paid:</span
-                                        >
-                                        <span
-                                            class="text-[10px] font-semibold text-green-600"
-                                            >৳{{ order.paid_amount || 0 }}</span
-                                        >
+
+                                    <!-- Paid -->
+                                    <div v-if="order.status === 'partially_delivered' || order.paid_amount > 0" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Paid</span>
+                                        <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                                            <div class="w-1 h-1 rounded-full bg-emerald-500"></div>
+                                            ৳{{ order.paid_amount || 0 }}
+                                        </div>
                                     </div>
-                                    <div
-                                        v-if="order.return_charge > 0"
-                                        class="flex items-center gap-1 mt-0.5"
-                                    >
-                                        <span
-                                            class="text-[10px] text-gray-500 w-10"
-                                            >R-Chrg:</span
-                                        >
-                                        <span
-                                            class="text-[10px] font-semibold text-red-500"
-                                            >৳{{ order.return_charge }}</span
-                                        >
+
+                                    <!-- Return Charge -->
+                                    <div v-if="order.return_charge > 0" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Return</span>
+                                        <span class="text-[11px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md">
+                                            ৳{{ order.return_charge }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Due (Optional Visual) -->
+                                    <div v-if="order.total > (order.paid_amount || 0)" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Due</span>
+                                        <span class="text-[11px] font-bold text-amber-600">
+                                            ৳{{ order.total - (order.paid_amount || 0) }}
+                                        </span>
                                     </div>
                                 </div>
                             </td>
@@ -1476,74 +1459,46 @@ const handleNotesSaved = (newNotes) => {
                                     {{ order.payment_status }}
                                 </div>
                             </td>
-                            <td class="px-2 py-2 text-sm">
+                            <td class="px-2 py-2 text-sm w-32">
                                 <div
-                                    v-if="
-                                        order.tracking_number ||
-                                        order.is_courier
-                                    "
-                                    class="border border-gray-200 rounded-lg p-1 bg-gray-50"
+                                    v-if="order.is_courier"
+                                    class="flex flex-col gap-1.5 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm group hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300"
                                 >
-                                    <div class="flex flex-col space-y-1">
-                                        <div
-                                            class="flex items-center space-x-1"
-                                        >
-                                            <Truck
-                                                class="w-4 h-4 text-gray-600"
-                                            />
-                                            <span
-                                                class="px-1 py-0.5 rounded-full text-xs font-medium"
-                                                :class="{
-                                                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                                                        order.courier_name,
-                                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200':
-                                                        order.courier_name ==
-                                                        'N/A',
-                                                }"
-                                            >
-                                                {{
-                                                    order.courier_name || "N/A"
-                                                }}
-                                            </span>
-                                        </div>
-                                        <div
-                                            class="flex flex-col justify-center items-center gap-1 p-2 bg-white rounded-md shadow-sm border"
-                                        >
-                                            <!-- Consignment ID -->
-                                            <span
-                                                class="text-xs font-semibold text-gray-800"
-                                            >
-                                                {{ order.consignment_id }}
-                                            </span>
-
-                                            <!-- Tracking Link -->
-                                            <a
-                                                v-if="
-                                                    order?.tracking_number !==
-                                                    'N/A'
-                                                "
-                                                :href="`https://steadfast.com.bd/t/${order.tracking_number}`"
-                                                target="_blank"
-                                                class="text-[11px] font-medium text-blue-600 hover:text-blue-800 underline"
-                                            >
-                                                Track Shipment
-                                            </a>
-                                        </div>
-
-                                        <div
-                                            v-show="order?.area_id"
-                                            class="flex items-center space-x-1"
-                                        >
-                                            <MapPin
-                                                class="w-4 h-4 text-green-600"
-                                            />
-                                            <span
-                                                class="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded"
-                                            >
-                                                Address Saved
+                                    <!-- Courier Badge -->
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5 overflow-hidden">
+                                            <div class="p-1 rounded bg-blue-50 dark:bg-blue-900/30">
+                                                <Truck class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 truncate">
+                                                {{ order.courier_name }}
                                             </span>
                                         </div>
                                     </div>
+
+                                    <!-- Tracking ID -->
+                                    <div class="flex flex-col">
+                                        <div class="text-[9px] text-gray-400 dark:text-gray-500 font-medium">CONSIGNMENT ID</div>
+                                        <div class="font-mono text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate leading-tight">
+                                            {{ order.tracking_number || 'PENDING' }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Link -->
+                                    <a
+                                        v-if="order?.tracking_number && order?.tracking_number !== 'N/A'"
+                                        :href="order.courier_name === 'pathao'
+                                            ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}`
+                                            : `https://steadfast.com.bd/t/${order.tracking_number}`"
+                                        target="_blank"
+                                        class="mt-1 flex items-center justify-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-[10px] font-bold rounded hover:bg-blue-500 hover:text-white dark:hover:bg-blue-600 transition-all duration-200 border border-blue-100 dark:border-blue-800/50"
+                                    >
+                                        <span>Track</span>
+                                        <Eye class="w-3 h-3" />
+                                    </a>
+                                </div>
+                                <div v-else class="text-center italic text-gray-300 dark:text-gray-600 text-[10px]">
+                                    Not Shipped
                                 </div>
                             </td>
                             <td class="px-3 py-3 text-sm">
@@ -1598,7 +1553,7 @@ const handleNotesSaved = (newNotes) => {
                                                 View Details
                                             </Link> -->
 
-                                            <button
+                                            <!-- <button
                                                 @click="
                                                     openCourierModal(
                                                         order,
@@ -1610,6 +1565,28 @@ const handleNotesSaved = (newNotes) => {
                                             >
                                                 <MapPin class="w-4 h-4" />
                                                 Couriers
+                                            </button> -->
+
+                                            <button
+                                                @click="
+                                                    sendToPathao(order);
+                                                    toggleActionMenu(order.id);
+                                                "
+                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-600 flex items-center gap-2 transition-colors"
+                                            >
+                                                <Truck class="w-4 h-4" />
+                                                Send to Pathao
+                                            </button>
+
+                                            <button
+                                                @click="
+                                                    sendToSteadfastSingle(order);
+                                                    toggleActionMenu(order.id);
+                                                "
+                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2 transition-colors"
+                                            >
+                                                <Truck class="w-4 h-4" />
+                                                Send to Steadfast
                                             </button>
 
                                             <!-- Partial Delivery Button -->

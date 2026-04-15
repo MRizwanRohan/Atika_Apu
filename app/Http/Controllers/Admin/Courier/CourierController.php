@@ -44,20 +44,28 @@ class CourierController extends Controller
     {
         try {
             $validated = $request->validate([
-                'client_id' => 'nullable|string',
-                'client_secret' => 'nullable|string',
-                'username' => 'nullable|string',
-                'password' => 'nullable|string',
-                'is_enabled' => 'nullable|in:yes,no',
-                'StoreId' => 'nullable|integer',
-                'steadfast_api_key' => 'nullable|string',
-                'steadfast_secret_key' => 'nullable|string',
-                'steadfast_is_enabled' => 'nullable|in:yes,no',
+                'client_id' => 'required|string',
+                'client_secret' => 'required|string',
+                'username' => 'required|string',
+                'password' => 'required|string',
+                'is_enabled' => 'required|in:yes,no',
+                'StoreId' => 'required|integer',
             ]);
 
             $settings = CourierSetting::first();
 
             if ($settings) {
+                // Check if credentials changed to force a new token
+                $credentialsChanged = $settings->client_id !== $validated['client_id'] ||
+                                     $settings->client_secret !== $validated['client_secret'] ||
+                                     $settings->username !== $validated['username'] ||
+                                     $settings->password !== $validated['password'];
+
+                if ($credentialsChanged) {
+                    $validated['access_token'] = null;
+                    $validated['expires_at'] = null;
+                }
+
                 $settings->update($validated);
                 $message = 'Courier settings updated successfully';
             } else {
@@ -129,29 +137,25 @@ class CourierController extends Controller
         try {
             $validated = $request->validate([
                 'orderId' => 'required|integer',
-                'recipient_city' => 'required|integer',
-                'recipient_zone' => 'required|integer',
-                'recipient_area' => 'required|integer',
             ]);
 
             // Call the Pathao service to create the shipment
             $response = $this->pathaoService->createShipment($validated, $request->input('specialInstruction', 'Need to Delivery before 5 PM'));
 
-            // Extract data from the response
-            $responseData = $response['data'] ?? $response;
+            if (isset($response['code']) && $response['code'] === 200) {
+                return redirect()->back()->with('flash', [
+                    'message' => $response['message'] ?? 'Order sent to Pathao successfully',
+                    'type' => 'success'
+                ]);
+            }
 
-            $order = $this->pathaoService->updateOrderWithPathaoDetails($validated['orderId'], $validated, $responseData);
-
-
-            return redirect()->back()->with([
-                'success' => true,
-                'message' => 'Shipment created successfully',
-                'data' => $responseData,
+            return redirect()->back()->withErrors([
+                'message' => $response['message'] ?? 'Failed to create Pathao shipment'
             ]);
         } catch (\Exception $e) {
             Log::error('Pathao Shipment Error:', ['error' => $e->getMessage()]);
-            return redirect()->back()->with([
-                'error' => $e->getMessage(),
+            return redirect()->back()->withErrors([
+                'message' => $e->getMessage()
             ]);
         }
     }
@@ -169,26 +173,20 @@ class CourierController extends Controller
 
             $response = $this->pathaoService->createBulkShipment($validated);
 
-            // Check if the response indicates success
-            if (isset($response['success']) && $response['success'] === true) {
-                // Update the is_courier column for each order in the payload
-                foreach ($validated['orders'] as $orderData) {
-                    Order::where('id', $orderData['orderId'])->update([
-                        'is_courier' => true,
-                        'courier_name' => 'pathao'
-                    ]);
-                }
+            if (isset($response['code']) && $response['code'] === 202) {
+                return redirect()->back()->with('flash', [
+                    'message' => $response['message'] ?? 'Bulk order creation request accepted',
+                    'type' => 'success'
+                ]);
             }
 
-            return redirect()->back()->with([
-                'success' => true,
-                'message' => 'Bulk shipment created successfully',
-                'data' => $response,
+            return redirect()->back()->withErrors([
+                'message' => $response['message'] ?? 'Failed to create Pathao bulk shipment'
             ]);
         } catch (\Exception $e) {
             Log::error('Pathao Bulk Shipment Error:', ['error' => $e->getMessage()]);
-            return redirect()->back()->with([
-                'error' => $e->getMessage(),
+            return redirect()->back()->withErrors([
+                'message' => $e->getMessage()
             ]);
         }
     }

@@ -5,6 +5,7 @@ namespace App\Services\Couriers\Pathao;
 use Carbon\Carbon;
 use App\Models\Order;
 use App\Models\CourierSetting;
+use App\Events\OrderUpdated;
 use Illuminate\Support\Facades\Log;
 
 class PathaoService
@@ -105,6 +106,11 @@ class PathaoService
     }
 
 
+    public function getStores()
+    {
+        return $this->makeRequest('GET', '/aladdin/api/v1/stores');
+    }
+
     public function getCities()
     {
         return $this->makeRequest('GET', '/aladdin/api/v1/city-list');
@@ -168,9 +174,6 @@ class PathaoService
             'recipient_name' => $order->customer_name ?? 'Unknown Customer',
             'recipient_phone' => $order->customer_phone ?? '01887573015',
             'recipient_address' => $order->shipping_address ?? 'Default Address',
-            'recipient_city' => $validated['recipient_city'],
-            'recipient_zone' => $validated['recipient_zone'],
-            'recipient_area' => $validated['recipient_area'],
             'delivery_type' => 48,
             'item_type' => 2,
             'special_instruction' => $specialInstruction,
@@ -180,28 +183,36 @@ class PathaoService
             'amount_to_collect' => $order->payment_status === 'paid' ? 0 : (float) $order->total,
         ];
 
-        return $this->makeRequest('POST', '/aladdin/api/v1/orders', $payload);
+        $response = $this->makeRequest('POST', '/aladdin/api/v1/orders', $payload);
+
+        if (isset($response['code']) && $response['code'] === 200) {
+            $this->updateOrderWithPathaoDetails($order->id, [], $response['data']);
+        }
+
+        return $response;
     }
 
 
 
-    public function updateOrderWithPathaoDetails($orderId, array $validated, array $responseData)
+    public function updateOrderWithPathaoDetails($orderId, array $validated = [], array $responseData = [])
     {
         // Find the order
         $order = Order::findOrFail($orderId);
 
         // Update the order with consignment_id and other fields
         $order->update([
-            'tracking_number' => $responseData['consignment_id'],
+            'tracking_number' => $responseData['consignment_id'] ?? $order->tracking_number,
             'is_courier' => true,
             'courier_name' => 'pathao',
-            'city_id' => $validated['recipient_city'],
-            'zone_id' => $validated['recipient_zone'],
-            'area_id' => $validated['recipient_area'],
-            'city_name' => $responseData['city_name'] ?? null,
-            'zone_name' => $responseData['zone_name'] ?? null,
-            'area_name' => $responseData['area_name'] ?? null,
+            'city_id' => $validated['recipient_city'] ?? $order->city_id,
+            'zone_id' => $validated['recipient_zone'] ?? $order->zone_id,
+            'area_id' => $validated['recipient_area'] ?? $order->area_id,
+            'city_name' => $responseData['city_name'] ?? $order->city_name,
+            'zone_name' => $responseData['zone_name'] ?? $order->zone_name,
+            'area_name' => $responseData['area_name'] ?? $order->area_name,
         ]);
+
+        event(new OrderUpdated($order));
 
         return $order;
     }
@@ -241,9 +252,6 @@ class PathaoService
                 'recipient_name' => $order->customer_name ?? 'Unknown Customer',
                 'recipient_phone' => $order->customer_phone ?? '01887573015',
                 'recipient_address' => $order->shipping_address ?? 'Default Address',
-                'recipient_city' => $order->city_id,
-                'recipient_zone' => $order->zone_id,
-                'recipient_area' => $order->area_id,
                 'delivery_type' => 48,
                 'item_type' => 2,
                 'special_instruction' => $orderData['specialInstruction'] ?? 'Need to Delivery before 5 PM',
@@ -256,6 +264,21 @@ class PathaoService
 
         $payload = ['orders' => $ordersPayload];
 
-        return $this->makeRequest('POST', '/aladdin/api/v1/orders/bulk', $payload);
+        $response = $this->makeRequest('POST', '/aladdin/api/v1/orders/bulk', $payload);
+
+        if (isset($response['code']) && $response['code'] === 202) {
+            foreach ($validated['orders'] as $orderData) {
+                $order = Order::find($orderData['orderId']);
+                if ($order) {
+                    $order->update([
+                        'is_courier' => true,
+                        'courier_name' => 'pathao',
+                    ]);
+                    event(new OrderUpdated($order->fresh()));
+                }
+            }
+        }
+
+        return $response;
     }
 }
