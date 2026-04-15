@@ -50,6 +50,22 @@ class UpdateProductRequest extends FormRequest
                 }
             }
         }
+
+        foreach (['existing_gallery_images', 'deleted_gallery_images'] as $galleryField) {
+            if ($this->has($galleryField)) {
+                $galleryValue = $this->input($galleryField);
+
+                if (is_string($galleryValue)) {
+                    $decoded = json_decode($galleryValue, true);
+
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $this->merge([$galleryField => $decoded]);
+                    } elseif ($galleryValue === '' || strtolower($galleryValue) === 'null') {
+                        $this->merge([$galleryField => []]);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -79,6 +95,10 @@ class UpdateProductRequest extends FormRequest
             'upload_video' => 'nullable|mimetypes:video/mp4,video/ogg,video/webm|max:51200',
             'gallery_images' => 'nullable|array',
             'gallery_images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
+            'existing_gallery_images' => 'nullable|array',
+            'existing_gallery_images.*' => 'string',
+            'deleted_gallery_images' => 'nullable|array',
+            'deleted_gallery_images.*' => 'string',
             'product_tags' => 'nullable|array',
             'product_tags.*' => 'string|max:255',
             'specification' => 'nullable|array',
@@ -166,6 +186,8 @@ class UpdateProductRequest extends FormRequest
             'feature_image' => 'feature image',
             'upload_video' => 'video',
             'gallery_images' => 'gallery images',
+            'existing_gallery_images' => 'existing gallery images',
+            'deleted_gallery_images' => 'deleted gallery images',
         ];
     }
 }

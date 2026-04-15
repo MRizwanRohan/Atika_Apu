@@ -82,8 +82,7 @@ onMounted(() => {
 
 const activeTab = ref("general");
 const defaultImageName = ref("");
-const galleryImageNames = ref([]);
-const galleryImagePreviews = ref([]);
+const galleryImageItems = ref([]);
 const variationImageNames = ref([]);
 const videoName = ref("");
 const videoPreview = ref(null);
@@ -169,7 +168,8 @@ const form = useForm({
     feature_image: null,
     feature_image_preview: null,
     gallery_images: [],
-    gallery_previews: [],
+    existing_gallery_images: [],
+    deleted_gallery_images: [],
     upload_video: null,
     upload_video_preview: null,
     product_tags: [],
@@ -245,11 +245,14 @@ const initializeForm = () => {
 
         const gallery = parseJsonField(props.product.gallery_images);
         if (Array.isArray(gallery) && gallery.length > 0) {
-            form.gallery_previews = gallery;
-            galleryImagePreviews.value = gallery;
-            galleryImageNames.value = gallery.map((path) =>
-                path.split("/").pop()
-            );
+            form.existing_gallery_images = [...gallery];
+            form.deleted_gallery_images = [];
+            galleryImageItems.value = gallery.map((path) => ({
+                type: "existing",
+                path,
+                preview: path,
+                name: path.split("/").pop(),
+            }));
         }
 
         if (props.product.upload_video) {
@@ -619,8 +622,12 @@ const handleGalleryImageUpload = (event) => {
         const uploadKey = `gallery_${form.gallery_images.length + index}`;
         uploadProgress.value[uploadKey] = 0;
         form.gallery_images.push(file);
-        galleryImageNames.value.push(file.name);
-        galleryImagePreviews.value.push(URL.createObjectURL(file));
+        galleryImageItems.value.push({
+            type: "new",
+            file,
+            preview: URL.createObjectURL(file),
+            name: file.name,
+        });
         simulateUploadProgress(uploadKey);
     });
 };
@@ -694,34 +701,35 @@ const removeFeatureImage = () => {
 };
 
 const removeGalleryImage = (index) => {
-    // If it's a new file
-    if (form.gallery_images[index]) {
-        // It's a newly uploaded file
-        URL.revokeObjectURL(galleryImagePreviews.value[index]);
-        form.gallery_images.splice(index, 1);
-        galleryImageNames.value.splice(index, 1);
-        galleryImagePreviews.value.splice(index, 1);
-    } else {
-        // It's an existing file from DB (isEditMode)
-        // We need to handle this. Since form.gallery_images was initialized empty and gallery_previews has paths.
-        // Wait, in initializeForm I realized I didn't push to form.gallery_images, just previews.
-        // So this index matches previews.
+    const item = galleryImageItems.value[index];
 
-        // Correct logic:
-        // We probably need a separate list for "deleted images" or just remove from previews and send the remaining list?
-        // The original code was pushing to form.gallery_images for updates.
-        // Let's stick to the visual removal.
-        galleryImagePreviews.value.splice(index, 1);
-        galleryImageNames.value.splice(index, 1);
-        // We might need to track deleted images if the backend requires it.
-        // Based on original Edit.vue, it parses JSON. If we resend JSON or something?
-        // Actually the original code just had `gallery_images: []` in form and did `form.gallery_images.splice`.
-        // But `galleryImagePaths` computed props were used.
-        // Let's assume for now the backend handles replacements or we just append new ones.
-        // To properly delete existing images, usually, we send the "kept" images list or "deleted" ids.
-        // For this refactor, let's keep it simple: We allow adding new ones. Removing existing ones strictly might require backend changes.
-        // But let's allow removing from the *UI preview* at least.
+    if (!item) {
+        return;
     }
+
+    if (item.type === "new") {
+        if (item.preview?.startsWith("blob:")) {
+            URL.revokeObjectURL(item.preview);
+        }
+
+        const fileIndex = form.gallery_images.findIndex(
+            (file) => file === item.file
+        );
+
+        if (fileIndex !== -1) {
+            form.gallery_images.splice(fileIndex, 1);
+        }
+    } else if (item.type === "existing" && item.path) {
+        form.existing_gallery_images = form.existing_gallery_images.filter(
+            (path) => path !== item.path
+        );
+
+        if (!form.deleted_gallery_images.includes(item.path)) {
+            form.deleted_gallery_images.push(item.path);
+        }
+    }
+
+    galleryImageItems.value.splice(index, 1);
 };
 
 const removeVideo = () => {
@@ -921,8 +929,8 @@ const submit = () => {
                 if (v.image_preview && v.image_path)
                     URL.revokeObjectURL(v.image_preview);
             });
-            galleryImagePreviews.value.forEach((p) => {
-                if (p.startsWith("blob:")) URL.revokeObjectURL(p);
+            galleryImageItems.value.forEach((item) => {
+                if (item.preview?.startsWith("blob:")) URL.revokeObjectURL(item.preview);
             });
 
             setTimeout(() => {
@@ -1485,11 +1493,11 @@ const submit = () => {
                                         @drop="onDrop($event, 'gallery')"
                                     >
                                         <div
-                                            v-for="(preview, index) in galleryImagePreviews"
-                                            :key="index"
+                                            v-for="(item, index) in galleryImageItems"
+                                            :key="item.type === 'existing' ? item.path : item.preview"
                                             class="relative group aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-violet-400 transition-all duration-300 shadow-sm hover:shadow-xl"
                                         >
-                                            <img :src="preview" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                            <img :src="item.preview" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                                             <button
                                                 type="button"

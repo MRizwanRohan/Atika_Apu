@@ -817,21 +817,47 @@ class ProductService
 
   private function updateGalleryImages($request, Product $product)
   {
-    $galleryImages = $product->gallery_images ?? [];
+    $existingGalleryImages = is_array($product->gallery_images) ? $product->gallery_images : [];
+    $deletedGalleryImages = $request->input('deleted_gallery_images', []);
+
+    if (!is_array($deletedGalleryImages)) {
+      $deletedGalleryImages = [];
+    }
+
+    if ($request->has('existing_gallery_images')) {
+      $keptGalleryImages = $request->input('existing_gallery_images', []);
+    } else {
+      $keptGalleryImages = array_values(array_diff($existingGalleryImages, $deletedGalleryImages));
+    }
+
+    if (!is_array($keptGalleryImages)) {
+      $keptGalleryImages = $existingGalleryImages;
+    }
+
+    // Keep only images that already belong to this product.
+    $galleryImages = array_values(array_filter(
+      $keptGalleryImages,
+      fn($image) => in_array($image, $existingGalleryImages, true)
+    ));
+
+    $deletedGalleryImages = array_unique(array_merge(
+      $deletedGalleryImages,
+      array_values(array_diff($existingGalleryImages, $galleryImages))
+    ));
+
+    foreach ($deletedGalleryImages as $deletedImage) {
+      if (in_array($deletedImage, $existingGalleryImages, true)) {
+        ImageHelper::deleteImage($deletedImage);
+      }
+    }
 
     if ($request->hasFile('gallery_images')) {
-      // Delete old gallery images using helper
-      foreach ($galleryImages as $oldImage) {
-        ImageHelper::deleteImage($oldImage);
-      }
-
-      $galleryImages = [];
       foreach ($request->file('gallery_images') as $image) {
         $galleryImages[] = ImageHelper::uploadImage($image, 'storage/products/gallery');
       }
     }
 
-    return $galleryImages;
+    return array_values($galleryImages);
   }
 
 

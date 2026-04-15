@@ -24,6 +24,8 @@ const form = useForm({
   parent_id: props.category.parent_id,
   image: null,
   icon: null,
+  remove_image: false,
+  remove_icon: false,
   order: props.category.order,
   _method: 'PUT',
 });
@@ -60,6 +62,11 @@ const handleFileChange = (event, field) => {
   const file = event.target.files[0];
   if (file) {
     form[field] = file;
+    if (field === 'image') {
+      form.remove_image = false;
+    } else {
+      form.remove_icon = false;
+    }
     updatePreview(file, field);
     simulateUploadProgress(field);
   }
@@ -70,6 +77,11 @@ const handleDrop = (event, field) => {
   const file = event.dataTransfer.files[0];
   if (file) {
     form[field] = file;
+    if (field === 'image') {
+      form.remove_image = false;
+    } else {
+      form.remove_icon = false;
+    }
     updatePreview(file, field);
     simulateUploadProgress(field);
   }
@@ -115,9 +127,6 @@ const submit = () => {
     forceFormData: true,
     onSuccess: () => {
       form.reset('image', 'icon');
-      // Reset to original images if update successful but no new image uploaded
-      if (!form.image) imagePreview.value = props.category.image ? props.category.image : null;
-      if (!form.icon) iconPreview.value = props.category.icon ? props.category.icon : null;
       imageProgress.value = 0;
       iconProgress.value = 0;
     },
@@ -127,9 +136,11 @@ const submit = () => {
 const removeFile = (field) => {
   form[field] = null;
   if (field === 'image') {
+    form.remove_image = true;
     imagePreview.value = null;
     imageProgress.value = 0;
   } else {
+    form.remove_icon = true;
     iconPreview.value = null;
     iconProgress.value = 0;
   }

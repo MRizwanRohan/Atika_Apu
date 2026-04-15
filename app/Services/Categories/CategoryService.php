@@ -89,20 +89,26 @@ class CategoryService
     public function updateCategory(Category $category, array $data)
     {
         try {
-            // Handle image upload if new image is provided
             $imagePath = $category->image;
+            if (!empty($data['remove_image']) && $imagePath) {
+                ImageHelper::deleteImage($imagePath);
+                $imagePath = null;
+            }
+
             if (isset($data['image']) && $data['image']->isValid()) {
-                // Delete old image using helper
                 if ($imagePath) {
                     ImageHelper::deleteImage($imagePath);
                 }
                 $imagePath = ImageHelper::uploadImage($data['image'], 'storage/categories');
             }
 
-            // Handle icon upload if new icon is provided
             $iconPath = $category->icon;
+            if (!empty($data['remove_icon']) && $iconPath) {
+                ImageHelper::deleteImage($iconPath);
+                $iconPath = null;
+            }
+
             if (isset($data['icon']) && $data['icon']->isValid()) {
-                // Delete old icon using helper
                 if ($iconPath) {
                     ImageHelper::deleteImage($iconPath);
                 }
