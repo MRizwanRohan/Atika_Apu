@@ -14,6 +14,8 @@ interface OrderInterface
 
     public function getOrders(array $params = []): LengthAwarePaginator;
 
+    public function getStatusCounts();
+
     // updateOrderStatus
     public function updateOrderStatus(int $orderId, string $status): Order;
 
@@ -32,6 +34,8 @@ interface OrderInterface
     public function updateNewOrder(int $orderId, array $data): Order;
 
     public function processPartialDelivery(int $orderId, array $data): Order;
+
+    public function calculateOrderTotals(Order $order): void;
 
     /**
      * Return admin-facing notifications (count + recent items)

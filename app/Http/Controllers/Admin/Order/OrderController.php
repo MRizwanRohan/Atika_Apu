@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use App\Events\OrderUpdated;
+use Illuminate\Support\Facades\Artisan;
 use App\Services\Order\OrderInterface;
 use App\Services\Product\ProductService;
 use App\Exceptions\InvalidOrderDataException;
@@ -430,7 +431,7 @@ class OrderController extends Controller
             ]);
 
             $order = $this->orderService->updateCourierDetails($orderId, $validated);
-            \Artisan::call('cache:clear');
+            Artisan::call('cache:clear');
 
             return redirect()->back()
                 ->with('success', 'Courier details updated successfully');
@@ -551,9 +552,12 @@ class OrderController extends Controller
 
             $order = $this->orderService->updateOrderStatus($orderId, $validated['status']);
 
-            // If order status is delivered, automatically mark payment as paid
-            if ($validated['status'] === 'delivered' && $order->payment_status !== 'paid') {
-                $order->update(['payment_status' => 'paid']);
+            // If order status is delivered, automatically mark payment as paid and update paid_amount
+            if ($validated['status'] === 'delivered') {
+                $order->update([
+                    'payment_status' => 'paid',
+                    'paid_amount' => $order->total
+                ]);
             }
 
             // update  caching cache
