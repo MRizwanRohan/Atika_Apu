@@ -3,17 +3,25 @@
 namespace App\Services\Courier\Config;
 
 use App\Contracts\CourierConfigInterface;
+use App\Models\CourierSetting;
 
 class SteadfastConfig implements CourierConfigInterface
 {
+    private $settings;
+
+    public function __construct()
+    {
+        $this->settings = CourierSetting::first();
+    }
+
     public function getApiKey(): string
     {
-        return config('courier.steadfast.api_key');
+        return $this->settings->steadfast_api_key ?? '';
     }
 
     public function getSecretKey(): string
     {
-        return config('courier.steadfast.secret_key');
+        return $this->settings->steadfast_secret_key ?? '';
     }
 
     public function getBaseUrl(): string

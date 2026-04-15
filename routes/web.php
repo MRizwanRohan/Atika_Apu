@@ -150,6 +150,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::get('/social-links', [GeneralSettingController::class, 'socialLinks'])->name('settings.socialLinks');
     Route::get('/basic-information', [GeneralSettingController::class, 'basicInformation'])->name('settings.basicInformation');
     Route::post('/settings-create', [GeneralSettingController::class, 'store'])->name('settings.store');
+    Route::post('/clear-cache', [GeneralSettingController::class, 'clearCache'])->name('settings.clearCache');
 
 
     Route::post('/upload', [ProductController::class, 'productDescriptionImageUpload'])->name('upload');

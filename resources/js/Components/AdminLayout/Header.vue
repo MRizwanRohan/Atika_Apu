@@ -25,6 +25,27 @@
 
         <!-- Right Section: Actions -->
         <div class="flex items-center gap-2 sm:gap-4">
+            <!-- Visit Website -->
+            <a
+                href="/"
+                target="_blank"
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200 flex items-center gap-1.5"
+                title="Visit Website"
+            >
+                <ExternalLink class="h-5 w-5" />
+                <span class="hidden lg:block text-xs font-medium">Visit Website</span>
+            </a>
+
+            <!-- Cache Clear -->
+            <button
+                @click="clearCache"
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200 flex items-center gap-1.5"
+                title="Clear Cache"
+            >
+                <RotateCw class="h-5 w-5" />
+                <span class="hidden lg:block text-xs font-medium">Clear Cache</span>
+            </button>
+
             <!-- Fullscreen Toggle -->
             <button
                 @click="toggleFullscreen"
@@ -194,8 +215,10 @@ import {
     Bell,
     User,
     LogOut,
+    ExternalLink,
+    RotateCw,
 } from "lucide-vue-next";
-import { Link } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 
 defineProps({
     sidebarOpen: Boolean,
@@ -252,4 +275,15 @@ function formatDate(value) {
         return value;
     }
 }
+
+const clearCache = () => {
+    if (confirm('Are you sure you want to clear system cache?')) {
+        router.post(route('admin.settings.clearCache'), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Success message is handled by Laravel session flash
+            }
+        });
+    }
+};
 </script>

@@ -32,6 +32,7 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    courierSettings: Object,
 });
 
 const showDeleteModal = ref(false);
@@ -978,20 +979,20 @@ const handleNotesSaved = (newNotes) => {
                     }}
                 </button>
                 <button
-                    v-if="selectedOrders.length > 0"
+                    v-if="selectedOrders.length > 0 && courierSettings?.steadfast_is_enabled === 'yes'"
                     @click="sendBulkToSteadfast"
-                    class="px-2 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600"
+                    class="px-2 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 hover:shadow-lg transition-all duration-200"
                     :disabled="isDownloading"
                 >
-                    Send {{ selectedOrders.length }} Orders to Steadfast
+                    🚚 Send {{ selectedOrders.length }} to Steadfast
                 </button>
                 <button
-                    v-if="selectedOrders.length > 0"
+                    v-if="selectedOrders.length > 0 && courierSettings?.is_enabled === 'yes'"
                     @click="sendBulkToPathao"
-                    class="px-2 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600"
+                    class="px-2 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 hover:shadow-lg transition-all duration-200"
                     :disabled="isDownloading"
                 >
-                    Send {{ selectedOrders.length }} Orders to Pathao
+                    🛵 Send {{ selectedOrders.length }} to Pathao
                 </button>
                 <!-- <button
                     v-if="selectedOrders.length > 0"
@@ -1795,6 +1796,7 @@ const handleNotesSaved = (newNotes) => {
                 :cities="cities?.data?.data || []"
                 :orderId="selectedOrderId"
                 :order="selectedOrder"
+                :settings="courierSettings"
                 @close="showCourierModal = false"
                 @submit="handleCourierSubmit"
             />

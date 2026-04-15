@@ -90,6 +90,7 @@ class OrderController extends Controller
             'orders'       => $orders,
             'statusCounts' => $statusCounts,
             'sentOrderIds' => $sentOrderIds,
+            'courierSettings' => \App\Models\CourierSetting::first(),
         ]);
     }
 

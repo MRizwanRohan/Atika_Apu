@@ -33,6 +33,9 @@ class CourierController extends Controller
                 'StoreId' => $settings->StoreId,
                 'access_token' => $settings->access_token,
                 'expires_at' => $settings->expires_at ? $settings->expires_at->toDateTimeString() : null,
+                'steadfast_api_key' => $settings->steadfast_api_key,
+                'steadfast_secret_key' => $settings->steadfast_secret_key,
+                'steadfast_is_enabled' => $settings->steadfast_is_enabled,
             ] : null,
         ]);
     }
@@ -41,12 +44,15 @@ class CourierController extends Controller
     {
         try {
             $validated = $request->validate([
-                'client_id' => 'required|string',
-                'client_secret' => 'required|string',
-                'username' => 'required|string',
-                'password' => 'required|string',
-                'is_enabled' => 'required|in:yes,no',
-                'StoreId' => 'required|integer',
+                'client_id' => 'nullable|string',
+                'client_secret' => 'nullable|string',
+                'username' => 'nullable|string',
+                'password' => 'nullable|string',
+                'is_enabled' => 'nullable|in:yes,no',
+                'StoreId' => 'nullable|integer',
+                'steadfast_api_key' => 'nullable|string',
+                'steadfast_secret_key' => 'nullable|string',
+                'steadfast_is_enabled' => 'nullable|in:yes,no',
             ]);
 
             $settings = CourierSetting::first();

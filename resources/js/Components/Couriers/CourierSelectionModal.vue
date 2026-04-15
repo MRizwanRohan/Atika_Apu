@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { X, Send, Truck } from 'lucide-vue-next';
 import { router, useForm } from '@inertiajs/vue3';
 import { toast } from '@steveyuowo/vue-hot-toast';
@@ -10,6 +10,7 @@ const props = defineProps({
   orderId: [Number, String],
   order: Object,
   cities: Array,
+  settings: Object,
 });
 
 const emit = defineEmits(['close', 'submit']);
@@ -54,11 +55,16 @@ const pathaoForm = useForm({
 });
 
 // Courier options
-const couriers = [
-  { value: 'pathao', label: 'Pathao' },
-  { value: 'redex', label: 'Redex' },
-  { value: 'steadfast', label: 'Steadfast' },
-];
+const couriers = computed(() => {
+  const options = [];
+  if (props.settings?.is_enabled === 'yes') {
+    options.push({ value: 'pathao', label: 'Pathao' });
+  }
+  if (props.settings?.steadfast_is_enabled === 'yes') {
+    options.push({ value: 'steadfast', label: 'Steadfast' });
+  }
+  return options;
+});
 
 const resetForm = () => {
   selectedCourier.value = '';

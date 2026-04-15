@@ -13,14 +13,21 @@ return new class extends Migration
     {
         Schema::create('courier_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('client_id');
-            $table->string('client_secret');
-            $table->string('username');
-            $table->string('password');
+            // Pathao Settings
+            $table->string('client_id')->nullable();
+            $table->string('client_secret')->nullable();
+            $table->string('username')->nullable();
+            $table->string('password')->nullable();
             $table->text('access_token')->nullable(); 
             $table->timestamp('expires_at')->nullable();
-            $table->enum('is_enabled', ['yes', 'no'])->default('yes');
-            $table->integer('StoreId');
+            $table->enum('is_enabled', ['yes', 'no'])->default('no');
+            $table->integer('StoreId')->nullable();
+
+            // Steadfast Settings
+            $table->string('steadfast_api_key')->nullable();
+            $table->string('steadfast_secret_key')->nullable();
+            $table->enum('steadfast_is_enabled', ['yes', 'no'])->default('no');
+
             $table->timestamps();
         });
     }

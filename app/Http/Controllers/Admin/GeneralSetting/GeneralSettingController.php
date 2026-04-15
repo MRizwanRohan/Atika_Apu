@@ -52,5 +52,19 @@ class GeneralSettingController extends Controller
             ->with('success', 'Settings updated successfully');
     }
 
+    public function clearCache()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('cache:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+            \Illuminate\Support\Facades\Artisan::call('route:clear');
+            
+            return redirect()->back()->with('success', 'Cache cleared successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to clear cache: ' . $e->getMessage());
+        }
+    }
+
 
 }

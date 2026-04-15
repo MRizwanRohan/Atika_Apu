@@ -15,10 +15,14 @@ class CourierSetting extends Model
         'expires_at',
         'is_enabled',
         'StoreId',
+        'steadfast_api_key',
+        'steadfast_secret_key',
+        'steadfast_is_enabled',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'is_enabled' => 'string',
+        'steadfast_is_enabled' => 'string',
     ];
 }
