@@ -86,12 +86,11 @@
             <!-- Pathao Row -->
             <div class="grid grid-cols-5 gap-4 px-4 py-3 text-sm border-b border-gray-200 items-center">
               <div class="flex items-center gap-2">
-                <span class="font-medium">pathao</span>
+                <span class="font-medium text-red-500">Pathao</span>
               </div>
-              <div class="text-center">{{ pathaoData.total_delivery }}</div>
-              <div class="text-center">{{ pathaoData.successful_delivery }}</div>
-              <div class="text-center">{{ pathaoData.total_delivery - pathaoData.successful_delivery }}</div>
-              <div class="text-center">{{ pathaoCancelRate }}%</div>
+              <div colspan="4" class="col-span-4 text-center text-red-500 italic">
+                Pathao does not share this API data publicly
+              </div>
             </div>
 
             <!-- REDX Row -->
@@ -99,10 +98,9 @@
               <div class="flex items-center gap-2">
                 <span class="font-bold text-red-600">REDX</span>
               </div>
-              <div class="text-center">0</div>
-              <div class="text-center">0</div>
-              <div class="text-center">0</div>
-              <div class="text-center">0%</div>
+              <div colspan="4" class="col-span-4 text-center text-red-500 italic">
+                REDX does not share this API data publicly
+              </div>
             </div>
 
 

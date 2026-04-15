@@ -24,13 +24,14 @@ class FraudcheckController extends Controller
     {
         $phone = $request->input('phone');
 
-        // Fetch data from both services
-        $pathaoResponse = $this->fetchPathaoData($phone);
+        // Fetch Steadfast data first (Fast if cached)
         $steadfastResponse = $this->fetchSteadfastData($phone);
+        $steadfastData = $steadfastResponse->getData(true);
 
-        // Decode JSON responses to arrays
-        $pathaoData = json_decode($pathaoResponse->getContent(), true);
-        $steadfastData = json_decode($steadfastResponse->getContent(), true);
+        // Fetch Pathao data (Temporarily disabled)
+        // $pathaoResponse = $this->fetchPathaoData($phone);
+        // $pathaoData = $pathaoResponse->getData(true);
+        $pathaoData = [];
 
         // Calculate aggregated metrics
         $aggregated = $this->calculateAggregatedMetrics($pathaoData, $steadfastData);
