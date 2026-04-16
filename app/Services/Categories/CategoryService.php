@@ -20,20 +20,20 @@ class CategoryService
 
     public function getAllCategoriesForApi()
     {
-        $categories = Category::where('status', 'active')
-            ->with(['children' => function ($query) {
-                $query->where('status', 'active')
-                    ->orderBy('order', 'asc')
-                    ->with(['children' => function ($query) {
-                        $query->where('status', 'active')
-                                ->orderBy('order', 'asc');
-                    }]);
-            }])
-            ->whereNull('parent_id')
-            ->orderBy('order', 'asc')
-            ->get();
-
-        return $categories;
+        return Cache::remember('categories_api_tree', 3600, function () {
+            return Category::where('status', 'active')
+                ->with(['children' => function ($query) {
+                    $query->where('status', 'active')
+                        ->orderBy('order', 'asc')
+                        ->with(['children' => function ($query) {
+                            $query->where('status', 'active')
+                                    ->orderBy('order', 'asc');
+                        }]);
+                }])
+                ->whereNull('parent_id')
+                ->orderBy('order', 'asc')
+                ->get();
+        });
     }
 
     public function createCategory(array $data)
@@ -125,7 +125,7 @@ class CategoryService
                 'order' => $data['order'] ?? 0,
             ]);
 
-            Cache::flush();
+            Cache::forget('categories_api_tree');
 
             return $category;
         } catch (\Exception $e) {
@@ -140,7 +140,7 @@ class CategoryService
         $category->status = $status;
         $category->save();
 
-        Cache::flush();
+        Cache::forget('categories_api_tree');
 
         return $category;
     }
@@ -163,7 +163,7 @@ class CategoryService
             // Soft delete the category (sets deleted_at timestamp)
             $category->delete();
 
-            Cache::flush();
+            Cache::forget('categories_api_tree');
 
             // Return info about usage
             return [

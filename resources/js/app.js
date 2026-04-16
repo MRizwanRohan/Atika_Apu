@@ -6,7 +6,6 @@ import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { createApp, h } from "vue";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
-import VueApexCharts from 'vue3-apexcharts';
 import { initMetaPixel, shouldTrackMetaPixel } from "@/Composables/useMetaPixel";
 
 const appName = import.meta.env.VITE_APP_NAME || "";
@@ -22,7 +21,6 @@ createInertiaApp({
         const vueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
-            .use(VueApexCharts)
             .mount(el);
 
         if (!shouldTrackMetaPixel()) {

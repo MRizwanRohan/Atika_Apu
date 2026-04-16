@@ -85,11 +85,12 @@ class SettingsService
 
 
     public function getAllPages(){
-        $pages = SitePage::select('id', 'name', 'slug')
-            ->where('status', 1)
-            ->whereNotIn('slug', ['pre-order-policy'])
-            ->get();
-        return $pages;
+        return Cache::remember('site_pages_active', 3600, function () {
+            return SitePage::select('id', 'name', 'slug')
+                ->where('status', 1)
+                ->whereNotIn('slug', ['pre-order-policy'])
+                ->get();
+        });
     }
 
     /**

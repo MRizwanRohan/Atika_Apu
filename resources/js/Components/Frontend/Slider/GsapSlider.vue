@@ -22,6 +22,8 @@
                     :src="slide.image"
                     class="w-full h-auto object-cover pointer-events-none"
                     draggable="false"
+                    :fetchpriority="index === 0 ? 'high' : 'auto'"
+                    :loading="index === 0 ? 'eager' : 'lazy'"
                     :ref="el => imageRefs[index] = el"
                 />
             </div>
