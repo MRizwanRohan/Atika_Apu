@@ -79,7 +79,7 @@ class OrderRepository implements OrderRepositoryInterface
     // public  function findOrderById(int $orderId);
     public function findOrderById(int $orderId)
     {
-        return Order::where('id', $orderId)->get();
+        return Order::where('id', $orderId)->first();
     }
 
 public function getPaginatedOrders(
@@ -89,8 +89,9 @@ public function getPaginatedOrders(
     string $sortDirection = 'desc'
 ): LengthAwarePaginator {
     $cacheVersion = Order::getCacheVersion();
-    $page = request()->input('page', 1); // Get the current page from the request
-    $cacheKey = "orders:v3:{$cacheVersion}:{$perPage}:{$page}:" .
+    $page = request()->input('page', 1);
+    $path = request()->path(); // Include path to prevent cache collision between different routes
+    $cacheKey = "orders:v4:{$cacheVersion}:{$perPage}:{$page}:{$path}:" .
         md5(json_encode($filters)) . ":{$sortBy}:{$sortDirection}";
 
     return Cache::remember($cacheKey, Order::CACHE_TTL, function () use ($perPage, $filters, $sortBy, $sortDirection) {

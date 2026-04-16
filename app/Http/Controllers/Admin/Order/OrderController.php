@@ -69,6 +69,8 @@ class OrderController extends Controller
             'sort_direction' => $sortDirection,
         ]);
 
+        $orders->withPath(route('admin.orders.index'));
+
         //return $orders;
 
         // Log::info('orders', [
@@ -120,6 +122,8 @@ class OrderController extends Controller
             'sort_by' => $sortBy,
             'sort_direction' => $sortDirection,
         ]);
+
+        $orders->withPath(route('admin.orders.incomplete'));
 
         return Inertia::render('Admin/Orders/IncompleteOrders', [
             'orders' => $orders,

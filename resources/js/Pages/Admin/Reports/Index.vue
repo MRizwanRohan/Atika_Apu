@@ -12,7 +12,153 @@
                 </p>
             </div>
 
-            <!-- Filters Section -->
+
+            <!-- Stats Cards with Premium Glassmorphism -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Products -->
+                <div class="stat-card group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Products</p>
+                            <h3 class="text-3xl font-bold text-gray-900 leading-none">{{ totalProducts }}</h3>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-blue-50 text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white shadow-sm">
+                            <Package :size="24" stroke-width="2.5" />
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-blue-600 bg-blue-50/50 w-fit px-2 py-1 rounded-full">
+                        <TrendingUp :size="12" class="mr-1" />
+                        <span>Inventory Active</span>
+                    </div>
+                </div>
+
+                <!-- Total Stock -->
+                <div class="stat-card group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">In Stock</p>
+                            <h3 class="text-3xl font-bold text-gray-900 leading-none">{{ totalStock }}</h3>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 transition-all group-hover:bg-emerald-600 group-hover:text-white shadow-sm">
+                            <Layers :size="24" stroke-width="2.5" />
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-emerald-600 bg-emerald-50/50 w-fit px-2 py-1 rounded-full">
+                        <CheckCircle :size="12" class="mr-1" />
+                        <span>Ready to Ship</span>
+                    </div>
+                </div>
+
+                <!-- Total Sold -->
+                <div class="stat-card group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Sold</p>
+                            <h3 class="text-3xl font-bold text-gray-900 leading-none">{{ totalSold }}</h3>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-amber-50 text-amber-600 transition-all group-hover:bg-amber-600 group-hover:text-white shadow-sm">
+                            <ShoppingCart :size="24" stroke-width="2.5" />
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-amber-600 bg-amber-50/50 w-fit px-2 py-1 rounded-full">
+                        <TrendingUp :size="12" class="mr-1" />
+                        <span>Sales Velocity: {{ overallSellThroughRate.toFixed(1) }}%</span>
+                    </div>
+                </div>
+
+                <!-- Total Value -->
+                <div class="stat-card group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Inventory Value</p>
+                            <h3 class="text-3xl font-bold text-gray-900 leading-none">BDT {{ totalValue.toLocaleString() }}</h3>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-purple-50 text-purple-600 transition-all group-hover:bg-purple-600 group-hover:text-white shadow-sm">
+                            <DollarSign :size="24" stroke-width="2.5" />
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-purple-600 bg-purple-50/50 w-fit px-2 py-1 rounded-full">
+                        <TrendingUp :size="12" class="mr-1" />
+                        <span>Asset Value Peak</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Section (Phase 2 Additions) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Stock Distribution Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Inventory Distribution</h3>
+                        <Layers class="text-gray-400" :size="20" />
+                    </div>
+                    <div class="h-[300px]">
+                        <VueApexCharts 
+                            type="donut" 
+                            height="300" 
+                            :options="inventoryPieOptions" 
+                            :series="inventoryPieSeries" 
+                        />
+                    </div>
+                </div>
+
+                <!-- Sell-Through Performance Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Category Efficiency</h3>
+                        <TrendingUp class="text-gray-400" :size="20" />
+                    </div>
+                    <div class="h-[300px]">
+                        <VueApexCharts 
+                            type="bar" 
+                            height="300" 
+                            :options="sellThroughBarOptions" 
+                            :series="sellThroughBarSeries" 
+                        />
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Top Performers Table -->
+            <div class="chart-container mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 uppercase tracking-tight">Top Performing Products</h3>
+                    <div class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">High Velocity</div>
+                </div>
+                <div class="overflow-x-auto rounded-2xl border border-gray-50">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Product</th>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Category</th>
+                                <th class="text-center py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Stock</th>
+                                <th class="text-center py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Sold</th>
+                                <th class="text-right py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Sell-Through</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr v-for="product in topPerformers" :key="product.id" class="hover:bg-blue-50/30 transition-colors group">
+                                <td class="py-4 px-6 font-semibold text-gray-900 group-hover:text-blue-600">{{ product.name }}</td>
+                                <td class="py-4 px-6 text-gray-500">{{ product.category }}</td>
+                                <td class="py-4 px-6 text-center tabular-nums">{{ product.stock }}</td>
+                                <td class="py-4 px-6 text-center tabular-nums font-semibold">{{ product.sold }}</td>
+                                <td class="py-4 px-6 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm"
+                                        :class="product.sell_through_rate > 15 ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'">
+                                        {{ product.sell_through_rate.toFixed(1) }}%
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+
+                        <!-- Filters Section -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">
                     Filters
@@ -180,147 +326,8 @@
                 </form>
             </div>
 
-            <!-- Stats Cards with Premium Glassmorphism -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Total Products -->
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Products</p>
-                            <h3 class="text-3xl font-black text-gray-900 leading-none">{{ totalProducts }}</h3>
-                        </div>
-                        <div class="p-3 rounded-2xl bg-blue-50 text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white shadow-sm">
-                            <Package :size="24" stroke-width="2.5" />
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-blue-600 bg-blue-50/50 w-fit px-2 py-1 rounded-full">
-                        <TrendingUp :size="12" class="mr-1" />
-                        <span>Inventory Active</span>
-                    </div>
-                </div>
-
-                <!-- Total Stock -->
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">In Stock</p>
-                            <h3 class="text-3xl font-black text-gray-900 leading-none">{{ totalStock }}</h3>
-                        </div>
-                        <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 transition-all group-hover:bg-emerald-600 group-hover:text-white shadow-sm">
-                            <Layers :size="24" stroke-width="2.5" />
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-emerald-600 bg-emerald-50/50 w-fit px-2 py-1 rounded-full">
-                        <CheckCircle :size="12" class="mr-1" />
-                        <span>Ready to Ship</span>
-                    </div>
-                </div>
-
-                <!-- Total Sold -->
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Sold</p>
-                            <h3 class="text-3xl font-black text-gray-900 leading-none">{{ totalSold }}</h3>
-                        </div>
-                        <div class="p-3 rounded-2xl bg-amber-50 text-amber-600 transition-all group-hover:bg-amber-600 group-hover:text-white shadow-sm">
-                            <ShoppingCart :size="24" stroke-width="2.5" />
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-amber-600 bg-amber-50/50 w-fit px-2 py-1 rounded-full">
-                        <TrendingUp :size="12" class="mr-1" />
-                        <span>Sales Velocity: {{ overallSellThroughRate.toFixed(1) }}%</span>
-                    </div>
-                </div>
-
-                <!-- Total Value -->
-                <div class="stat-card group">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Inventory Value</p>
-                            <h3 class="text-3xl font-black text-gray-900 leading-none">BDT {{ totalValue.toLocaleString() }}</h3>
-                        </div>
-                        <div class="p-3 rounded-2xl bg-purple-50 text-purple-600 transition-all group-hover:bg-purple-600 group-hover:text-white shadow-sm">
-                            <DollarSign :size="24" stroke-width="2.5" />
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-purple-600 bg-purple-50/50 w-fit px-2 py-1 rounded-full">
-                        <TrendingUp :size="12" class="mr-1" />
-                        <span>Asset Value Peak</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Visualization Section (Phase 2 Additions) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <!-- Stock Distribution Chart -->
-                <div class="chart-container">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900">Inventory Distribution</h3>
-                        <Layers class="text-gray-400" :size="20" />
-                    </div>
-                    <div class="h-[300px]">
-                        <VueApexCharts 
-                            type="donut" 
-                            height="300" 
-                            :options="inventoryPieOptions" 
-                            :series="inventoryPieSeries" 
-                        />
-                    </div>
-                </div>
-
-                <!-- Sell-Through Performance Chart -->
-                <div class="chart-container">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900">Category Efficiency</h3>
-                        <TrendingUp class="text-gray-400" :size="20" />
-                    </div>
-                    <div class="h-[300px]">
-                        <VueApexCharts 
-                            type="bar" 
-                            height="300" 
-                            :options="sellThroughBarOptions" 
-                            :series="sellThroughBarSeries" 
-                        />
-                    </div>
-                </div>
-            </div>
 
 
-            <!-- Top Performers Table -->
-            <div class="chart-container mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-black text-gray-900 uppercase tracking-tight">Top Performing Products</h3>
-                    <div class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">High Velocity</div>
-                </div>
-                <div class="overflow-x-auto rounded-2xl border border-gray-50">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50/50">
-                            <tr>
-                                <th class="text-left py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Product</th>
-                                <th class="text-left py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Category</th>
-                                <th class="text-center py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Stock</th>
-                                <th class="text-center py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Sold</th>
-                                <th class="text-right py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Sell-Through</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            <tr v-for="product in topPerformers" :key="product.id" class="hover:bg-blue-50/30 transition-colors group">
-                                <td class="py-4 px-6 font-semibold text-gray-900 group-hover:text-blue-600">{{ product.name }}</td>
-                                <td class="py-4 px-6 text-gray-500">{{ product.category }}</td>
-                                <td class="py-4 px-6 text-center tabular-nums">{{ product.stock }}</td>
-                                <td class="py-4 px-6 text-center tabular-nums font-bold">{{ product.sold }}</td>
-                                <td class="py-4 px-6 text-right">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black shadow-sm"
-                                        :class="product.sell_through_rate > 15 ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'">
-                                        {{ product.sell_through_rate.toFixed(1) }}%
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
             <!-- Orders Table -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
@@ -360,12 +367,12 @@
                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
                                 </th>
-                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Order #</th>
-                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Date</th>
-                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Customer</th>
-                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Status</th>
-                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Payment</th>
-                                <th class="text-right py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Total Amount</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Order #</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Date</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Customer</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Payment</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Total Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -382,38 +389,38 @@
                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
                                 </td>
-                                <td class="py-3 px-4 font-bold text-blue-600">#{{ order.order_number }}</td>
-                                <td class="py-3 px-4 text-xs text-gray-500 font-medium whitespace-nowrap">{{ formatDate(order.date) }}</td>
+                                <td class="py-3 px-4 font-semibold text-blue-600">#{{ order.order_number }}</td>
+                                <td class="py-3 px-4 text-xs text-gray-500 font-normal whitespace-nowrap">{{ formatDate(order.date) }}</td>
                                 <td class="py-3 px-4">
-                                    <div class="font-black text-gray-900 leading-tight">{{ order.customer_name || order.customer?.name }}</div>
-                                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{{ order.customer_phone || order.customer?.phone }}</div>
+                                    <div class="font-bold text-gray-900 leading-tight">{{ order.customer_name || order.customer?.name }}</div>
+                                    <div class="text-[10px] text-gray-400 font-semibold uppercase tracking-tighter">{{ order.customer_phone || order.customer?.phone }}</div>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm" :class="getStatusColor(order.status)">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm" :class="getStatusColor(order.status)">
                                         {{ order.status }}
                                     </span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm" :class="getPaymentStatusColor(order.payment_status)">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm" :class="getPaymentStatusColor(order.payment_status)">
                                         {{ order.payment_status }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-right font-black text-gray-900 tabular-nums text-sm">BDT {{ order.total }}</td>
+                                <td class="py-3 px-4 text-right font-bold text-gray-900 tabular-nums text-sm">BDT {{ order.total }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr class="border-t-2 border-gray-100 bg-gray-50/50">
                                 <td colspan="3" class="py-4 px-6">
                                     <div class="space-y-1">
-                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Revenue Overview</p>
+                                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Revenue Overview</p>
                                         <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-2">
                                                 <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                                                <span class="text-sm font-medium text-gray-600">Page Total: <span class="text-gray-900 font-bold">BDT {{ calculateTotalAmount().toLocaleString() }}</span></span>
+                                                <span class="text-sm font-medium text-gray-600">Page Total: <span class="text-gray-900 font-semibold">BDT {{ calculateTotalAmount().toLocaleString() }}</span></span>
                                             </div>
                                             <div class="flex items-center gap-2 border-l border-gray-200 pl-4">
                                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                <span class="text-sm font-medium text-gray-600">Grand Total: <span class="text-gray-900 font-black text-lg">BDT {{ grandTotalRevenue.toLocaleString() }}</span></span>
+                                                <span class="text-sm font-medium text-gray-600">Grand Total: <span class="text-gray-900 font-bold text-lg">BDT {{ grandTotalRevenue.toLocaleString() }}</span></span>
                                             </div>
                                         </div>
                                     </div>
@@ -788,7 +795,7 @@ const exportToPDF = () => {
         startX + 5,
         y + 8
     );
-    doc.setFont("helvetica", "black");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.text(
         `GRAND TOTAL (ALL PAGES): BDT ${props.grandTotalRevenue.toLocaleString()}`,

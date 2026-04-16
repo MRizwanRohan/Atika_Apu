@@ -120,6 +120,8 @@ public function generateReport(Request $request)
         return compact('totalProducts', 'totalVariations', 'totalStock', 'totalSold', 'totalValue', 'productsByCategory', 'topPerformers', 'lowStockProducts');
     });
 
+    $orders->withPath(route('admin.reports.generateReport'));
+
     return Inertia::render('Admin/Reports/Index', array_merge([
         'orders' => $orders,
         'grandTotalRevenue' => (float) $grandTotalRevenue,
@@ -270,87 +272,104 @@ public function exportOrdersPDF(Request $request)
      *
      *
      */
-    public function getAllProductsStock()
+    /**
+     * Get comprehensive stock data for all products with variations
+     * Optimized with server-side pagination and search
+     */
+    public function getAllProductsStock(Request $request)
     {
-        // Correct column names for relationships
-        $allProductsStock = [];
+        $search = $request->input('search');
+        $filter = $request->input('filter', 'all');
+        $perPage = $request->input('per_page', 10);
 
-        Product::with([
-            'category:id,name',
-            'variations:id,product_id,price,stock,sold_stock,image_path',
-            'variations.attributes:id,product_variation_id,attribute_value_id',
-            'variations.attributes.value' => function($query) {
-                $query->withTrashed()->select(['id', 'attribute_id', 'value', 'deleted_at']);
-            },
-            'variations.attributes.value.attribute' => function($query) {
-                $query->withTrashed()->select(['id', 'name', 'deleted_at']);
-            }
-        ])
-            ->select(['id', 'name', 'stock', 'sold_stock', 'feature_image'])
-            ->chunk(100, function ($products) use (&$allProductsStock) {
-                foreach ($products as $product) {
-                    // Pre-calculate product stock values
-                    $initial_stock = $product->stock + $product->sold_stock;
-                    $stockData = [
-                        'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'product_image' => $product->feature_image,
-                        'total_stock' => $product->stock,
-                        'total_sold' => $product->sold_stock,
-                        'initial_stock' => $initial_stock,
-                        //   'remaining_stock' => $product->stock - $product->sold_stock,
-                        'stock_ratio' => $initial_stock > 0
-                            ? round(($product->sold_stock / $initial_stock) * 100, 2)
-                            : 0,
-                        'variations' => []
-                    ];
-
-                    // Process variations - SKIP variations with soft-deleted attribute values
-                    foreach ($product->variations as $variation) {
-                        // Check if ANY attribute value is soft-deleted
-                        $hasSoftDeletedAttribute = $variation->attributes->contains(function ($item) {
-                            return !$item->value || $item->value->trashed() || !$item->value->attribute || $item->value->attribute->trashed();
-                        });
-
-                        // Skip this variation if it has soft-deleted attributes
-                        if ($hasSoftDeletedAttribute) {
-                            continue;
-                        }
-
-                        $variationTotal = $variation->stock + $variation->sold_stock;
-
-                        // Map attributes correctly
-                        $attributeDetails = collect($variation->attributes)
-                            ->mapWithKeys(function ($item) {
-                                return [
-                                    $item->value->attribute->name => $item->value->value
-                                ];
-                            })
-                            ->toArray();
-
-                        $stockData['variations'][] = [
-                            'variation_id' => $variation->id,
-                            'attributes' => $attributeDetails,
-                            'current_stock' => $variation->stock,
-                            'sold_stock' => $variation->sold_stock,
-                            'initial_stock' => $variationTotal,
-                            // 'remaining_stock' => $variation->stock - $variation->sold_stock,
-                            'sold_ratio' => $variationTotal > 0
-                                ? round(($variation->sold_stock / $variationTotal) * 100, 2)
-                                : 0,
-                            'price' => $variation->price,
-                            'image' => $variation->image_path
-                        ];
-                    }
-
-                    $allProductsStock[] = $stockData;
+        $query = Product::query()
+            ->with([
+                'category:id,name',
+                'variations:id,product_id,price,stock,sold_stock,image_path',
+                'variations.attributes:id,product_variation_id,attribute_value_id',
+                'variations.attributes.value' => function($query) {
+                    $query->withTrashed()->select(['id', 'attribute_id', 'value', 'deleted_at']);
+                },
+                'variations.attributes.value.attribute' => function($query) {
+                    $query->withTrashed()->select(['id', 'name', 'deleted_at']);
                 }
+            ])
+            ->select(['id', 'name', 'stock', 'sold_stock', 'feature_image', 'category_id', 'type'])
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%")
+                      ->orWhere('id', $search);
+                });
+            })
+            ->when($filter === 'low_stock', function($q) {
+                $q->where('stock', '<=', 10);
             });
 
-        //return $allProductsStock ?? [];
+        $paginatedProducts = $query->latest()->paginate($perPage)->withQueryString();
+
+        $paginatedProducts->through(function ($product) {
+            $initial_stock = $product->stock + $product->sold_stock;
+            
+            $stockData = [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_image' => $product->feature_image,
+                'category' => $product->category->name ?? 'Uncategorized',
+                'type' => $product->type,
+                'total_stock' => $product->stock,
+                'total_sold' => $product->sold_stock,
+                'initial_stock' => $initial_stock,
+                'stock_ratio' => $initial_stock > 0
+                    ? round(($product->sold_stock / $initial_stock) * 100, 2)
+                    : 0,
+                'variations' => []
+            ];
+
+            // Process variations
+            foreach ($product->variations as $variation) {
+                // Skip variations with soft-deleted attribute values
+                $hasSoftDeletedAttribute = $variation->attributes->contains(function ($item) {
+                    return !$item->value || $item->value->trashed() || !$item->value->attribute || $item->value->attribute->trashed();
+                });
+
+                if ($hasSoftDeletedAttribute) {
+                    continue;
+                }
+
+                $variationTotal = $variation->stock + $variation->sold_stock;
+
+                // Map attributes correctly
+                $attributeDetails = collect($variation->attributes)
+                    ->mapWithKeys(function ($item) {
+                        return [
+                            $item->value->attribute->name => $item->value->value
+                        ];
+                    })
+                    ->toArray();
+
+                $stockData['variations'][] = [
+                    'variation_id' => $variation->id,
+                    'attributes' => $attributeDetails,
+                    'current_stock' => $variation->stock,
+                    'sold_stock' => $variation->sold_stock,
+                    'initial_stock' => $variationTotal,
+                    'sold_ratio' => $variationTotal > 0
+                        ? round(($variation->sold_stock / $variationTotal) * 100, 2)
+                        : 0,
+                    'price' => $variation->price,
+                    'image' => $variation->image_path
+                ];
+            }
+
+            return $stockData;
+        });
 
         return Inertia::render('Admin/Inventory/InventoryManagement', [
-            'allProductsStock' => $allProductsStock,
+            'products' => $paginatedProducts,
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage
+            ]
         ]);
     }
 
