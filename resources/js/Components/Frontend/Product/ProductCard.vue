@@ -372,6 +372,8 @@ onUnmounted(() => {
                     :alt="product.name"
                     loading="lazy"
                     class="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                    width="400"
+                    height="600"
                     @load="imageLoaded = true"
                 />
 

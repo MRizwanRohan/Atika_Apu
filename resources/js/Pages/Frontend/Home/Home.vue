@@ -69,7 +69,17 @@ const pageTitle = computed(
 </script>
 
 <template>
-    <Head :title="pageTitle" />
+    <Head :title="pageTitle">
+        <!-- LCP Image Preload -->
+        <link 
+            v-if="sliders && sliders.length > 0" 
+            rel="preload" 
+            as="image" 
+            :href="sliders[0].image" 
+            fetchpriority="high"
+        >
+        <meta name="description" :content="settings?.generalSettings?.site_description || 'E-commerce store'">
+    </Head>
 
     <!-- <pre>{{ settings }}</pre> -->
 

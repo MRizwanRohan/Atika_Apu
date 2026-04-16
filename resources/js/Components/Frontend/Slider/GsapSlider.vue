@@ -15,16 +15,20 @@
             <div
                 v-for="(slide, index) in sliders"
                 :key="slide.id"
-                :class="['w-full', index === 0 ? 'relative' : 'absolute inset-0']"
+                :class="['w-full transition-opacity duration-300', index === 0 ? 'relative' : 'absolute inset-0']"
                 :ref="el => slideRefs[index] = el"
+                style="aspect-ratio: 16/7; background-color: #f3f4f6;"
             >
                 <img
                     :src="slide.image"
-                    class="w-full h-auto object-cover pointer-events-none"
+                    class="w-full h-full object-cover pointer-events-none"
                     draggable="false"
                     :fetchpriority="index === 0 ? 'high' : 'auto'"
                     :loading="index === 0 ? 'eager' : 'lazy'"
+                    :decoding="index === 0 ? 'sync' : 'async'"
                     :ref="el => imageRefs[index] = el"
+                    width="1920"
+                    height="840"
                 />
             </div>
         </div>

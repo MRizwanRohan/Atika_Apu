@@ -72,12 +72,8 @@ class HandleInertiaRequests extends Middleware
         $request->session()->put('cart_session_id', $sessionId);
         cookie()->queue('cart_session_id', $sessionId, 60 * 24 * 30); // 30 days
 
-        // Get cart data
+        // Move cart data fetching into closures for better performance
         $userId = $user ? $user->id : null;
-        $cart = $this->cartService->getCart($userId, $sessionId);
-        
-        // Calculate cart count from items relationship
-        $cartCount = $cart ? $cart->items->count() : 0;
         
         return [
             ...parent::share($request),
@@ -96,9 +92,13 @@ class HandleInertiaRequests extends Middleware
             // Share categories globally for navigation - hierarchical structure with children
             'categories' => fn () => $this->categoryService->getAllCategoriesForApi(),
             
-            // Share cart data globally - lazy loaded
-            'cart' => fn() => $cart ? new CartResource($cart) : null,
-            'cartCount' => fn() => $cartCount,
+            // Share cart data globally - fully lazy loaded
+            'cart' => fn() => $this->cartService->getCart($userId, $sessionId) 
+                ? new CartResource($this->cartService->getCart($userId, $sessionId)) 
+                : null,
+            'cartCount' => fn() => $this->cartService->getCart($userId, $sessionId) 
+                ? $this->cartService->getCart($userId, $sessionId)->items->count() 
+                : 0,
             'cartSessionId' => $sessionId,
 
             // Share wishlist and compare counts - lazy loaded
