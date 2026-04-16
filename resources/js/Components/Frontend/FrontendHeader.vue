@@ -64,12 +64,24 @@ const siteName = computed(() => {
 const toggleSearch = () => {
     isSearchOpen.value = !isSearchOpen.value;
 };
+
+const cleantopnotice = (html) => {
+    if (!html) return false;
+
+    // remove html tags + nbsp + spaces
+    const text = html
+        .replace(/<[^>]*>/g, '')   // remove HTML tags
+        .replace(/&nbsp;/g, '')    // remove nbsp
+        .trim();
+
+    return text.length > 0;
+};
 </script>
 
 <template>
     <!-- <pre>{{ settings }}</pre> -->
     <header class="sticky top-0 z-50 bg-white shadow-sm font-sans">
-        <div class="header_top py-2 bg-black text-white">
+        <div v-if="cleantopnotice(settings?.generalSettings?.top_notice)" class="header_top py-2 bg-black text-white">
             <div class="container mx-auto px-4">
                 <div
                     class="flex items-center justify-center text-[11px] sm:text-sm"
