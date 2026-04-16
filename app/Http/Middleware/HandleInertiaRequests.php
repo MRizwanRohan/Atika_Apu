@@ -12,6 +12,7 @@ use App\Services\Compare\CompareService;
 use App\Http\Resources\Cart\CartResource;
 use Illuminate\Support\Str;
 use App\Services\Order\OrderInterface as OrderServiceInterface;
+use App\Models\TrackingSettings;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -86,26 +87,37 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     // expose permissions and roles as plain arrays for the frontend
-                    'permissions' => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
-                    'roles' => $user ? $user->getRoleNames()->toArray() : [],
+                    'permissions' => fn() => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
+                    'roles' => fn() => $user ? $user->getRoleNames()->toArray() : [],
                     // useful flag: consider users with role 'admin' or 'super-admin' as full-access
                     'is_admin' => $user ? ($user->hasRole('admin') || $user->hasRole('super-admin')) : false,
                 ] : null,
             ],
             // Share categories globally for navigation - hierarchical structure with children
             'categories' => fn () => $this->categoryService->getAllCategoriesForApi(),
-            // Share cart data globally
-            'cart' => $cart ? new CartResource($cart) : null,
-            'cartCount' => $cartCount,
+            
+            // Share cart data globally - lazy loaded
+            'cart' => fn() => $cart ? new CartResource($cart) : null,
+            'cartCount' => fn() => $cartCount,
             'cartSessionId' => $sessionId,
-            // Share wishlist and compare counts
-            'wishlistCount' => $this->wishlistService->getWishlistCount($userId, $sessionId),
+
+            // Share wishlist and compare counts - lazy loaded
+            'wishlistCount' => fn() => $this->wishlistService->getWishlistCount($userId, $sessionId),
             'wishlistIds' => fn() => $this->wishlistService->getWishlist($userId, $sessionId)->pluck('id')->toArray(),
-            'compareCount' => $this->compareService->getCompareCount($userId, $sessionId),
+            'compareCount' => fn() => $this->compareService->getCompareCount($userId, $sessionId),
             'compareIds' => fn() => $this->compareService->getCompareIds($userId, $sessionId),
-            // Share site settings globally
+
+            // Share site settings globally - already closures or made into closures
             'settings' => fn () => $this->settingsService->getSiteInfo(),
             'pages' => fn () => $this->settingsService->getAllPages(),
+            'metaPixel' => function() {
+                $settings = TrackingSettings::getSettings();
+                return [
+                    'pixel_id' => $settings->pixel_enabled ? $settings->pixel_id : null,
+                    'pixel_enabled' => $settings->pixel_enabled,
+                ];
+            },
+            
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

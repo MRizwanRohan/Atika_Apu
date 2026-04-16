@@ -28,11 +28,18 @@ class HomeController extends Controller
     public function index(): Response
     {
         $groupedProducts = $this->productService->categorywithproducts();
-        $activeCampaigns = $this->productService->getActiveCampaigns();
+        
+        $activeCampaigns = Cache::remember('active_campaigns.all', 1800, function() {
+            return $this->productService->getActiveCampaigns();
+        });
+
         $productGroups = $this->productGroupService->getAllWithProducts();
         $sliders = $this->sliders();
         $productVideos = $this->productVideos();
-        $instagramFeeds = InstagramFeed::active()->orderBy('sort_order', 'asc')->get();
+
+        $instagramFeeds = Cache::remember('instagram_feeds.active', 3600, function() {
+            return InstagramFeed::active()->orderBy('sort_order', 'asc')->get();
+        });
 
         // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [

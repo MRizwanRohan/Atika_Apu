@@ -23,20 +23,10 @@ createInertiaApp({
             .use(ZiggyVue)
             .mount(el);
 
-        if (!shouldTrackMetaPixel()) {
-            return vueApp;
+        const metaPixel = props.initialPage.props.metaPixel;
+        if (metaPixel && metaPixel.pixel_enabled && metaPixel.pixel_id) {
+            initMetaPixel(metaPixel.pixel_id);
         }
-
-        // ── Meta Pixel: boot after app mounts ──
-        // Fetch pixel config from backend (no access token exposed)
-        fetch('/api/meta/pixel-config')
-            .then(res => res.json())
-            .then(config => {
-                if (config.pixel_enabled && config.pixel_id) {
-                    initMetaPixel(config.pixel_id);
-                }
-            })
-            .catch(() => {}); // Silently fail — tracking is non-critical
 
         return vueApp;
     },

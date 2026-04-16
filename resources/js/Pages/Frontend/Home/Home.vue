@@ -9,9 +9,10 @@ import ProductVideoReel from "@/Components/Frontend/Product/ProductVideoReel.vue
 import GsapSlider from "@/Components/Frontend/Slider/GsapSlider.vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
-import ProductsGroup from "@/Components/Frontend/Home/ProductsGroup.vue";
-import InstagramFeed from "@/Components/Frontend/Home/InstagramFeed.vue";
-import { computed, toRef } from "vue";
+import { computed, toRef, defineAsyncComponent } from "vue";
+
+const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
+const InstagramFeed = defineAsyncComponent(() => import("@/Components/Frontend/Home/InstagramFeed.vue"));
 
 defineOptions({
     layout: FrontendLayout,
