@@ -6,9 +6,13 @@ use App\Events\OrderCreated;
 use App\Models\TrackingSettings;
 use App\Services\MetaConversion\MetaConversionService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
 
-class SendMetaConversionOnOrderCreated
+class SendMetaConversionOnOrderCreated implements ShouldQueue
 {
+    use InteractsWithQueue;
+
     public function __construct(private MetaConversionService $metaService) {}
 
     public function handle(OrderCreated $event): void

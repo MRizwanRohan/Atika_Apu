@@ -534,7 +534,7 @@ class OrderService implements OrderInterface
         }
 
         // Clear product cache after stock update
-        Cache::flush();
+        Order::incrementCacheVersion();
     }
 
     /**

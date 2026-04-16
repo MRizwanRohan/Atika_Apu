@@ -370,7 +370,7 @@ class OrderController extends Controller
         // Dispatch so Meta CAPI listener can react to status changes
         event(new OrderUpdated($order->fresh()));
 
-        Cache::flush();
+        Order::incrementCacheVersion();
 
         return redirect()->back()
             ->with('success', 'Order basic information updated successfully');
@@ -395,7 +395,7 @@ class OrderController extends Controller
                 'admin_notes' => $validated['admin_notes'] ?? null,
             ]);
 
-            Cache::flush();
+            Order::incrementCacheVersion();
 
             return redirect()->back()
                 ->with('success', 'Admin notes updated successfully');
@@ -432,7 +432,7 @@ class OrderController extends Controller
             ]);
 
             $order = $this->orderService->updateCourierDetails($orderId, $validated);
-            Artisan::call('cache:clear');
+            Order::incrementCacheVersion();
 
             return redirect()->back()
                 ->with('success', 'Courier details updated successfully');
@@ -630,8 +630,7 @@ class OrderController extends Controller
 
     private function updateOrderCache()
     {
-
-        Cache::flush();
+        Order::incrementCacheVersion();
     }
 
     public function updateNewOrders(Request $request, $orderId)

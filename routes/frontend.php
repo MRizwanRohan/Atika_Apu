@@ -64,8 +64,8 @@ Route::get('/product/{slug}', [ProductController::class, 'detailsPage'])->name('
 // Product Group details page
 Route::get('/product-group/{slug}', [ProductController::class, 'productGroup'])->name('product-group.show');
 
-// Cart routes
-Route::prefix('cart')->name('cart.')->group(function () {
+// Cart routes with throttle to prevent spam
+Route::prefix('cart')->name('cart.')->middleware('throttle:30,1')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('add', [CartController::class, 'addToCart'])->name('add');
     Route::post('update', [CartController::class, 'updateItemQuantity'])->name('update');
@@ -74,10 +74,10 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::post('apply-coupon', [CartController::class, 'applyCoupon'])->name('apply-coupon');
 });
 
-// Order routes (Guest checkout allowed)
+// Order routes with strict throttle for checkout
 Route::prefix('order')->name('order.')->group(function () {
     Route::get('/checkout', [OrderController::class, 'create'])->name('create');
-    Route::post('/', [OrderController::class, 'store'])->name('store');
+    Route::post('/', [OrderController::class, 'store'])->name('store')->middleware('throttle:5,1');
     Route::get('/success/{order}', [OrderController::class, 'success'])->name('success');
     Route::get('/track', [OrderController::class, 'trackOrder'])->name('track');
 });
@@ -113,7 +113,7 @@ Route::prefix('compare')->name('compare.')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'throttle:10,1'])->group(function () {
     // User Login Routes
     Route::get('/login', [UserAuthController::class, 'create'])->name('login');
     Route::post('/login', [UserAuthController::class, 'store']);

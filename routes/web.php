@@ -235,29 +235,21 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
         Route::get('/orders/{order}/status', [MetaTrackingController::class, 'orderStatus'])->name('orders.status');
     });
 
+    // Sub-routes for Order management
+    Route::put('/orders/{orderId}/status', [OrderController::class, 'OderupdateStatus'])->name('orders.status.update');
+    Route::put('/orders/{orderId}/partial-delivery', [OrderController::class, 'processPartialDelivery'])->name('orders.partial-delivery');
+    Route::post('/orders/{orderId}/update', [OrderController::class, 'updateNewOrders'])->name('orders.update-new');
+    Route::post('/orders/{orderId}/basic-info', [OrderController::class, 'updateBasicInfo'])->name('orders.basic-info');
+    Route::put('/orders/{orderId}/admin-notes', [OrderController::class, 'updateAdminNotes'])->name('orders.update-notes');
+    Route::put('/orders/{order}/items/{item}', [OrderController::class, 'updateItemQuantity'])->name('orders.items.update');
+    Route::delete('/orders/{order}/items/{item}', [OrderController::class, 'destroyItem'])->name('orders.items.destroy');
 });
 
 // Public endpoint: pixel config for frontend (no auth needed)
 Route::get('/api/meta/pixel-config', [MetaTrackingController::class, 'pixelConfig'])->name('meta.pixel-config');
 
 
-// route group for guest user
-Route::put('/orders/{orderId}/status', [OrderController::class, 'OderupdateStatus']);
-Route::put('/orders/{orderId}/partial-delivery', [OrderController::class, 'processPartialDelivery'])->name('orders.partial-delivery');
-
-
-
-
-Route::post('/orders/{orderId}/update', [OrderController::class, 'updateNewOrders']);
-
-Route::post('/orders/{orderId}/basic-info', [OrderController::class, 'updateBasicInfo']);
-
-// Quick update admin notes
-Route::put('/admin/orders/{orderId}/admin-notes', [OrderController::class, 'updateAdminNotes'])->name('admin.orders.update-notes');
-
-Route::put('/orders/{order}/items/{item}', [OrderController::class, 'updateItemQuantity'])->name('orders.items.update');
-
-Route::delete('/orders/{order}/items/{item}', [OrderController::class, 'destroyItem'])->name('orders.items.destroy');
+// Removed insecure public routes
 
 // Pre-Order Lead Admin Routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {

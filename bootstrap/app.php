@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         ]);
         $middleware->validateCsrfTokens(except: [
-            '*',
+            //
         ]);
         
         // Exclude cart_session_id cookie from encryption so it persists across login/logout

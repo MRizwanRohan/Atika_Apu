@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\DB;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -54,5 +55,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // Monitor slow queries (> 500ms) to identify bottlenecks early
+        DB::listen(function ($query) {
+            if ($query->time > 500) {
+                Log::warning('Slow query detected', [
+                    'sql'  => $query->sql,
+                    'time' => $query->time . 'ms',
+                    'url'  => request()->fullUrl(),
+                ]);
+            }
+        });
     }
 }

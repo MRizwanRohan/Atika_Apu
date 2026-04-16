@@ -61,6 +61,7 @@ export function useCart() {
 
         router.post(route('cart.add'), payload, {
             preserveScroll: true,
+            only: ['cart', 'cartCount', 'flash'],
             onSuccess: () => {
                 isLoading.value = false;
                 if (onSuccess) onSuccess();
@@ -89,6 +90,7 @@ export function useCart() {
             quantity: 1  // positive = increase by 1
         }, {
             preserveScroll: true,
+            only: ['cart', 'cartCount', 'flash'],
             onSuccess: () => {
                 if (onSuccess) onSuccess();
             },
@@ -121,6 +123,7 @@ export function useCart() {
             quantity: -1  // negative = decrease by 1
         }, {
             preserveScroll: true,
+            only: ['cart', 'cartCount', 'flash'],
             onSuccess: () => {
                 if (onSuccess) onSuccess();
             },
@@ -184,6 +187,7 @@ export function useCart() {
             item_id: itemId
         }, {
             preserveScroll: true,
+            only: ['cart', 'cartCount', 'flash'],
             onSuccess: (page) => {
                 // Check if cart is now empty and we're on checkout page
                 const currentPath = window.location.pathname;
@@ -214,6 +218,7 @@ export function useCart() {
 
         router.post(route('cart.clear'), {}, {
             preserveScroll: true,
+            only: ['cart', 'cartCount', 'flash'],
             onSuccess: () => {
                 if (onSuccess) onSuccess();
             },
