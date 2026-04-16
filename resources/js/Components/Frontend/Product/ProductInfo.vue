@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, watchEffect } from "vue";
 import { useCart } from "@/Composables/useCart";
 import { useCartSidebar } from "@/Composables/useCartSidebar";
 import { useWishlist } from "@/Composables/useWishlist";
@@ -541,11 +541,26 @@ watch(
             // Pass the computed main price for accurate ecommerce value
             trackViewItem(newProduct, pricing.value.main);
             // Track ViewContent via Meta Pixel (fbq)
-            trackViewContent(newProduct, pricing.value.main);
+            //trackViewContent(newProduct, pricing.value.main);
         }
     },
     { immediate: true }, // Run immediately if product is already loaded
 );
+
+let fired = false;
+
+watch(
+    () => [props.product, pricing.value.main],
+    ([product, price]) => {
+        if (product?.id && price && !fired) {
+            console.log("🔥 firing view content", product);
+            trackViewContent(product, price);
+            fired = true;
+        }
+    },
+    { immediate: true, deep: true }
+);
+
 </script>
 
 <template>

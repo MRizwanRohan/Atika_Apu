@@ -9,6 +9,18 @@
 let pixelId = null;
 let initialized = false;
 
+function getCurrentPathname() {
+    if (typeof window === 'undefined') {
+        return '/';
+    }
+
+    return window.location?.pathname || '/';
+}
+
+export function shouldTrackMetaPixel(pathname = getCurrentPathname()) {
+    return !(pathname === '/admin' || pathname.startsWith('/admin/'));
+}
+
 /**
  * Inject the Meta Pixel base script into <head>.
  * Called once when the app boots (app.js).
@@ -40,7 +52,10 @@ export function initMetaPixel(id) {
     /* eslint-enable */
 
     window.fbq('init', pixelId);
-    window.fbq('track', 'PageView'); // Initial page load
+
+    if (shouldTrackMetaPixel()) {
+        window.fbq('track', 'PageView'); // Initial page load
+    }
 }
 
 /**
@@ -48,6 +63,16 @@ export function initMetaPixel(id) {
  */
 function isReady() {
     return typeof window !== 'undefined' && typeof window.fbq === 'function' && pixelId;
+}
+
+function waitForFbq(callback, retries = 10) {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+        callback();
+    } else if (retries > 0) {
+        setTimeout(() => waitForFbq(callback, retries - 1), 300);
+    } else {
+        console.warn('Meta Pixel not loaded');
+    }
 }
 
 /**
@@ -68,7 +93,7 @@ export function useMetaPixel() {
      * Track SPA Page View (call on every Inertia navigate event).
      */
     function trackPageView() {
-        if (!isReady()) return;
+        if (!isReady() || !shouldTrackMetaPixel()) return;
         window.fbq('track', 'PageView');
     }
 
@@ -78,18 +103,21 @@ export function useMetaPixel() {
      * @param {Object} product  - Product object from Inertia props
      * @param {number} price    - Displayed price
      */
-    function trackViewContent(product, price) {
-        if (!isReady() || !product) return;
+function trackViewContent(product, price) {
+    if (!product?.id) return;
 
+    waitForFbq(() => {
         const eventId = generateEventId('vc');
+
         window.fbq('track', 'ViewContent', {
             content_ids:  [String(product.id)],
-            content_name: product.name,
+            content_name: product.name || '',
             content_type: 'product',
             value:        parseFloat(price) || 0,
             currency:     'BDT',
         }, { eventID: eventId });
-    }
+    });
+}
 
     /**
      * Track Add to Cart.
