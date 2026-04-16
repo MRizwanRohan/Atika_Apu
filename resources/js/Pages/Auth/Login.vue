@@ -111,7 +111,7 @@ const submit = () => {
                                     required
                                     autofocus
                                     autocomplete="username"
-                                    placeholder="samrat2880@gmail.com"
+                                    placeholder="Enter your email"
                                     class="block w-full pl-12 pr-4 py-4 bg-[#eff6ff] border-none rounded-2xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                                 />
                             </div>
