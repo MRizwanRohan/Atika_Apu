@@ -137,41 +137,6 @@ const injectMarketingTools = () => {
         <link v-if="media?.favicon" rel="icon" :href="media.favicon" />
     </Head>
 
-    <!-- Preloader -->
-    <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition ease-in duration-300"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-    >
-        <div
-            v-if="isLoading"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-white"
-        >
-            <div class="flex flex-col items-center gap-6">
-                <!-- Custom Loader Logo -->
-                <div class="relative">
-                    <img
-                        v-if="media?.loder_logo"
-                        :src="media.loder_logo"
-                        alt="Loading..."
-                        class="h-24 w-auto object-contain animate-pulse"
-                    />
-                    <div
-                        v-else
-                        class="h-16 w-16 border-4 border-primary border-t-transparent rounded-full animate-spin"
-                    ></div>
-                </div>
-
-                <!-- Loading Progress Bar -->
-                <div class="w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-primary animate-loading-bar"></div>
-                </div>
-            </div>
-        </div>
-    </transition>
 
     <div class="min-h-screen flex flex-col bg-white">
         <!-- Header -->

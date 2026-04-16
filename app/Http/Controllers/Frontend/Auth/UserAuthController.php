@@ -31,18 +31,13 @@ class UserAuthController extends Controller
     {
         $request->authenticate();
 
+        $request->session()->regenerate();
+
         $user = Auth::user();
 
-        // Check if user has admin role - redirect them to admin login
         if ($user->hasAnyRole(['admin', 'super-admin', 'Admin', 'Super Admin'])) {
-            //Auth::guard('web')->logout();
-            // $request->session()->invalidate();
-            // $request->session()->regenerateToken();
-            
-            return redirect()->route('admin.dashboard.index')->with('status', 'Please use the admin login page.');
+            return redirect()->route('admin.dashboard.index');
         }
-
-        $request->session()->regenerate();
 
         return redirect()->intended(route('user.dashboard'));
     }

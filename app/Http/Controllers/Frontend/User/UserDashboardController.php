@@ -16,14 +16,25 @@ class UserDashboardController extends Controller
     /**
      * Display the user dashboard.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|\Illuminate\Http\RedirectResponse
     {
         $user = Auth::user();
-        
+
+        // ✅ Admin check
+        if ($user->hasAnyRole(['admin', 'super-admin', 'Admin', 'Super Admin'])) {
+            return redirect()->route('admin.dashboard.index');
+        }
+
         // Get user's orders excluding incomplete orders with product relationships
         $orders = Order::where('user_id', $user->id)
             ->where('status', '!=', 'incomplete')
-            ->with('items', 'items.product', 'items.productVariation', 'items.productVariation.attributes.value.attribute', 'items.productVariation.attributes.value')
+            ->with(
+                'items',
+                'items.product',
+                'items.productVariation',
+                'items.productVariation.attributes.value.attribute',
+                'items.productVariation.attributes.value'
+            )
             ->latest()
             ->paginate(10);
 
@@ -31,12 +42,15 @@ class UserDashboardController extends Controller
         $totalOrders = Order::where('user_id', $user->id)
             ->where('status', '!=', 'incomplete')
             ->count();
+
         $pendingOrders = Order::where('user_id', $user->id)
             ->where('status', 'pending')
             ->count();
+
         $completedOrders = Order::where('user_id', $user->id)
             ->where('status', 'delivered')
             ->count();
+
         $canceledOrders = Order::where('user_id', $user->id)
             ->where('status', 'cancelled')
             ->count();
