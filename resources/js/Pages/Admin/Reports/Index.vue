@@ -180,261 +180,140 @@
                 </form>
             </div>
 
-            <!-- Stats Cards -->
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-            >
-                <div class="bg-white rounded-lg shadow-sm p-6">
+            <!-- Stats Cards with Premium Glassmorphism -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Products -->
+                <div class="stat-card group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                Total Products
-                            </p>
-                            <p class="text-3xl font-bold text-gray-900">
-                                {{ totalProducts }}
-                            </p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Products</p>
+                            <h3 class="text-3xl font-black text-gray-900 leading-none">{{ totalProducts }}</h3>
                         </div>
-                        <div class="bg-blue-100 p-3 rounded-full">
-                            <svg
-                                class="w-6 h-6 text-blue-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
-                                ></path>
-                            </svg>
+                        <div class="p-3 rounded-2xl bg-blue-50 text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white shadow-sm">
+                            <Package :size="24" stroke-width="2.5" />
                         </div>
                     </div>
-                </div>
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                Total Stock
-                            </p>
-                            <p class="text-3xl font-bold text-gray-900">
-                                {{ totalStock }}
-                            </p>
-                        </div>
-                        <div class="bg-green-100 p-3 rounded-full">
-                            <svg
-                                class="w-6 h-6 text-green-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                ></path>
-                            </svg>
-                        </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-blue-600 bg-blue-50/50 w-fit px-2 py-1 rounded-full">
+                        <TrendingUp :size="12" class="mr-1" />
+                        <span>Inventory Active</span>
                     </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm p-6">
+
+                <!-- Total Stock -->
+                <div class="stat-card group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                Total Sold
-                            </p>
-                            <p class="text-3xl font-bold text-gray-900">
-                                {{ totalSold }}
-                            </p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">In Stock</p>
+                            <h3 class="text-3xl font-black text-gray-900 leading-none">{{ totalStock }}</h3>
                         </div>
-                        <div class="bg-primary/10 p-3 rounded-full">
-                            <svg
-                                class="w-6 h-6 text-primary"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                ></path>
-                            </svg>
+                        <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 transition-all group-hover:bg-emerald-600 group-hover:text-white shadow-sm">
+                            <Layers :size="24" stroke-width="2.5" />
                         </div>
                     </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-emerald-600 bg-emerald-50/50 w-fit px-2 py-1 rounded-full">
+                        <CheckCircle :size="12" class="mr-1" />
+                        <span>Ready to Ship</span>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm p-6">
+
+                <!-- Total Sold -->
+                <div class="stat-card group">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                Total Value
-                            </p>
-                            <p class="text-3xl font-bold text-gray-900">
-                                ৳{{ totalValue.toLocaleString() }}
-                            </p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Sold</p>
+                            <h3 class="text-3xl font-black text-gray-900 leading-none">{{ totalSold }}</h3>
                         </div>
-                        <div class="bg-purple-100 p-3 rounded-full">
-                            <svg
-                                class="w-6 h-6 text-purple-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                                ></path>
-                            </svg>
+                        <div class="p-3 rounded-2xl bg-amber-50 text-amber-600 transition-all group-hover:bg-amber-600 group-hover:text-white shadow-sm">
+                            <ShoppingCart :size="24" stroke-width="2.5" />
                         </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-amber-600 bg-amber-50/50 w-fit px-2 py-1 rounded-full">
+                        <TrendingUp :size="12" class="mr-1" />
+                        <span>Sales Velocity: {{ overallSellThroughRate.toFixed(1) }}%</span>
+                    </div>
+                </div>
+
+                <!-- Total Value -->
+                <div class="stat-card group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Inventory Value</p>
+                            <h3 class="text-3xl font-black text-gray-900 leading-none">BDT {{ totalValue.toLocaleString() }}</h3>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-purple-50 text-purple-600 transition-all group-hover:bg-purple-600 group-hover:text-white shadow-sm">
+                            <DollarSign :size="24" stroke-width="2.5" />
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-medium text-purple-600 bg-purple-50/50 w-fit px-2 py-1 rounded-full">
+                        <TrendingUp :size="12" class="mr-1" />
+                        <span>Asset Value Peak</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Performance Metrics -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                        Sell-Through Rate
-                    </h3>
-                    <div class="flex items-center justify-between">
-                        <div class="text-4xl font-bold text-gray-900">
-                            {{ overallSellThroughRate.toFixed(1) }}%
-                        </div>
-                        <div class="w-20 h-20">
-                            <svg class="w-full h-full" viewBox="0 0 100 100">
-                                <circle
-                                    cx="50"
-                                    cy="50"
-                                    r="45"
-                                    fill="none"
-                                    stroke="#e5e7eb"
-                                    stroke-width="10"
-                                />
-                                <circle
-                                    cx="50"
-                                    cy="50"
-                                    r="45"
-                                    fill="none"
-                                    stroke="#3b82f6"
-                                    stroke-width="10"
-                                    stroke-dasharray="283"
-                                    :stroke-dashoffset="
-                                        283 -
-                                        (283 * overallSellThroughRate) / 100
-                                    "
-                                    transform="rotate(-90 50 50)"
-                                />
-                            </svg>
-                        </div>
+            <!-- Visualization Section (Phase 2 Additions) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Stock Distribution Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-900">Inventory Distribution</h3>
+                        <Layers class="text-gray-400" :size="20" />
+                    </div>
+                    <div class="h-[300px]">
+                        <VueApexCharts 
+                            type="donut" 
+                            height="300" 
+                            :options="inventoryPieOptions" 
+                            :series="inventoryPieSeries" 
+                        />
                     </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                        Category Performance
-                    </h3>
-                    <div class="space-y-4">
-                        <div
-                            v-for="(category, name) in productsByCategory"
-                            :key="name"
-                            class="flex items-center justify-between"
-                        >
-                            <div>
-                                <p class="font-medium text-gray-900">
-                                    {{ name }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    {{ category.total_products }} products
-                                </p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-semibold text-gray-900">
-                                    {{ category.sell_through_rate.toFixed(1) }}%
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    ৳{{
-                                        category.inventory_value.toLocaleString()
-                                    }}
-                                </p>
-                            </div>
-                        </div>
+
+                <!-- Sell-Through Performance Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-900">Category Efficiency</h3>
+                        <TrendingUp class="text-gray-400" :size="20" />
+                    </div>
+                    <div class="h-[300px]">
+                        <VueApexCharts 
+                            type="bar" 
+                            height="300" 
+                            :options="sellThroughBarOptions" 
+                            :series="sellThroughBarSeries" 
+                        />
                     </div>
                 </div>
             </div>
 
-            <!-- Top Performers -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                    Top Performing Products
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="border-b">
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Product
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Category
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Stock
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Sold
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Sell-Through Rate
-                                </th>
+
+            <!-- Top Performers Table -->
+            <div class="chart-container mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-black text-gray-900 uppercase tracking-tight">Top Performing Products</h3>
+                    <div class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">High Velocity</div>
+                </div>
+                <div class="overflow-x-auto rounded-2xl border border-gray-50">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th class="text-left py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Product</th>
+                                <th class="text-left py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Category</th>
+                                <th class="text-center py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Stock</th>
+                                <th class="text-center py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Sold</th>
+                                <th class="text-right py-4 px-6 font-bold text-gray-500 lowercase tracking-wider">Sell-Through</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr
-                                v-for="product in topPerformers"
-                                :key="product.id"
-                                class="border-b hover:bg-gray-50"
-                            >
-                                <td class="py-3 px-4 font-medium text-gray-900">
-                                    {{ product.name }}
-                                </td>
-                                <td class="py-3 px-4 text-gray-600">
-                                    {{ product.category }}
-                                </td>
-                                <td class="py-3 px-4 text-gray-600">
-                                    {{ product.stock }}
-                                </td>
-                                <td class="py-3 px-4 text-gray-600">
-                                    {{ product.sold }}
-                                </td>
-                                <td class="py-3 px-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        :class="
-                                            product.sell_through_rate > 10
-                                                ? 'bg-green-100 text-green-800'
-                                                : product.sell_through_rate > 5
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : 'bg-red-100 text-red-800'
-                                        "
-                                    >
-                                        {{
-                                            product.sell_through_rate.toFixed(
-                                                1
-                                            )
-                                        }}%
+                        <tbody class="divide-y divide-gray-50">
+                            <tr v-for="product in topPerformers" :key="product.id" class="hover:bg-blue-50/30 transition-colors group">
+                                <td class="py-4 px-6 font-semibold text-gray-900 group-hover:text-blue-600">{{ product.name }}</td>
+                                <td class="py-4 px-6 text-gray-500">{{ product.category }}</td>
+                                <td class="py-4 px-6 text-center tabular-nums">{{ product.stock }}</td>
+                                <td class="py-4 px-6 text-center tabular-nums font-bold">{{ product.sold }}</td>
+                                <td class="py-4 px-6 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black shadow-sm"
+                                        :class="product.sell_through_rate > 15 ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'">
+                                        {{ product.sell_through_rate.toFixed(1) }}%
                                     </span>
                                 </td>
                             </tr>
@@ -481,36 +360,12 @@
                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
                                 </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Order #
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Customer
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Total
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Status
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Payment
-                                </th>
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
-                                    Date
-                                </th>
+                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Order #</th>
+                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Date</th>
+                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Customer</th>
+                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Status</th>
+                                <th class="text-left py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Payment</th>
+                                <th class="text-right py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Total Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -527,63 +382,45 @@
                                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
                                 </td>
-                                <td class="py-3 px-4 font-medium text-gray-900">
-                                    {{ order.order_number }}
+                                <td class="py-3 px-4 font-bold text-blue-600">#{{ order.order_number }}</td>
+                                <td class="py-3 px-4 text-xs text-gray-500 font-medium whitespace-nowrap">{{ formatDate(order.date) }}</td>
+                                <td class="py-3 px-4">
+                                    <div class="font-black text-gray-900 leading-tight">{{ order.customer_name || order.customer?.name }}</div>
+                                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{{ order.customer_phone || order.customer?.phone }}</div>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <div>
-                                        <p class="font-medium text-gray-900">
-                                            {{ order.customer.name }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            {{ order.customer.email }}
-                                        </p>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-4 font-medium text-gray-900">
-                                    ৳{{ order.total }}
-                                </td>
-                                <td class="py-3 px-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        :class="getStatusColor(order.status)"
-                                    >
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm" :class="getStatusColor(order.status)">
                                         {{ order.status }}
                                     </span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        :class="
-                                            getPaymentStatusColor(
-                                                order.payment_status
-                                            )
-                                        "
-                                    >
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm" :class="getPaymentStatusColor(order.payment_status)">
                                         {{ order.payment_status }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-gray-600">
-                                    {{ formatDate(order.date) }}
-                                </td>
+                                <td class="py-3 px-4 text-right font-black text-gray-900 tabular-nums text-sm">BDT {{ order.total }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr class="border-t-2 border-gray-300 bg-gray-50">
-                                <td
-                                    colspan="3"
-                                    class="py-3 px-4 font-bold text-gray-900"
-                                >
-                                    Total Amount:
+                            <tr class="border-t-2 border-gray-100 bg-gray-50/50">
+                                <td colspan="3" class="py-4 px-6">
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Revenue Overview</p>
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                                <span class="text-sm font-medium text-gray-600">Page Total: <span class="text-gray-900 font-bold">BDT {{ calculateTotalAmount().toLocaleString() }}</span></span>
+                                            </div>
+                                            <div class="flex items-center gap-2 border-l border-gray-200 pl-4">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                <span class="text-sm font-medium text-gray-600">Grand Total: <span class="text-gray-900 font-black text-lg">BDT {{ grandTotalRevenue.toLocaleString() }}</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td
-                                    class="py-3 px-4 font-bold text-gray-900 text-lg"
-                                >
-                                    ৳{{
-                                        calculateTotalAmount().toLocaleString()
-                                    }}
+                                <td colspan="4" class="py-4 px-6 text-right">
+                                    <p class="text-xs text-gray-400 font-medium italic">Calculated across {{ orders.total }} matching records</p>
                                 </td>
-                                <td colspan="4" class="py-3 px-4"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -621,12 +458,26 @@
 <script setup>
 import { Head } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { jsPDF } from "jspdf";
+import VueApexCharts from "vue3-apexcharts";
+import { 
+    Package, 
+    ShoppingCart, 
+    TrendingUp, 
+    DollarSign, 
+    Filter, 
+    Download, 
+    FileText,
+    AlertCircle,
+    CheckCircle,
+    Layers
+} from "lucide-vue-next";
 
 const props = defineProps({
     orders: Object,
+    grandTotalRevenue: Number,
     totalProducts: Number,
     totalVariations: Number,
     totalStock: Number,
@@ -652,6 +503,34 @@ const filters = reactive({
 
 const selectedOrders = ref([]);
 const selectAll = ref(false);
+
+// Chart Configurations
+const inventoryPieOptions = computed(() => ({
+    chart: { type: 'donut', fontFamily: 'Inter, sans-serif', toolbar: { show: false } },
+    labels: Object.keys(props.productsByCategory),
+    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+    legend: { position: 'bottom' },
+    plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Categories' } } } } },
+    dataLabels: { enabled: false }
+}));
+
+const inventoryPieSeries = computed(() => 
+    Object.values(props.productsByCategory).map(cat => cat.stock)
+);
+
+const sellThroughBarOptions = computed(() => ({
+    chart: { type: 'bar', toolbar: { show: false } },
+    plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+    colors: ['#3b82f6'],
+    xaxis: { categories: Object.keys(props.productsByCategory) },
+    title: { text: 'Sell-Through Rate (%)', align: 'center', style: { fontSize: '14px', fontWeight: 600 } },
+    grid: { borderColor: '#f1f1f1' }
+}));
+
+const sellThroughBarSeries = computed(() => [{
+    name: 'Sell-Through Rate',
+    data: Object.values(props.productsByCategory).map(cat => parseFloat(cat.sell_through_rate.toFixed(1)))
+}]);
 
 // Initialize filters with URL parameters on mount
 onMounted(() => {
@@ -689,13 +568,17 @@ const calculateTotalAmount = () => {
 
 // Export to CSV function
 const exportToCSV = () => {
-    // Select data based on whether orders are selected
-    const selectedData =
-        selectedOrders.value.length > 0
-            ? props.orders.data.filter((order) =>
-                  selectedOrders.value.includes(order.id)
-              )
-            : props.orders.data;
+    // If no orders selected, export ALL data across ALL pages via backend
+    if (selectedOrders.value.length === 0) {
+        const params = new URLSearchParams(filters).toString();
+        window.location.href = route('admin.reports.export') + '?' + params;
+        return;
+    }
+
+    // Otherwise, export only SELECTED data from current page
+    const selectedData = props.orders.data.filter((order) =>
+        selectedOrders.value.includes(order.id)
+    );
 
     if (selectedData.length === 0) {
         alert("No orders to export");
@@ -705,31 +588,36 @@ const exportToCSV = () => {
     // CSV Headers
     const headers = [
         "Order #",
+        "Date",
         "Customer Name",
-        "Customer Email",
-        "Total",
+        "Customer Phone",
         "Status",
         "Payment Status",
-        "Date",
+        "Total Amount",
     ];
 
     // Convert data to CSV format
-    const csvContent = [
+    let csvContent = [
         // Add headers
         headers.join(","),
         // Add data rows
         ...selectedData.map((order) =>
             [
-                `"${order.order_number}"`,
-                `"${order.customer.name}"`,
-                `"${order.customer.email}"`,
-                `"$${order.total}"`,
+                `"#${order.order_number}"`,
+                `"${formatDate(order.date)}"`,
+                `"${order.customer_name || order.customer?.name}"`,
+                `"${order.customer_phone || order.customer?.phone}"`,
                 `"${order.status}"`,
                 `"${order.payment_status}"`,
-                `"${formatDate(order.date)}"`,
+                `"BDT ${order.total}"`,
             ].join(",")
         ),
     ].join("\n");
+
+    // Add Grand Total row for context (Big Tech Standard)
+    if (selectedOrders.value.length === 0) {
+        csvContent += `\n\n"","","","","","GRAND TOTAL (All Filtered Pages)","BDT ${props.grandTotalRevenue}"`;
+    }
 
     // Create and download CSV file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -759,19 +647,23 @@ const exportToCSV = () => {
 
 // Export to PDF function
 const exportToPDF = () => {
+    // If no orders selected, export ALL data across ALL pages via backend
+    if (selectedOrders.value.length === 0) {
+        const params = new URLSearchParams(filters).toString();
+        window.location.href = route('admin.reports.export-pdf') + '?' + params;
+        return;
+    }
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     let y = 20;
 
-    // Select data based on whether orders are selected
-    const selectedData =
-        selectedOrders.value.length > 0
-            ? props.orders.data.filter((order) =>
-                  selectedOrders.value.includes(order.id)
-              )
-            : props.orders.data;
+    // Select only SELECTED data from current page
+    const selectedData = props.orders.data.filter((order) =>
+        selectedOrders.value.includes(order.id)
+    );
 
     // Header
     doc.setFont("helvetica", "bold");
@@ -797,13 +689,13 @@ const exportToPDF = () => {
     // Table setup
     const headers = [
         "Order #",
+        "Date",
         "Customer",
-        "Total",
         "Status",
         "Payment",
-        "Date",
+        "Total",
     ];
-    const columnWidths = [25, 55, 20, 25, 25, 35];
+    const columnWidths = [25, 35, 55, 25, 25, 20];
     const startX = margin;
 
     const drawTableRow = (rowData, isHeader = false, rowHeight = 10) => {
@@ -870,12 +762,12 @@ const exportToPDF = () => {
         checkPageBreak(15);
 
         const row = [
-            order.order_number,
-            `${order.customer.name}\n${order.customer.email}`,
-            `$${order.total}`,
+            `#${order.order_number}`,
+            formatDate(order.date),
+            `${order.customer_name || order.customer?.name}\n${order.customer_phone || order.customer?.phone}`,
             order.status,
             order.payment_status,
-            formatDate(order.date),
+            `BDT ${order.total}`,
         ];
 
         drawTableRow(row, false, 12);
@@ -890,11 +782,18 @@ const exportToPDF = () => {
     doc.setFillColor(240, 240, 240); // Light gray background for total
     doc.setDrawColor(0, 0, 0); // Black border
     const tableWidth = columnWidths.reduce((a, b) => a + b, 0);
-    doc.rect(startX, y, tableWidth, 12, "FD");
+    doc.rect(startX, y, tableWidth, 20, "FD");
     doc.text(
-        `Total Amount: $${calculateTotalAmount().toLocaleString()}`,
+        `Current Page Total: BDT ${calculateTotalAmount().toLocaleString()}`,
         startX + 5,
         y + 8
+    );
+    doc.setFont("helvetica", "black");
+    doc.setFontSize(11);
+    doc.text(
+        `GRAND TOTAL (ALL PAGES): BDT ${props.grandTotalRevenue.toLocaleString()}`,
+        startX + 5,
+        y + 16
     );
 
     // Footer
@@ -914,6 +813,12 @@ const exportToPDF = () => {
 
 const applyFilters = () => {
     const params = { ...filters };
+
+    // Reset dates if not custom to ensure 'All Time' works correctly
+    if (filters.period !== "custom") {
+        params.date_from = null;
+        params.date_to = null;
+    }
 
     if (filters.period === "today") {
         const today = new Date().toISOString().split("T")[0];
@@ -1029,3 +934,43 @@ const formatDate = (dateString) => {
     });
 };
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+.reports-dashboard {
+    font-family: 'Inter', sans-serif;
+}
+
+.stat-card {
+    @apply bg-white p-6 rounded-3xl border border-gray-100 shadow-sm transition-all duration-300;
+    backdrop-filter: blur(10px);
+}
+
+.stat-card:hover {
+    @apply shadow-xl border-blue-100 -translate-y-1;
+}
+
+.chart-container {
+    @apply bg-white p-8 rounded-3xl border border-gray-100 shadow-sm transition-all duration-300;
+}
+
+.chart-container:hover {
+    @apply shadow-lg border-blue-50;
+}
+
+/* Glassmorphism utility */
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Custom transitions */
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.5s ease;
+}
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
+}
+</style>

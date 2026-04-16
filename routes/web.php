@@ -100,6 +100,8 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
 
     // inventory
     Route::get('/reports', [InventoryManagementController::class, 'generateReport'])->name('reports.generateReport');
+    Route::get('/reports/export', [InventoryManagementController::class, 'exportOrders'])->name('reports.export');
+    Route::get('/reports/export-pdf', [InventoryManagementController::class, 'exportOrdersPDF'])->name('reports.export-pdf');
 
     Route::resource('products', ProductController::class);
     Route::resource('product-videos', ProductVideoController::class);

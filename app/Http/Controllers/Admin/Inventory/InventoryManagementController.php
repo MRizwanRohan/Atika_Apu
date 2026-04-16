@@ -37,6 +37,7 @@ public function generateReport(Request $request)
     $sortBy = $request->input('sort_by', 'created_at');
     $sortDirection = $request->input('sort_direction', 'desc');
 
+    // 1. Fetch Paginated Orders
     $orders = $this->orderService->getOrders([
         'per_page' => $perPage,
         'filters' => $filters,
@@ -44,197 +45,225 @@ public function generateReport(Request $request)
         'sort_direction' => $sortDirection,
     ]);
 
-    // Fetch products with their relationships
-    // Load WITH soft-deleted attribute values so we can filter them out from stock UI
-    $products = Product::with([
-        'category',
-        'variations.attributes.value' => function($query) {
-            $query->withTrashed(); // Load soft-deleted attribute values
-        },
-        'variations.attributes.value.attribute' => function($query) {
-            $query->withTrashed(); // Load soft-deleted attributes
-        }
-    ])->get();
-
-    // Filter out variations that have any soft-deleted attribute values (for stock UI only)
-    $products->each(function ($product) {
-        if ($product->type === 'variable') {
-            $filteredVariations = $product->variations->filter(function ($variation) {
-                // Keep only variations where ALL attribute values are NOT soft-deleted
-                return $variation->attributes->every(function ($attr) {
-                    return $attr->value && !$attr->value->trashed();
-                });
-            })->values(); // Re-index the collection
-
-            $product->setRelation('variations', $filteredVariations);
-        }
-    });
-
-    // Calculate overall inventory statistics
-    $totalProducts = $products->count();
-    $totalVariations = $products->flatMap->variations->count();
-
-    // Calculate stock for both simple and variable products
-    $totalStock = $products->sum(function ($product) {
-        if ($product->type === 'simple') {
-            return $product->stock;
-        } else {
-            return $product->variations->sum('stock');
-        }
-    });
-
-    // Calculate sold stock for both simple and variable products
-    $totalSold = $products->sum(function ($product) {
-        if ($product->type === 'simple') {
-            return $product->sold_stock;
-        } else {
-            return $product->variations->sum('sold_stock');
-        }
-    });
-
-    // Calculate total inventory value
-    $totalValue = $products->sum(function ($product) {
-        if ($product->type === 'simple') {
-            return $product->stock * $product->price;
-        } else {
-            return $product->variations->sum(function ($variation) {
-                return $variation->stock * $variation->price;
+    // 1b. Calculate Grand Total Revenue (All Filtered Results - Big Tech Standard)
+    $grandTotalRevenue = \App\Models\Order::query()
+        ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
+        ->when($filters['payment_status'], fn($q) => $q->where('payment_status', $filters['payment_status']))
+        ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
+        ->when($filters['date_to'], fn($q) => $q->whereDate('created_at', '<=', $filters['date_to']))
+        ->when($filters['customer_search'], function($q) use ($filters) {
+            $q->whereHas('customer', function($cq) use ($filters) {
+                $cq->where('name', 'like', "%{$filters['customer_search']}%")
+                   ->orWhere('email', 'like', "%{$filters['customer_search']}%");
             });
-        }
+        })
+        ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
+        ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
+        ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
+        ->sum('total');
+
+    // 2. Extract Inventory Stats (Cached for 10 minutes)
+    $report = \Cache::remember('inventory_dashboard_report', 600, function () {
+        // Optimized Aggregate Queries
+        $simpleStats = \App\Models\Product::where('type', 'simple')
+            ->selectRaw('count(*) as count, sum(stock) as stock, sum(sold_stock) as sold, sum(stock * price) as value')
+            ->first();
+
+        $variationStats = \App\Models\ProductVariation::selectRaw('count(*) as count, sum(stock) as stock, sum(sold_stock) as sold, sum(stock * price) as value')
+            ->first();
+
+        $totalStock = ($simpleStats->stock ?? 0) + ($variationStats->stock ?? 0);
+        $totalSold = ($simpleStats->sold ?? 0) + ($variationStats->sold ?? 0);
+        $totalValue = ($simpleStats->value ?? 0) + ($variationStats->value ?? 0);
+        $totalProducts = \App\Models\Product::count();
+        $totalVariations = $variationStats->count ?? 0;
+
+        // Performant Category Breakdown
+        $productsByCategory = \App\Models\Category::withCount('products')
+            ->get()->mapWithKeys(function ($cat) {
+                $ids = \App\Models\Product::where('category_id', $cat->id)->pluck('id');
+                $simple = \App\Models\Product::where('category_id', $cat->id)->where('type', 'simple')
+                    ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * price) as v')->first();
+                $variations = \App\Models\ProductVariation::whereIn('product_id', $ids)
+                    ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * price) as v')->first();
+                
+                $stock = ($simple->s ?? 0) + ($variations->s ?? 0);
+                $sold = ($simple->sl ?? 0) + ($variations->sl ?? 0);
+                
+                return [$cat->name => [
+                    'total_products' => $cat->products_count,
+                    'stock' => $stock,
+                    'sold' => $sold,
+                    'inventory_value' => ($simple->v ?? 0) + ($variations->v ?? 0),
+                    'sell_through_rate' => ($stock + $sold) > 0 ? ($sold / ($stock + $sold)) * 100 : 0
+                ]];
+            });
+
+        // Top Performers Strategy (Balanced query/logic)
+        $topPerformers = \App\Models\Product::with(['category', 'variations'])->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'category' => $p->category->name ?? 'Uncategorized',
+                'stock' => $s = ($p->type === 'simple' ? $p->stock : $p->variations->sum('stock')),
+                'sold' => $sl = ($p->type === 'simple' ? $p->sold_stock : $p->variations->sum('sold_stock')),
+                'sell_through_rate' => ($s + $sl) > 0 ? ($sl / ($s + $sl)) * 100 : 0,
+            ])->sortByDesc('sell_through_rate')->take(5)->values();
+
+        // Low Stock Detection
+        $lowStockProducts = \App\Models\Product::with('variations')->get()->filter(function($p) {
+            $s = $p->type === 'simple' ? $p->stock : $p->variations->sum('stock');
+            $sl = $p->type === 'simple' ? $p->sold_stock : $p->variations->sum('sold_stock');
+            return ($s + $sl) > 0 && ($s / ($s + $sl)) < 0.2;
+        })->take(10)->values();
+
+        return compact('totalProducts', 'totalVariations', 'totalStock', 'totalSold', 'totalValue', 'productsByCategory', 'topPerformers', 'lowStockProducts');
     });
 
-    // Calculate sell-through rate (proportion of inventory sold)
-    $overallSellThroughRate = ($totalStock + $totalSold) > 0
-        ? ($totalSold / ($totalStock + $totalSold)) * 100
-        : 0;
-
-    // Products with low stock (less than 20% remaining)
-    $lowStockProducts = $products->filter(function ($product) {
-        if ($product->type === 'simple') {
-            $totalProductStock = $product->stock;
-            $totalProductSold = $product->sold_stock;
-        } else {
-            $totalProductStock = $product->variations->sum('stock');
-            $totalProductSold = $product->variations->sum('sold_stock');
-        }
-
-        $totalInventory = $totalProductStock + $totalProductSold;
-
-        // Skip products with no inventory
-        if ($totalInventory == 0) {
-            return false;
-        }
-
-        $remainingPercentage = ($totalProductStock / $totalInventory) * 100;
-        return $remainingPercentage < 20;
-    });
-
-    // Group products by category for analysis
-    $productsByCategory = $products->groupBy('category.name')->map(function ($categoryProducts) {
-        $categoryStock = $categoryProducts->sum(function ($product) {
-            if ($product->type === 'simple') {
-                return $product->stock;
-            } else {
-                return $product->variations->sum('stock');
-            }
-        });
-
-        $categorySold = $categoryProducts->sum(function ($product) {
-            if ($product->type === 'simple') {
-                return $product->sold_stock;
-            } else {
-                return $product->variations->sum('sold_stock');
-            }
-        });
-
-        $categoryValue = $categoryProducts->sum(function ($product) {
-            if ($product->type === 'simple') {
-                return $product->stock * $product->price;
-            } else {
-                return $product->variations->sum(function ($variation) {
-                    return $variation->stock * $variation->price;
-                });
-            }
-        });
-
-        $sellThroughRate = 0;
-        if (($categoryStock + $categorySold) > 0) {
-            $sellThroughRate = ($categorySold / ($categoryStock + $categorySold)) * 100;
-        }
-
-        return [
-            'total_products' => $categoryProducts->count(),
-            'total_variations' => $categoryProducts->flatMap->variations->count(),
-            'stock' => $categoryStock,
-            'sold' => $categorySold,
-            'inventory_value' => $categoryValue,
-            'sell_through_rate' => $sellThroughRate,
-        ];
-    });
-
-    // Get top performing products (highest sell-through rate)
-    $topPerformers = $products->filter(function ($product) {
-        if ($product->type === 'simple') {
-            $totalProductStock = $product->stock;
-            $totalProductSold = $product->sold_stock;
-        } else {
-            $totalProductStock = $product->variations->sum('stock');
-            $totalProductSold = $product->variations->sum('sold_stock');
-        }
-        return ($totalProductStock + $totalProductSold) > 0;
-    })->map(function ($product) {
-        if ($product->type === 'simple') {
-            $totalProductStock = $product->stock;
-            $totalProductSold = $product->sold_stock;
-        } else {
-            $totalProductStock = $product->variations->sum('stock');
-            $totalProductSold = $product->variations->sum('sold_stock');
-        }
-
-        $sellThroughRate = ($totalProductSold / ($totalProductStock + $totalProductSold)) * 100;
-
-        return [
-            'id' => $product->id,
-            'name' => $product->name,
-            'category' => $product->category->name ?? 'Uncategorized',
-            'stock' => $totalProductStock,
-            'sold' => $totalProductSold,
-            'sell_through_rate' => $sellThroughRate,
-        ];
-    })->sortByDesc('sell_through_rate')->take(5);
-
-    // return [
-    //     'orders' => $orders,
-    //     'totalProducts' => $totalProducts,
-    //     'totalVariations' => $totalVariations,
-    //     'totalStock' => $totalStock,
-    //     'totalSold' => $totalSold,
-    //     'totalValue' => $totalValue,
-    //     'overallSellThroughRate' => $overallSellThroughRate,
-    //     'lowStockProducts' => $lowStockProducts,
-    //     'productsByCategory' => $productsByCategory,
-    //     'topPerformers' => $topPerformers,
-    // ];
-
-    return Inertia::render('Admin/Reports/Index', [
+    return Inertia::render('Admin/Reports/Index', array_merge([
         'orders' => $orders,
-        'totalProducts' => $totalProducts,
-        'totalVariations' => $totalVariations,
-        'totalStock' => $totalStock,
-        'totalSold' => $totalSold,
-        'totalValue' => $totalValue,
-        'overallSellThroughRate' => $overallSellThroughRate,
-        'lowStockProducts' => $lowStockProducts,
-        'productsByCategory' => $productsByCategory,
-        'topPerformers' => $topPerformers,
-    ]);
-
+        'grandTotalRevenue' => (float) $grandTotalRevenue,
+        'overallSellThroughRate' => ($report['totalStock'] + $report['totalSold']) > 0 
+            ? ($report['totalSold'] / ($report['totalStock'] + $report['totalSold'])) * 100 
+            : 0,
+    ], $report));
 }
 
+public function exportOrders(Request $request)
+{
+    $filters = [
+        'status' => $request->input('status'),
+        'payment_status' => $request->input('payment_status'),
+        'date_from' => $request->input('date_from'),
+        'date_to' => $request->input('date_to'),
+        'customer_search' => $request->input('customer_search'),
+        'min_total' => $request->input('min_total'),
+        'max_total' => $request->input('max_total'),
+        'order_number' => $request->input('order_number'),
+    ];
 
+    $orders = \App\Models\Order::query()
+        ->with('customer')
+        ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
+        ->when($filters['payment_status'], fn($q) => $q->where('payment_status', $filters['payment_status']))
+        ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
+        ->when($filters['date_to'], fn($q) => $q->whereDate('created_at', '<=', $filters['date_to']))
+        ->when($filters['customer_search'], function($q) use ($filters) {
+            $q->whereHas('customer', function($cq) use ($filters) {
+                $cq->where('name', 'like', "%{$filters['customer_search']}%")
+                   ->orWhere('email', 'like', "%{$filters['customer_search']}%");
+            });
+        })
+        ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
+        ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
+        ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
+        ->latest()
+        ->get();
 
+    $fileName = 'orders_full_report_' . date('Y-m-d') . '.csv';
+    $headers = [
+        "Content-type"        => "text/csv",
+        "Content-Disposition" => "attachment; filename=$fileName",
+        "Pragma"              => "no-cache",
+        "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+        "Expires"             => "0"
+    ];
 
+    $callback = function() use($orders) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, ['Order #', 'Date', 'Customer Name', 'Customer Phone', 'Status', 'Payment Status', 'Total Amount']);
 
+        $grandTotal = 0;
+        foreach ($orders as $order) {
+            $row = [
+                '#' . $order->order_number,
+                $order->created_at->format('Y-m-d H:i'),
+                $order->customer_name ?? ($order->customer->name ?? 'N/A'),
+                $order->customer_phone ?? ($order->customer->phone ?? 'N/A'),
+                $order->status,
+                $order->payment_status,
+                'BDT ' . $order->total,
+            ];
+            fputcsv($file, $row);
+            $grandTotal += $order->total;
+        }
+
+        fputcsv($file, []); // Empty line
+        fputcsv($file, ['', '', '', '', '', 'GRAND TOTAL', 'BDT ' . $grandTotal]);
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
+
+public function exportOrdersPDF(Request $request)
+{
+    $filters = [
+        'status' => $request->input('status'),
+        'payment_status' => $request->input('payment_status'),
+        'date_from' => $request->input('date_from'),
+        'date_to' => $request->input('date_to'),
+        'customer_search' => $request->input('customer_search'),
+        'min_total' => $request->input('min_total'),
+        'max_total' => $request->input('max_total'),
+        'order_number' => $request->input('order_number'),
+    ];
+
+    $orders = \App\Models\Order::query()
+        ->with('customer')
+        ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
+        ->when($filters['payment_status'], fn($q) => $q->where('payment_status', $filters['payment_status']))
+        ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
+        ->when($filters['date_to'], fn($q) => $q->whereDate('created_at', '<=', $filters['date_to']))
+        ->when($filters['customer_search'], function($q) use ($filters) {
+            $q->whereHas('customer', function($cq) use ($filters) {
+                $cq->where('name', 'like', "%{$filters['customer_search']}%")
+                   ->orWhere('email', 'like', "%{$filters['customer_search']}%");
+            });
+        })
+        ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
+        ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
+        ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
+        ->latest()
+        ->get();
+
+    $grandTotal = $orders->sum('total');
+
+    // Create a simple HTML view for PDF
+    $html = '<html><head><style>
+        body { font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 12px; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        .footer { margin-top: 20px; text-align: right; font-weight: bold; font-size: 16px; border-top: 2px solid #000; padding-top: 10px; }
+        .header { text-align: center; margin-bottom: 20px; }
+    </style></head><body>';
+    
+    $html .= '<div class="header"><h1>Inventory Sales Report</h1><p>Full Filtered Report - Generated on: '.date('Y-m-d').'</p></div>';
+    
+    $html .= '<table><thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Status</th><th>Payment</th><th style="text-align: right;">Total</th></tr></thead><tbody>';
+    
+    foreach ($orders as $order) {
+        $name = $order->customer_name ?? ($order->customer->name ?? 'N/A');
+        $phone = $order->customer_phone ?? ($order->customer->phone ?? 'N/A');
+        $html .= "<tr>
+            <td>#{$order->order_number}</td>
+            <td>{$order->created_at->format('M d, Y')}</td>
+            <td>{$name}<br><small style='color: #666;'>{$phone}</small></td>
+            <td>{$order->status}</td>
+            <td>{$order->payment_status}</td>
+            <td style='text-align: right; font-weight: bold;'>BDT ".number_format($order->total)."</td>
+        </tr>";
+    }
+    
+    $html .= '</tbody></table>';
+    $html .= '<div class="footer">GRAND TOTAL: BDT '.number_format($grandTotal).'</div>';
+    $html .= '</body></html>';
+
+    $pdf = \App::make('dompdf.wrapper');
+    $pdf->loadHTML($html);
+    return $pdf->download('full_orders_report_'.date('Y-m-d').'.pdf');
+}
 
     /**
      * Get comprehensive stock data for all products with variations
