@@ -89,7 +89,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
 
 
 
-    Route::put('/orders/{orderId}/courier-details', [OrderController::class, 'updateCourierDetails']);
+    Route::put('/orders/{orderId}/courier-details', [OrderController::class, 'updateCourierDetails'])->name('orders.courier-details.update');
     Route::post('/couriers/pathao/shipment', [CourierController::class, 'createShipment'])->name('couriers.pathao.shipment');
     Route::post('/couriers/pathao/shipments/bulk', [CourierController::class, 'createBulkShipment']);
     Route::get('/courier/settings', [CourierController::class, 'index'])->name('courier.settings.index');

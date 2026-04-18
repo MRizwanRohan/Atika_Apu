@@ -138,7 +138,7 @@ const submit = async () => {
     form.area_id = area?.area_id || null;
   }
 
-  form.put(`/admin/orders/${props.orderId}/courier-details`, {
+  form.put(route('admin.orders.courier-details.update', { orderId: props.orderId }), {
     onSuccess: () => {
       toast.success('Courier details updated successfully');
       emit('submit', form.data());

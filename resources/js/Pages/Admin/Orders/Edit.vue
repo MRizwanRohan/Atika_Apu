@@ -317,7 +317,7 @@ const orderNew = (product) => {
 
   loading.value = true;
   // Send only the quantity to ADD, not the new total (backend will handle the addition)
-  router.post(`/orders/${props.order.id}/update`, {
+  router.post(route('admin.orders.update-new', { orderId: props.order.id }), {
     items: [{
       product_id: product.id,
       product_variation_id: variationId,
@@ -364,7 +364,10 @@ const orderNew = (product) => {
 // Handle item removal
 const removeItem = (itemId) => {
   loading.value = true;
-  router.delete(`/orders/${props.order.id}/items/${itemId}`, {
+  router.delete(route('admin.orders.items.destroy', {
+    order: props.order.id,
+    item: itemId
+  }), {
     preserveState: true,
     preserveScroll: true,
     onSuccess: () => {
@@ -519,7 +522,10 @@ const saveQuantityChanges = () => {
     }
 
     const change = changes[index];
-    router.put(`/orders/${props.order.id}/items/${change.itemId}`, {
+    router.put(route('admin.orders.items.update', {
+      order: props.order.id,
+      item: change.itemId
+    }), {
       quantity: change.newQuantity
     }, {
       preserveState: true,
@@ -555,7 +561,7 @@ const cancelQuantityChanges = () => {
 
 // Submit form for customer info updates
 const submitForm = () => {
-  form.post(`/orders/${props.order.id}/basic-info`, {
+  form.post(route('admin.orders.basic-info', { orderId: props.order.id }), {
     preserveScroll: true,
     onSuccess: (page) => {
       // Check for flash message from backend

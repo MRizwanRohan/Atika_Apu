@@ -246,7 +246,7 @@ const handleSave = async () => {
 
     try {
         await router.put(
-            `/admin/orders/${props.orderId}/admin-notes`,
+            route('admin.orders.update-notes', { orderId: props.orderId }),
             { admin_notes: localNotes.value },
             {
                 preserveState: true,

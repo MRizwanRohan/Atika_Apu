@@ -573,9 +573,12 @@ const updateOrderStatus = async (orderId, newStatus) => {
     updatingOrders.value[orderId] = true;
 
     try {
-        const response = await axios.put(`/orders/${orderId}/status`, {
+        const response = await axios.put(
+            route("admin.orders.status.update", { orderId }),
+            {
             status: newStatus,
-        });
+            },
+        );
         toast.success(
             response.data.message || "Order status updated successfully",
         );

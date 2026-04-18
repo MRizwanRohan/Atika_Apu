@@ -101,7 +101,10 @@ const submit = async () => {
             final_status: finalStatus.value
         };
 
-        const { data } = await axios.put(`/orders/${props.order.id}/partial-delivery`, payload);
+        const { data } = await axios.put(
+            route("admin.orders.partial-delivery", { orderId: props.order.id }),
+            payload,
+        );
 
         if (data.success) {
             toast.success("Partial delivery processed!");
