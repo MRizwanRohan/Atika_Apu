@@ -377,8 +377,6 @@ const addToCart = () => {
         },
         onSuccess: () => {
             isAddingToCart.value = false;
-            // Open the cart sidebar
-            openCart();
             // Track add_to_cart in Google Tag Manager
             trackAddToCart(props.product, matchingVariation, quantity.value);
             // Track add_to_cart via Meta Pixel (fbq)
@@ -425,6 +423,7 @@ const buyNow = () => {
             gift_wrap: false,
             message: "",
         },
+        openSidebar: false,
         onSuccess: () => {
             isAddingToCart.value = false;
             trackAddToCart(props.product, matchingVariation, quantity.value);

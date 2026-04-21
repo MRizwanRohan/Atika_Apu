@@ -803,7 +803,7 @@ const sendToSteadfastSingle = async (order) => {
 
             <!-- Filter Toggle & Search Bar -->
             <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                <div class="relative w-full md:w-96">
+                <div class="relative w-full md:w-1/2">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -812,7 +812,7 @@ const sendToSteadfastSingle = async (order) => {
                     <input
                         v-model="filters.customer_search"
                         type="text"
-                        placeholder="Search customer name, phone or email..."
+                        placeholder="Search customer name, phone or email or order number..."
                         class="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
                     />
                 </div>
@@ -885,7 +885,7 @@ const sendToSteadfastSingle = async (order) => {
                     </div>
 
                     <!-- Order ID -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Order ID</label>
                         <input
                             v-model="filters.order_number"
@@ -893,7 +893,7 @@ const sendToSteadfastSingle = async (order) => {
                             placeholder="ORD-XXXX..."
                             class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
                         />
-                    </div>
+                    </div> -->
 
                     <!-- Amount Range -->
                     <div class="space-y-2">

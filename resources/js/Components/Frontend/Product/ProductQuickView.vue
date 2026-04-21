@@ -248,8 +248,6 @@ const performAddToCart = () => {
             emit("close");
             quantity.value = 1;
             selectedAttributes.value = {};
-            // Open the cart sidebar after adding
-            openCart();
         },
         onError: () => {
             isAddingToCart.value = false;
@@ -294,15 +292,17 @@ watch(
     (newVal) => {
         if (newVal) {
             // Reset and prepare image load states
-            imageLoadStates.value = new Array(productImages.value.length).fill(false);
-            
+            imageLoadStates.value = new Array(productImages.value.length).fill(
+                false,
+            );
+
             // Stagger image loading for one-by-one appearance
             productImages.value.forEach((_, index) => {
                 setTimeout(() => {
                     imageLoadStates.value[index] = true;
                 }, index * 100); // 100ms delay between each image
             });
-            
+
             // Lock body scroll
             document.body.style.overflow = "hidden";
         } else {
@@ -354,7 +354,9 @@ onUnmounted(() => {
                 <div
                     class="flex items-center justify-between p-4 md:p-6 border-b bg-gray-50"
                 >
-                    <h2 class="text-lg md:text-xl font-bold text-gray-900 uppercase tracking-wide">
+                    <h2
+                        class="text-lg md:text-xl font-bold text-gray-900 uppercase tracking-wide"
+                    >
                         Select Options
                     </h2>
                     <button
@@ -368,7 +370,9 @@ onUnmounted(() => {
                 <!-- Main Content Area: Images (Left) + Details (Right) -->
                 <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
                     <!-- Left Side: Horizontally Scrollable Images (Mobile) / Vertically Scrollable (Desktop) -->
-                    <div class="md:w-1/2 bg-gray-50 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto p-4 md:p-6 scrollbar-hide">
+                    <div
+                        class="md:w-1/2 bg-gray-50 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto p-4 md:p-6 scrollbar-hide"
+                    >
                         <div class="flex md:flex-col gap-3 md:space-y-0">
                             <Transition
                                 v-for="(image, index) in productImages"
@@ -390,7 +394,11 @@ onUnmounted(() => {
                                         :src="image"
                                         :alt="`${product.name} ${index + 1}`"
                                         class="w-full h-full object-cover transition-all duration-300"
-                                        :class="currentStock <= 0 ? 'blur-sm grayscale' : ''"
+                                        :class="
+                                            currentStock <= 0
+                                                ? 'blur-sm grayscale'
+                                                : ''
+                                        "
                                         loading="lazy"
                                     />
                                     <!-- Out of Stock Overlay -->
@@ -398,7 +406,9 @@ onUnmounted(() => {
                                         v-if="currentStock <= 0"
                                         class="absolute inset-0 bg-white/60 flex items-center justify-center"
                                     >
-                                        <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                                        <span
+                                            class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm"
+                                        >
                                             OUT OF STOCK
                                         </span>
                                     </div>
@@ -412,13 +422,17 @@ onUnmounted(() => {
                         <div class="flex-1 overflow-y-auto p-4 md:p-6">
                             <div class="space-y-4">
                                 <!-- Product Name -->
-                                <h2 class="text-xl md:text-2xl font-bold text-gray-900 uppercase">
+                                <h2
+                                    class="text-xl md:text-2xl font-bold text-gray-900 uppercase"
+                                >
                                     {{ product.name }}
                                 </h2>
 
                                 <!-- Price -->
                                 <div class="flex items-baseline gap-3">
-                                    <span class="text-2xl md:text-3xl font-bold text-gray-900">
+                                    <span
+                                        class="text-2xl md:text-3xl font-bold text-gray-900"
+                                    >
                                         ${{ formatPrice(pricing.main) }}
                                     </span>
                                     <span
@@ -431,7 +445,10 @@ onUnmounted(() => {
 
                                 <!-- Shipping Info -->
                                 <p class="text-sm text-gray-600">
-                                    <span class="underline cursor-pointer">Shipping</span> calculated at checkout.
+                                    <span class="underline cursor-pointer"
+                                        >Shipping</span
+                                    >
+                                    calculated at checkout.
                                 </p>
 
                                 <!-- Attributes Selection -->
@@ -444,11 +461,26 @@ onUnmounted(() => {
                                         :key="attr.key"
                                         class="space-y-3"
                                     >
-                                        <div class="flex justify-between items-center">
-                                            <label class="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                        <div
+                                            class="flex justify-between items-center"
+                                        >
+                                            <label
+                                                class="text-sm font-bold text-gray-900 uppercase tracking-wide"
+                                            >
                                                 {{ attr.name }}:
-                                                <span v-if="selectedAttributes[attr.key]" class="font-normal">
-                                                    {{ selectedAttributes[attr.key].value }}
+                                                <span
+                                                    v-if="
+                                                        selectedAttributes[
+                                                            attr.key
+                                                        ]
+                                                    "
+                                                    class="font-normal"
+                                                >
+                                                    {{
+                                                        selectedAttributes[
+                                                            attr.key
+                                                        ].value
+                                                    }}
                                                 </span>
                                             </label>
                                         </div>
@@ -456,10 +488,16 @@ onUnmounted(() => {
                                             <button
                                                 v-for="val in attr.values"
                                                 :key="val.id"
-                                                @click="selectAttribute(attr.key, val)"
+                                                @click="
+                                                    selectAttribute(
+                                                        attr.key,
+                                                        val,
+                                                    )
+                                                "
                                                 class="px-4 py-2 text-sm font-medium border transition-all duration-200"
                                                 :class="
-                                                    selectedAttributes[attr.key]?.id === val.id
+                                                    selectedAttributes[attr.key]
+                                                        ?.id === val.id
                                                         ? 'bg-gray-900 border-gray-900 text-white'
                                                         : 'bg-white border-gray-300 text-gray-900 hover:border-gray-900'
                                                 "
@@ -472,15 +510,21 @@ onUnmounted(() => {
 
                                 <!-- Quantity Selector -->
                                 <div class="pt-4">
-                                    <div class="flex items-center border border-gray-300">
+                                    <div
+                                        class="flex items-center border border-gray-300"
+                                    >
                                         <button
-                                            @click="quantity > 1 ? quantity-- : null"
+                                            @click="
+                                                quantity > 1 ? quantity-- : null
+                                            "
                                             class="w-12 h-12 flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50"
                                             :disabled="quantity <= 1"
                                         >
                                             <Minus :size="16" />
                                         </button>
-                                        <span class="flex-1 text-center font-medium text-gray-900">
+                                        <span
+                                            class="flex-1 text-center font-medium text-gray-900"
+                                        >
                                             {{ quantity }}
                                         </span>
                                         <button
@@ -496,16 +540,22 @@ onUnmounted(() => {
                                 <div class="space-y-3 pt-4">
                                     <button
                                         @click="performAddToCart"
-                                        :disabled="!canAddToCart || isAddingToCart"
+                                        :disabled="
+                                            !canAddToCart || isAddingToCart
+                                        "
                                         class="w-full bg-white border-2 border-gray-900 text-gray-900 font-bold py-3 md:py-4 hover:bg-gray-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300"
                                     >
-                                        <span v-if="isAddingToCart">Adding...</span>
+                                        <span v-if="isAddingToCart"
+                                            >Adding...</span
+                                        >
                                         <span v-else>ADD TO CART</span>
                                     </button>
 
                                     <button
                                         @click="performAddToCart"
-                                        :disabled="!canAddToCart || isAddingToCart"
+                                        :disabled="
+                                            !canAddToCart || isAddingToCart
+                                        "
                                         class="w-full bg-gray-900 text-white font-bold py-3 md:py-4 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                     >
                                         BUY IT NOW
@@ -514,12 +564,35 @@ onUnmounted(() => {
                                     <button
                                         @click="toggleWishlist(product.id)"
                                         class="w-full bg-white border border-gray-300 text-gray-900 font-medium py-3 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
-                                        :class="{ 'text-primary border-primary': isInWishlist(product.id) }"
+                                        :class="{
+                                            'text-primary border-primary':
+                                                isInWishlist(product.id),
+                                        }"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'fill-current': isInWishlist(product.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-5 w-5"
+                                            :class="{
+                                                'fill-current': isInWishlist(
+                                                    product.id,
+                                                ),
+                                            }"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                            />
                                         </svg>
-                                        {{ isInWishlist(product.id) ? 'In Wishlist' : 'Add to Wishlist' }}
+                                        {{
+                                            isInWishlist(product.id)
+                                                ? "In Wishlist"
+                                                : "Add to Wishlist"
+                                        }}
                                     </button>
                                 </div>
 
@@ -533,7 +606,8 @@ onUnmounted(() => {
                                                 : 'text-red-700'
                                         "
                                     >
-                                        {{ currentStock > 0 ? '✓' : '✗' }} {{ stockMessage }}
+                                        {{ currentStock > 0 ? "✓" : "✗" }}
+                                        {{ stockMessage }}
                                     </span>
                                 </div>
                             </div>
@@ -580,12 +654,12 @@ onUnmounted(() => {
 
 /* Hide scrollbar completely on both mobile and desktop */
 .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
+    display: none; /* Chrome, Safari and Opera */
 }
 
 /* Hide scrollbar but keep functionality for detail section */

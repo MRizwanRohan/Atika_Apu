@@ -160,8 +160,14 @@ const performAddToCart = () => {
             showOptions.value = false;
             quantity.value = 1;
             // Track AddToCart via Meta Pixel (fbq)
-            const matchedVariation = isVariable.value ? getMatchingVariation() : null;
-            pixelTrackAddToCart(props.product, matchedVariation, quantity.value);
+            const matchedVariation = isVariable.value
+                ? getMatchingVariation()
+                : null;
+            pixelTrackAddToCart(
+                props.product,
+                matchedVariation,
+                quantity.value,
+            );
         },
         onError: () => {
             addingToCart.value = false;
@@ -365,7 +371,7 @@ onUnmounted(() => {
             <!-- Product Image -->
             <Link
                 :href="route('product.details', product.slug)"
-                class="block relative w-full aspect-[2/3] rounded-xl overflow-hidden group/image"
+                class="block relative w-full aspect-[2/3] overflow-hidden group/image"
             >
                 <img
                     :src="product.feature_image"
@@ -383,7 +389,7 @@ onUnmounted(() => {
                     class="absolute inset-0 z-10 flex items-center justify-center bg-white/50"
                 >
                     <span
-                        class="bg-gray-900 text-white px-3 py-1 text-xs font-bold rounded uppercase tracking-wider"
+                        class="bg-gray-900 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider"
                     >
                         Sold Out
                     </span>
@@ -393,9 +399,9 @@ onUnmounted(() => {
                 <button
                     v-if="!isOutOfStock"
                     @click.prevent="openQuickView"
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 scale-90 group-hover/image:scale-100 bg-white hover:bg-primary text-gray-800 hover:text-white px-4 py-2.5 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2"
+                    class="absolute bottom-4 left-4 right-4 z-20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 translate-y-2 group-hover/image:translate-y-0 bg-white text-gray-900 py-3 px-4 shadow-xl font-bold text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 uppercase hover:bg-gray-50"
                 >
-                    <Eye :size="18" />
+                    <Eye :size="16" stroke-width="2.5" />
                     <span>Quick View</span>
                 </button>
             </Link>
@@ -403,7 +409,7 @@ onUnmounted(() => {
             <!-- Quick View Overlay (Desktop) -->
             <div
                 v-if="showOptions"
-                class="hidden md:flex absolute inset-x-0 bottom-0 bg-white z-[30] p-4 shadow-lg rounded-t-xl border-t border-gray-100 flex-col gap-3 animate-in slide-in-from-bottom duration-300"
+                class="hidden md:flex absolute inset-x-0 bottom-0 bg-white z-[30] p-4 shadow-lg border-t border-gray-100 flex-col gap-3 animate-in slide-in-from-bottom duration-300"
                 @click.stop.prevent
             >
                 <div class="flex justify-between items-center mb-1">
@@ -442,7 +448,7 @@ onUnmounted(() => {
                             v-for="val in attr.values"
                             :key="val.id"
                             @click="selectAttribute(attr.key, val)"
-                            class="px-2 py-0.5 text-[10px] uppercase font-bold border rounded transition-all duration-200"
+                            class="px-2 py-0.5 text-[10px] uppercase font-bold border transition-all duration-200"
                             :class="
                                 selectedAttributes[attr.key]?.id === val.id
                                     ? 'bg-primary border-primary text-white shadow-sm'
@@ -457,7 +463,7 @@ onUnmounted(() => {
                 <!-- Quantity & Add -->
                 <div class="flex gap-2 mt-1">
                     <div
-                        class="flex items-center border border-gray-200 rounded h-8 bg-gray-50"
+                        class="flex items-center border border-gray-200 h-8 bg-gray-50"
                     >
                         <button
                             @click="quantity > 1 ? quantity-- : null"
@@ -480,7 +486,7 @@ onUnmounted(() => {
                     <button
                         @click="performAddToCart"
                         :disabled="!canAddToCart || addingToCart"
-                        class="flex-1 bg-primary text-white text-[10px] font-bold uppercase tracking-wider rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 h-8 transition-colors"
+                        class="flex-1 bg-primary text-white text-[10px] font-bold uppercase tracking-wider hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 h-8 transition-colors"
                     >
                         <span v-if="addingToCart">...</span>
                         <span v-else class="flex items-center gap-1">
@@ -557,7 +563,7 @@ onUnmounted(() => {
                                         >{{ attr.name }}</span
                                     >
                                     <span
-                                        class="text-xs font-medium text-primary bg-primary/5 px-2 py-0.5 rounded-full"
+                                        class="text-xs font-medium text-primary bg-primary/5 px-2 py-0.5"
                                         v-if="selectedAttributes[attr.key]"
                                     >
                                         {{ selectedAttributes[attr.key].value }}
@@ -568,7 +574,7 @@ onUnmounted(() => {
                                         v-for="val in attr.values"
                                         :key="val.id"
                                         @click="selectAttribute(attr.key, val)"
-                                        class="px-4 py-2 text-sm font-semibold border-2 rounded-xl transition-all duration-300"
+                                        class="px-4 py-2 text-sm font-semibold border-2 transition-all duration-300"
                                         :class="
                                             selectedAttributes[attr.key]?.id ===
                                             val.id
@@ -585,7 +591,7 @@ onUnmounted(() => {
                         <!-- Mobile Footer Action -->
                         <div class="flex gap-3 pt-4 border-t border-gray-100">
                             <div
-                                class="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100"
+                                class="flex items-center bg-gray-50 p-1 border border-gray-100"
                             >
                                 <button
                                     @click="quantity > 1 ? quantity-- : null"
@@ -608,7 +614,7 @@ onUnmounted(() => {
                             <button
                                 @click="performAddToCart"
                                 :disabled="!canAddToCart || addingToCart"
-                                class="flex-1 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/25 hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 h-12 transition-all active:scale-[0.98]"
+                                class="flex-1 bg-primary text-white font-bold shadow-xl shadow-primary/25 hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 h-12 transition-all active:scale-[0.98]"
                             >
                                 <ShoppingCart v-if="!addingToCart" :size="20" />
                                 <span v-if="addingToCart">Processing...</span>
@@ -628,7 +634,7 @@ onUnmounted(() => {
                     <!-- Discount Badge -->
                     <div
                         v-if="pricing.discountValue > 0 && !isOutOfStock"
-                        class="border border-lime-500 text-lime-600 bg-white text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+                        class="border border-lime-500 text-lime-600 bg-white text-[11px] font-bold px-2.5 py-0.5"
                     >
                         <span v-if="pricing.discountType === 'percentage'">
                             -{{ Math.round(pricing.discountValue) }}%
@@ -639,7 +645,7 @@ onUnmounted(() => {
                     </div>
                     <div v-else class="h-6">
                         <span
-                            class="border border-lime-500 text-lime-600 bg-white text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+                            class="border border-lime-500 text-lime-600 bg-white text-[11px] font-bold px-2.5 py-0.5"
                             >0%</span
                         >
                         <!-- Spacer to maintain height if no discount -->
@@ -649,7 +655,7 @@ onUnmounted(() => {
                 <!-- Quick Add Button -->
                 <button
                     @click.stop.prevent="handleAddToCartClick"
-                    class="md:bg-gray-200/80 md:hover:bg-gray-300 md:text-gray-700 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+                    class="md:bg-gray-200/80 md:hover:bg-gray-300 md:text-gray-700 bg-primary text-white px-3 py-1.5 text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
                     :disabled="isOutOfStock"
                     :title="isVariable ? 'Select Options' : 'Add to Cart'"
                 >

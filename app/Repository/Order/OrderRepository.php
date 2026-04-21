@@ -341,14 +341,15 @@ public function getPaginatedOrders(
             $query->where(function ($q) use ($search) {
                 $q->where('customer_email', 'like', "%{$search}%")
                     ->orWhere('customer_phone', 'like', "%{$search}%")
-                    ->orWhere('customer_name', 'like', "%{$search}%");
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('order_number', 'like', "%{$search}%");
             });
         }
 
         // Order number search
-        if (!empty($filters['order_number'])) {
-            $query->where('order_number', 'like', "%{$filters['order_number']}%");
-        }
+        // if (!empty($filters['order_number'])) {
+        //     $query->where('order_number', 'like', "%{$filters['order_number']}%");
+        // }
 
         // Total amount range
         if (!empty($filters['min_total'])) {

@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
+import { useCartSidebar } from '@/Composables/useCartSidebar';
 
 /**
  * Cart Composable - Centralized cart management
@@ -14,6 +15,7 @@ export function useCart() {
     const isLoading = ref(false);
     const error = ref(null);
     const { success, error: showError } = useToast();
+    const { openCart } = useCartSidebar();
 
     // Reactive cart data from Inertia shared props
     const cart = computed(() => {
@@ -38,6 +40,7 @@ export function useCart() {
             quantity = 1,
             variationId = null,
             productOptions = { gift_wrap: false, message: '' },
+            openSidebar = true,
             onSuccess = null,
             onError = null
         } = options;
@@ -64,6 +67,7 @@ export function useCart() {
             only: ['cart', 'cartCount', 'flash'],
             onSuccess: () => {
                 isLoading.value = false;
+                if (openSidebar) openCart(); // Automatically open cart sidebar on success
                 if (onSuccess) onSuccess();
             },
             onError: (errors) => {
