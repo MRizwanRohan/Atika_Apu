@@ -27,13 +27,14 @@ class ProductService
   {
     $perPage = $request->input('per_page', 10);
     $search = $request->input('search', '');
+    $categoryId = $request->input('category_id', '');
     $page = $request->input('page', 1);
 
-    // Generate unique cache key based on pagination and search
-    $cacheKey = "products.admin.page.{$page}.per_page.{$perPage}.search." . md5($search);
+    // Generate unique cache key based on pagination, search and category
+    $cacheKey = "products.admin.page.{$page}.per_page.{$perPage}.search." . md5($search) . ".category.{$categoryId}";
 
     // Cache for 30 minutes (1800 seconds)
-    return Cache::remember($cacheKey, 1800, function () use ($search, $perPage) {
+    return Cache::remember($cacheKey, 1800, function () use ($search, $perPage, $categoryId) {
       $query = Product::with([
         'category.parentRecursive',
         'brand',
@@ -55,6 +56,11 @@ class ProductService
             ->orWhere('price', 'like', "%{$search}%")
             ->orWhere('status', 'like', "%{$search}%");
         });
+      }
+
+      // Apply category filter if provided
+      if ($categoryId) {
+        $query->where('category_id', $categoryId);
       }
 
       //descending order by latest

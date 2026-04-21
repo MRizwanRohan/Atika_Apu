@@ -30,16 +30,35 @@
 
       <!-- Table Controls -->
       <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-        <div class="flex items-center">
-          <label for="perPage" class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-300">Show:</label>
-          <select id="perPage" v-model="perPage"
-            class="rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 text-sm px-2 w-[60px] py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            @change="handlePerPageChange">
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-          </select>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center">
+            <label for="perPage" class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-300">Show:</label>
+            <select id="perPage" v-model="perPage"
+              class="rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 text-sm px-2 w-[60px] py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              @change="handlePerPageChange">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <div class="flex items-center">
+            <label for="categoryFilter" class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-300">Category:</label>
+            <select id="categoryFilter" v-model="selectedCategory"
+              class="rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 text-sm px-3 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              @change="handleCategoryChange">
+              <option value="">All Categories</option>
+              <template v-for="category in categories" :key="category.id">
+                <option :value="category.id">{{ category.name }}</option>
+                <template v-if="category.children && category.children.length > 0">
+                  <option v-for="child in category.children" :key="child.id" :value="child.id">
+                    &nbsp;&nbsp;&mdash; {{ child.name }}
+                  </option>
+                </template>
+              </template>
+            </select>
+          </div>
         </div>
 
         <div class="relative w-full md:w-64">
@@ -429,12 +448,16 @@ import {
 } from 'lucide-vue-next';
 
 const props = defineProps({
-  products: Object
+  products: Object,
+  categories: Array
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+
 // State for search, filters, and bulk delete
-const searchQuery = ref('');
-const perPage = ref(10);
+const searchQuery = ref(urlParams.get('search') || '');
+const perPage = ref(parseInt(urlParams.get('per_page')) || 10);
+const selectedCategory = ref(urlParams.get('category_id') || '');
 const selectedProductIds = ref([]);
 const expandedRows = ref({});
 const loading = ref(false);
@@ -514,7 +537,7 @@ const handleSearch = () => {
   loading.value = true;
   router.get(
     route('admin.products.index'),
-    { search: searchQuery.value, page: 1, per_page: perPage.value },
+    { search: searchQuery.value, page: 1, per_page: perPage.value, category_id: selectedCategory.value },
     {
       preserveState: true,
       onSuccess: () => {
@@ -524,19 +547,13 @@ const handleSearch = () => {
   );
 };
 
+const handleCategoryChange = () => {
+  handleSearch();
+};
+
 const handlePerPageChange = (e) => {
   perPage.value = parseInt(e.target.value);
-  loading.value = true;
-  router.get(
-    route('admin.products.index'),
-    { search: searchQuery.value, page: 1, per_page: perPage.value },
-    {
-      preserveState: true,
-      onSuccess: () => {
-        loading.value = false;
-      }
-    }
-  );
+  handleSearch();
 };
 
 const goToPage = (page) => {
@@ -545,7 +562,7 @@ const goToPage = (page) => {
   loading.value = true;
   router.get(
     route('admin.products.index'),
-    { search: searchQuery.value, page: page, per_page: perPage.value },
+    { search: searchQuery.value, page: page, per_page: perPage.value, category_id: selectedCategory.value },
     {
       preserveState: true,
       onSuccess: () => {

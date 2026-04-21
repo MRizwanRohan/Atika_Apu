@@ -38,11 +38,11 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $products = $this->productService->getAllProductsForAdmin($request);
-
-        //return $products;
+        $categories = $this->productService->getAllCategories();
 
         return Inertia::render('Admin/Product/Index', [
             'products' => $products,
+            'categories' => $categories,
         ]);
     }
 
