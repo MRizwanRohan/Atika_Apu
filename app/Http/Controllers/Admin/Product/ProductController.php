@@ -321,4 +321,23 @@ class ProductController extends Controller
 
 
 
+    public function updateOrder(Request $request)
+    {
+        $request->validate([
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|exists:products,id',
+            'orders.*.order' => 'required|integer',
+        ]);
+
+        $result = $this->productService->updateOrder($request->orders);
+
+        if ($result['success']) {
+            $this->clearAllProductCaches();
+            return response()->json(['success' => true, 'message' => 'Order updated successfully!']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Failed to update order'], 500);
+    }
+
+
 }

@@ -104,6 +104,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::get('/reports/export-pdf', [InventoryManagementController::class, 'exportOrdersPDF'])->name('reports.export-pdf');
 
     Route::resource('products', ProductController::class);
+    Route::post('/products/update-order', [ProductController::class, 'updateOrder'])->name('products.update-order');
     Route::resource('product-videos', ProductVideoController::class);
     Route::post('/products/{id}/quick-edit', [ProductController::class, 'quickEdit'])->name('products.quick-edit');
     Route::resource('attributes', AttributeController::class);

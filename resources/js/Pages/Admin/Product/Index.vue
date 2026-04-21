@@ -85,7 +85,6 @@
               <th>#</th>
               <th>Image</th>
               <th>Name</th>
-              <!-- <th>Price</th> -->
               <th>In Stock</th>
               <th>Free Shipping</th>
               <th>Status</th>
@@ -93,246 +92,171 @@
               <th class="text-end">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- Skeleton Loader -->
-            <template v-if="loading">
-              <tr v-for="i in perPage" :key="`skeleton-${i}`" class="animate-pulse">
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-10 w-10 bg-gray-200 dark:bg-gray-600 rounded-md"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-32 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-10 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                  <div class="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </td>
-              </tr>
-            </template>
+          
+          <!-- Skeleton Loader -->
+          <tbody v-if="loading">
+            <tr v-for="i in perPage" :key="`skeleton-${i}`" class="animate-pulse">
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-10 w-10 bg-gray-200 dark:bg-gray-600 rounded-md"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-32 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-10 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap">
+                <div class="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
+              </td>
+              <td class="px-3 py-4 whitespace-nowrap text-end">
+                <div class="h-4 w-20 bg-gray-200 dark:bg-gray-600 rounded ml-auto"></div>
+              </td>
+            </tr>
+          </tbody>
 
-            <!-- Actual Data -->
-            <template v-else>
-              <template v-for="(item, index) in products.data" :key="item.id">
-                <!-- Main Row -->
-                <tr>
-                  <td class="px-3 py-4 whitespace-nowrap">
+          <!-- Actual Data -->
+          <draggable
+            v-else
+            v-model="productList"
+            tag="tbody"
+            item-key="id"
+            handle=".drag-handle"
+            @end="onDragEnd"
+          >
+            <template #item="{ element: item, index }">
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <td class="px-3 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                      <GripVertical size="18" />
+                    </div>
                     <input type="checkbox"
                       class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
                       :checked="isSelected(item.id)" @change="toggleSelection(item.id)" />
-                  </td>
-                  <td>{{ index + 1 }}</td>
-                  <td class="px-3 py-4 whitespace-nowrap">
-                    <img class="w-15 rounded-md object-cover bg-gray-100 dark:bg-gray-600"
-                      :src="item.feature_image" alt="main image" />
-                  </td>
-                  <td>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 w-[160px] whitespace-normal">
-                      {{ item.name }}
-                    </h3>
-                  </td>
-                  <!-- <td>৳{{ item.price }}</td> -->
-                  <td>
-                    <span
-                      class="px-2 py-1 dark:text-gray-100"
-                      :class="{
-                        'bg-blue-100 text-blue-500 dark:bg-blue-700': item.stock > 0,
-                        'bg-primary/10 text-primary dark:bg-primary/80': item.is_pre_order && item.stock === 0,
-                        'bg-red-100 text-red-500 dark:bg-red-700': item.stock === 0 && !item.is_pre_order
-                      }"
-                    >
-                      {{ item.stock > 0 ? 'In Stock' : (item.is_pre_order ? 'Pre Order' : 'Out of Stock') }}{{ item.stock > 0 ? ` (${item.stock})` : '' }}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      class="px-2 py-1 text-gray-900 dark:text-gray-100"
-                      :class="{
-                        'bg-green-100 dark:bg-green-700': item.is_free_delivery,
-                        'bg-red-100 dark:bg-red-700': !item.is_free_delivery
-                      }"
-                    >
-                      {{ item.is_free_delivery ? 'Yes' : 'No' }}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      class="px-2 py-1 text-gray-900 dark:text-gray-100"
-                      :class="{
-                        'bg-green-100 dark:bg-green-700': item.status === 'Published',
-                        'bg-red-100 dark:bg-red-700': item.status === 'Unpublished'
-                      }"
-                    >
-                      {{ item.status }}
-                    </span>
-                  </td>
-                  <td>{{ formatDate(item.updated_at) }}</td>
-                  <td class="actions">
-                    <div class="flex justify-end space-x-2 relative">
-                      <!-- Quick Edit Button -->
-                      <div class="relative group">
-                        <button @click="openQuickEditModal(item)"
-                          class="table_quick_edit_action hover:bg-blue-500 hover:text-white p-2 rounded">
-                          <PencilIcon size="20" />
-                        </button>
-                        <span
-                          class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
-                          Quick Edit
-                        </span>
-                      </div>
-
-                      <!-- Delete Button -->
-                      <div class="relative group">
-                        <button @click="openDeleteModal(item.id)"
-                          class="table_delete_action hover:bg-red-500 hover:text-white p-2 rounded">
-                          <Trash2Icon size="20" />
-                        </button>
-                        <span
-                          class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
-                          Delete
-                        </span>
-                      </div>
-
-                      <!-- Edit Link -->
-                      <div class="relative group">
-                        <Link :href="route('admin.products.edit', item.id)"
-                          class="table_edit_action hover:bg-green-500 hover:text-white p-2 rounded">
-                          <SquarePen size="20" />
-                        </Link>
-                        <span
-                          class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
-                          Edit
-                        </span>
-                      </div>
-
-                      <!-- Expand/Collapse Button -->
-                      <div class="relative group">
-                        <button @click="toggleExpanded(item.id)"
-                          class="table_expand_action hover:bg-gray-500 hover:text-white p-2 rounded">
-                          <ChevronDown v-if="expandedRows[item.id]" size="20" />
-                          <ChevronRight v-else size="20" />
-                        </button>
-                        <span
-                          class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
-                          View
-                        </span>
-                      </div>
+                  </div>
+                </td>
+                <td>{{ (currentPage - 1) * perPage + index + 1 }}</td>
+                <td class="px-3 py-4 whitespace-nowrap">
+                  <img class="w-15 rounded-md object-cover bg-gray-100 dark:bg-gray-600"
+                    :src="item.feature_image" alt="main image" />
+                </td>
+                <td>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 w-[160px] whitespace-normal">
+                    {{ item.name }}
+                  </h3>
+                </td>
+                <td>
+                  <span
+                    class="px-2 py-1 dark:text-gray-100"
+                    :class="{
+                      'bg-blue-100 text-blue-500 dark:bg-blue-700': item.stock > 0,
+                      'bg-primary/10 text-primary dark:bg-primary/80': item.is_pre_order && item.stock === 0,
+                      'bg-red-100 text-red-500 dark:bg-red-700': item.stock === 0 && !item.is_pre_order
+                    }"
+                  >
+                    {{ item.stock > 0 ? 'In Stock' : (item.is_pre_order ? 'Pre Order' : 'Out of Stock') }}{{ item.stock > 0 ? ` (${item.stock})` : '' }}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    class="px-2 py-1 text-gray-900 dark:text-gray-100"
+                    :class="{
+                      'bg-green-100 dark:bg-green-700': item.is_free_delivery,
+                      'bg-red-100 dark:bg-red-700': !item.is_free_delivery
+                    }"
+                  >
+                    {{ item.is_free_delivery ? 'Yes' : 'No' }}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    class="px-2 py-1 text-gray-900 dark:text-gray-100"
+                    :class="{
+                      'bg-green-100 dark:bg-green-700': item.status === 'Published',
+                      'bg-red-100 dark:bg-red-700': item.status === 'Unpublished'
+                    }"
+                  >
+                    {{ item.status }}
+                  </span>
+                </td>
+                <td>{{ formatDate(item.updated_at) }}</td>
+                <td class="actions">
+                  <div class="flex justify-end space-x-2 relative">
+                    <!-- Quick Edit Button -->
+                    <div class="relative group">
+                      <button @click="openQuickEditModal(item)"
+                        class="table_quick_edit_action hover:bg-blue-500 hover:text-white p-2 rounded">
+                        <PencilIcon size="20" />
+                      </button>
+                      <span
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
+                        Quick Edit
+                      </span>
                     </div>
-                  </td>
-                </tr>
 
-                <!-- Expanded Row for Details -->
-                <tr v-if="expandedRows[item.id]">
-                  <td colspan="11" class="px-0 py-0 border-t-0">
-                    <div class="bg-gray-50 dark:bg-gray-900 p-6">
-                      <div class="flex flex-col md:flex-row gap-6">
-                        <div class="md:w-1/5">
-                          <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                            <img :src="item.feature_image" alt="" class="w-full h-auto object-contain" />
-                          </div>
-                        </div>
-                        <div class="md:w-3/4 grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Model Name</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.name }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Brand</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.brand?.brand_name || 'N/A' }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Price</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">৳{{ item.price }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Created At</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ formatDate(item.created_at) }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">ID</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.id }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Stock</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.stock }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Status</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.status }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Type</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.type }}</div>
-                          </div>
-                          <div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">Variations</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ item.variations?.length || 0 }}</div>
-                          </div>
-
-                          <!-- Product Variations -->
-                          <div v-if="item.variations && item.variations.length > 0" class="col-span-2 md:col-span-3 mt-4">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Product Variations</div>
-                            <div class="overflow-x-auto">
-                              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
-                                <thead class="bg-gray-50 dark:bg-gray-900">
-                                  <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Image</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Attributes</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Price</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Stock</th>
-                                  </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                  <tr v-for="variation in item.variations" :key="variation.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td class="px-3 py-2 whitespace-nowrap">
-                                      <img v-if="variation.image_path" class="h-8 w-8 rounded-md object-cover bg-gray-100 dark:bg-gray-600"
-                                        :src="variation.image_path" alt="" />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                      <div class="flex flex-wrap gap-1">
-                                        <span v-for="attr in variation.attributes" :key="attr.id"
-                                          class="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                                          {{ attr.value?.attribute?.name }}: {{ attr.value?.value }}
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">৳{{ variation.price }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ variation.stock }}</td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <!-- Delete Button -->
+                    <div class="relative group">
+                      <button @click="openDeleteModal(item.id)"
+                        class="table_delete_action hover:bg-red-500 hover:text-white p-2 rounded">
+                        <Trash2Icon size="20" />
+                      </button>
+                      <span
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
+                        Delete
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              </template>
 
-              <!-- Empty State -->
-              <tr v-if="products.data.length === 0 && !loading">
-                <td colspan="11" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                  <div class="flex flex-col items-center">
-                    <Package size="48" class="text-gray-300 dark:text-gray-600 mb-3" />
-                    <p>No products found</p>
+                    <!-- Edit Link -->
+                    <div class="relative group">
+                      <Link :href="route('admin.products.edit', item.id)"
+                        class="table_edit_action hover:bg-green-500 hover:text-white p-2 rounded">
+                        <SquarePen size="20" />
+                      </Link>
+                      <span
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
+                        Edit
+                      </span>
+                    </div>
+
+                    <!-- Detail View Modal Trigger -->
+                    <div class="relative group">
+                      <button @click="openDetailModal(item)"
+                        class="table_expand_action hover:bg-gray-500 hover:text-white p-2 rounded">
+                        <ChevronRight size="20" />
+                      </button>
+                      <span
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1">
+                        View Details
+                      </span>
+                    </div>
                   </div>
                 </td>
               </tr>
             </template>
+          </draggable>
+
+          <!-- Empty State -->
+          <tbody v-if="products.data.length === 0 && !loading">
+            <tr>
+              <td colspan="11" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                <div class="flex flex-col items-center">
+                  <Package size="48" class="text-gray-300 dark:text-gray-600 mb-3" />
+                  <p>No products found</p>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -363,7 +287,7 @@
         </div>
       </div>
 
-      <!-- Delete Confirmation Modal using Reusable Component -->
+      <!-- Delete Confirmation Modal -->
       <DeleteModal
         :item-id="productToDelete"
         item-name="product"
@@ -377,9 +301,7 @@
         class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 flex items-center justify-center z-50">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
           <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Quick Edit Product</h3>
-
           <form @submit.prevent="submitQuickEdit" class="space-y-4">
-            <!-- Status -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
               <select v-model="quickEditForm.status"
@@ -388,15 +310,11 @@
                 <option value="Unpublished">Unpublished</option>
               </select>
             </div>
-
-            <!-- Free Delivery -->
             <label class="flex items-center cursor-pointer">
               <input type="checkbox" v-model="quickEditForm.is_free_delivery"
                 class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500">
               <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Free Delivery</span>
             </label>
-
-            <!-- Remarks -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Remarks</label>
               <select v-model="quickEditForm.remarks"
@@ -409,8 +327,6 @@
                 <option value="Special">Special</option>
               </select>
             </div>
-
-            <!-- Buttons -->
             <div class="flex justify-end space-x-4">
               <button type="button" @click="closeQuickEditModal"
                 class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
@@ -424,6 +340,89 @@
           </form>
         </div>
       </div>
+
+      <!-- Detailed View Modal -->
+      <div v-if="showDetailModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Product Details</h3>
+            <button @click="closeDetailModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+               <ChevronRight class="rotate-180" size="24" />
+            </button>
+          </div>
+          <div class="p-6" v-if="selectedProduct">
+            <div class="flex flex-col md:flex-row gap-8">
+              <div class="md:w-1/3">
+                <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700 sticky top-24">
+                  <img :src="selectedProduct.feature_image" alt="" class="w-full h-auto object-contain rounded-lg" />
+                </div>
+              </div>
+              <div class="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Model Name</div>
+                  <div class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ selectedProduct.name }}</div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Brand</div>
+                  <div class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ selectedProduct.brand?.brand_name || 'N/A' }}</div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Price</div>
+                  <div class="text-lg font-bold text-primary">৳{{ selectedProduct.price }}</div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Stock</div>
+                  <div class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ selectedProduct.stock }}</div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">ID</div>
+                  <div class="text-lg font-bold text-gray-900 dark:text-gray-100">#{{ selectedProduct.id }}</div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</div>
+                  <div class="text-lg font-bold text-gray-900 dark:text-gray-100 capitalize">{{ selectedProduct.type }}</div>
+                </div>
+                
+                <div v-if="selectedProduct.variations && selectedProduct.variations.length > 0" class="col-span-1 sm:col-span-2 mt-4">
+                  <div class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Variations</div>
+                  <div class="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700">
+                    <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+                      <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                          <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Image</th>
+                          <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Details</th>
+                          <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Price</th>
+                          <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Stock</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tr v-for="variation in selectedProduct.variations" :key="variation.id">
+                          <td class="px-4 py-3">
+                            <img v-if="variation.image_path" class="h-10 w-10 rounded shadow-sm object-cover" :src="variation.image_path" />
+                          </td>
+                          <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-1">
+                              <span v-for="attr in variation.attributes" :key="attr.id" class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">
+                                {{ attr.value?.attribute?.name }}: {{ attr.value?.value }}
+                              </span>
+                            </div>
+                          </td>
+                          <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-100">৳{{ variation.price }}</td>
+                          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ variation.stock }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+             <button @click="closeDetailModal" class="px-6 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 transition">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
   </AdminLayout>
 </template>
@@ -431,20 +430,19 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { toast } from "@steveyuowo/vue-hot-toast";
 import DeleteModal from '@/Components/Modal/DeleteModal.vue';
+import draggable from 'vuedraggable';
 import {
   ChevronDown,
   ChevronRight,
   Search,
   Package,
-  ChevronLeft,
-  ChevronLast,
-  ChevronFirst,
   Trash2Icon,
   SquarePen,
-  PencilIcon
+  PencilIcon,
+  GripVertical
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -454,33 +452,33 @@ const props = defineProps({
 
 const urlParams = new URLSearchParams(window.location.search);
 
-// State for search, filters, and bulk delete
+// State
 const searchQuery = ref(urlParams.get('search') || '');
 const perPage = ref(parseInt(urlParams.get('per_page')) || 10);
 const selectedCategory = ref(urlParams.get('category_id') || '');
 const selectedProductIds = ref([]);
-const expandedRows = ref({});
 const loading = ref(false);
 const showDeleteModal = ref(false);
 const productToDelete = ref(null);
 const showQuickEditModal = ref(false);
 const productToEdit = ref(null);
-const quickEditForm = ref({
-  status: '',
-  is_free_delivery: false,
-  remarks: ''
-});
+const quickEditForm = ref({ status: '', is_free_delivery: false, remarks: '' });
 const confirmationInput = ref('');
 const isDeleting = ref(false);
 
-// Computed properties for pagination
-const paginationData = computed(() => props.products);
+const productList = ref([...props.products.data]);
+
+// Modal State
+const showDetailModal = ref(false);
+const selectedProduct = ref(null);
+
+watch(() => props.products.data, (newData) => {
+  productList.value = [...newData];
+}, { deep: true });
+
+// Computed
 const currentPage = computed(() => props.products.current_page);
 const lastPage = computed(() => props.products.last_page);
-const from = computed(() => props.products.from || 0);
-const to = computed(() => props.products.to || 0);
-const total = computed(() => props.products.total || 0);
-const links = computed(() => props.products.links || []);
 
 // Methods
 const openDeleteModal = (id) => {
@@ -505,78 +503,58 @@ const openQuickEditModal = (product) => {
 
 const closeQuickEditModal = () => {
   showQuickEditModal.value = false;
-  productToEdit.value = null;
-  quickEditForm.value = {
-    status: '',
-    is_free_delivery: false,
-    remarks: ''
-  };
 };
 
 const submitQuickEdit = () => {
   if (!productToEdit.value) return;
+  router.post(route('admin.products.quick-edit', productToEdit.value.id), quickEditForm.value, {
+    preserveState: true,
+    onSuccess: () => {
+      toast.success('Product updated!');
+      closeQuickEditModal();
+    },
+    onError: () => toast.error('Update failed')
+  });
+};
 
-  router.post(
-    route('admin.products.quick-edit', productToEdit.value.id),
-    quickEditForm.value,
-    {
-      preserveState: true,
-      onSuccess: () => {
-        toast.success('Product updated successfully!');
-        closeQuickEditModal();
-      },
-      onError: (errors) => {
-        toast.error('Failed to update product');
-        Object.values(errors).forEach(error => toast.error(error));
-      }
-    }
-  );
+const openDetailModal = (product) => {
+  selectedProduct.value = product;
+  showDetailModal.value = true;
+};
+
+const closeDetailModal = () => {
+  showDetailModal.value = false;
 };
 
 const handleSearch = () => {
   loading.value = true;
-  router.get(
-    route('admin.products.index'),
-    { search: searchQuery.value, page: 1, per_page: perPage.value, category_id: selectedCategory.value },
-    {
-      preserveState: true,
-      onSuccess: () => {
-        loading.value = false;
-      }
-    }
-  );
+  router.get(route('admin.products.index'), {
+    search: searchQuery.value,
+    page: 1,
+    per_page: perPage.value,
+    category_id: selectedCategory.value
+  }, {
+    preserveState: true,
+    onSuccess: () => loading.value = false,
+    onError: () => loading.value = false
+  });
 };
 
-const handleCategoryChange = () => {
-  handleSearch();
-};
-
-const handlePerPageChange = (e) => {
-  perPage.value = parseInt(e.target.value);
-  handleSearch();
-};
+const handleCategoryChange = () => handleSearch();
+const handlePerPageChange = () => handleSearch();
 
 const goToPage = (page) => {
   if (page < 1 || page > lastPage.value || page === currentPage.value) return;
-
   loading.value = true;
-  router.get(
-    route('admin.products.index'),
-    { search: searchQuery.value, page: page, per_page: perPage.value, category_id: selectedCategory.value },
-    {
-      preserveState: true,
-      onSuccess: () => {
-        loading.value = false;
-      }
-    }
-  );
-};
-
-const toggleExpanded = (id) => {
-  expandedRows.value = {
-    ...expandedRows.value,
-    [id]: !expandedRows.value[id]
-  };
+  router.get(route('admin.products.index'), {
+    search: searchQuery.value,
+    page: page,
+    per_page: perPage.value,
+    category_id: selectedCategory.value
+  }, {
+    preserveState: true,
+    onSuccess: () => loading.value = false
+  });
 };
 
 const toggleSelectAll = () => {
@@ -587,102 +565,62 @@ const toggleSelectAll = () => {
   }
 };
 
-const isSelected = (id) => {
-  return selectedProductIds.value.includes(id);
-};
+const isSelected = (id) => selectedProductIds.value.includes(id);
 
 const toggleSelection = (id) => {
   const index = selectedProductIds.value.indexOf(id);
-  if (index === -1) {
-    selectedProductIds.value.push(id);
-  } else {
-    selectedProductIds.value.splice(index, 1);
-  }
+  if (index === -1) selectedProductIds.value.push(id);
+  else selectedProductIds.value.splice(index, 1);
 };
 
 const deleteSelectedProducts = () => {
-  if (selectedProductIds.value.length === 0) {
-    toast.error('No products selected');
-    return;
-  }
-
-  if (confirmationInput.value !== 'confirm') {
-    toast.error('Please type "confirm" to delete selected products');
-    return;
-  }
-
+  if (confirmationInput.value !== 'confirm') return;
   isDeleting.value = true;
-  router.post(
-    route('admin.products.bulk-delete'),
-    { product_ids: selectedProductIds.value, confirmation: confirmationInput.value },
-    {
-      preserveState: true,
-      onSuccess: () => {
-        toast.success(`${selectedProductIds.value.length} products deleted successfully!`);
-        selectedProductIds.value = [];
-        confirmationInput.value = '';
-        isDeleting.value = false;
-      },
-      onError: (errors) => {
-        toast.error('Failed to delete selected products');
-        Object.values(errors).forEach(error => toast.error(error));
-        isDeleting.value = false;
-      }
-    }
-  );
+  router.post(route('admin.products.bulk-delete'), {
+    product_ids: selectedProductIds.value,
+    confirmation: confirmationInput.value
+  }, {
+    onSuccess: () => {
+      toast.success('Deleted!');
+      selectedProductIds.value = [];
+      confirmationInput.value = '';
+      isDeleting.value = false;
+    },
+    onError: () => isDeleting.value = false
+  });
+};
+
+const onDragEnd = () => {
+  const orders = productList.value.map((p, i) => ({
+    id: p.id,
+    order: i + 1 + (currentPage.value - 1) * perPage.value
+  }));
+  router.post(route('admin.products.update-order'), { orders }, {
+    preserveState: true,
+    onSuccess: () => toast.success('Order saved!')
+  });
 };
 
 function formatDate(isoDate) {
   const date = new Date(isoDate);
-  const now = new Date();
-  const diffInMs = now - date; // Difference in milliseconds
-
-  const seconds = Math.floor(diffInMs / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) {
-    return `${days} day${days === 1 ? '' : 's'} ago`;
-  } else if (hours > 0) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  } else if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-  } else {
-    return `${seconds} second${seconds === 1 ? '' : 's'} ago`;
-  }
+  const diff = Math.floor((new Date() - date) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
 
-// Debounce search input
-let searchTimeout = null;
+const searchTimeout = ref(null);
 const debouncedSearch = () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    handleSearch();
-  }, 500);
+  clearTimeout(searchTimeout.value);
+  searchTimeout.value = setTimeout(handleSearch, 500);
 };
 </script>
 
 <style>
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.8; }
-}
-
-.animate-pulse {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.pagination-button {
-  @apply px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition;
-}
-
-.active {
-  @apply bg-green-500 text-white border-green-500 hover:bg-green-600 dark:bg-green-600 dark:border-green-600 dark:hover:bg-green-700;
-}
-
-.pagination-ellipsis {
-  @apply px-5 py-2 text-sm text-gray-500 dark:text-gray-400;
-}
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+.animate-pulse { animation: pulse 1.5s infinite; }
+.pagination-button { @apply px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition; }
+.active { @apply bg-green-500 text-white border-green-500; }
+.pagination-ellipsis { @apply px-5 py-2 text-sm text-gray-500; }
 </style>
-

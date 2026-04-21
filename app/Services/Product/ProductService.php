@@ -63,8 +63,8 @@ class ProductService
         $query->where('category_id', $categoryId);
       }
 
-      //descending order by latest
-      $query->orderBy('created_at', 'desc');
+      // Order by order column, then by latest
+      $query->orderBy('order', 'asc')->orderBy('created_at', 'desc');
 
       // Get paginated results with soft-delete filtering for variations
       $products = $query->paginate($perPage);
@@ -1042,6 +1042,22 @@ public function quickUpdate($productId, array $data)
 
 
 
+
+
+  public function updateOrder($orders)
+  {
+    try {
+      DB::beginTransaction();
+      foreach ($orders as $item) {
+        Product::where('id', $item['id'])->update(['order' => $item['order']]);
+      }
+      DB::commit();
+      return ['success' => true];
+    } catch (\Exception $e) {
+      DB::rollBack();
+      return ['success' => false, 'error' => $e->getMessage()];
+    }
+  }
 
 
 }

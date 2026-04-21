@@ -40,6 +40,7 @@ return new class extends Migration
             $table->enum('remarks', ['New', 'Popular', 'Trending', 'Hot', 'Special'])->nullable();
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
+            $table->integer('order')->default(0);
             $table->timestamps();
         });
     }
