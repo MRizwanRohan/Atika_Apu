@@ -1,42 +1,44 @@
 <template>
     <div
-        class="relative w-full overflow-hidden group select-none cursor-grab active:cursor-grabbing"
-        @mouseenter="stopAutoplay"
-        @mouseleave="startAutoplay"
-        @mousedown="handleMouseDown"
-        @mousemove="handleMouseMove"
-        @mouseup="handleMouseUp"
-        @touchstart="handleTouchStart"
-        @touchmove="handleTouchMove"
-        @touchend="handleTouchEnd"
+        class="relative w-full overflow-hidden group select-none"
+        :class="filteredSliders.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''"
+        @mouseenter="filteredSliders.length > 1 && stopAutoplay()"
+        @mouseleave="filteredSliders.length > 1 && startAutoplay()"
+        @mousedown="filteredSliders.length > 1 && handleMouseDown($event)"
+        @mousemove="filteredSliders.length > 1 && handleMouseMove($event)"
+        @mouseup="filteredSliders.length > 1 && handleMouseUp($event)"
+        @touchstart="filteredSliders.length > 1 && handleTouchStart($event)"
+        @touchmove="filteredSliders.length > 1 && handleTouchMove($event)"
+        @touchend="filteredSliders.length > 1 && handleTouchEnd($event)"
     >
         <!-- Slides -->
         <div class="relative w-full">
             <div
-                v-for="(slide, index) in sliders"
+                v-for="(slide, index) in filteredSliders"
                 :key="slide.id"
                 :class="['w-full transition-opacity duration-300', index === 0 ? 'relative' : 'absolute inset-0']"
                 :ref="el => slideRefs[index] = el"
-                style="aspect-ratio: 16/7; background-color: #f3f4f6;"
+                class="bg-gray-100"
+                :style="{ aspectRatio: isMobile ? '4/5' : '16/7' }"
             >
                 <img
-                    :src="slide.image"
-                    class="w-full h-full object-cover pointer-events-none"
+                    :src="getImageUrl(slide)"
+                    class="w-full h-full object-cover pointer-events-none transition-transform duration-[2.5s] ease-out"
                     draggable="false"
                     :fetchpriority="index === 0 ? 'high' : 'auto'"
                     :loading="index === 0 ? 'eager' : 'lazy'"
                     :decoding="index === 0 ? 'sync' : 'async'"
                     :ref="el => imageRefs[index] = el"
-                    width="1920"
-                    height="840"
+                    :width="isMobile ? '800' : '1920'"
+                    :height="isMobile ? '1000' : '840'"
                 />
             </div>
         </div>
 
         <!-- Pagination -->
-        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-4">
+        <div v-if="filteredSliders.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-4">
             <button
-                v-for="(_, index) in sliders"
+                v-for="(_, index) in filteredSliders"
                 :key="index"
                 @click="goToSlide(index)"
                 class="relative w-2 h-2 rounded-full bg-white"
@@ -75,7 +77,7 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, computed, watch } from "vue";
 import gsap from "gsap";
 
 /* ================= PROPS ================= */
@@ -89,6 +91,7 @@ const props = defineProps({
 /* ================= REFS ================= */
 const currentSlide = ref(0);
 const isAnimating = ref(false);
+const isMobile = ref(false);
 
 const slideRefs = ref([]);
 const imageRefs = ref([]);
@@ -104,6 +107,49 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 /* autoplay controller */
 let autoplayTimeout = null;
+
+/* ================= FILTER LOGIC ================= */
+const filteredSliders = computed(() => {
+    if (!isMobile.value) return props.sliders;
+    const mobileOnly = props.sliders.filter(s => !!s.mobile_image);
+    return mobileOnly.length > 0 ? mobileOnly : props.sliders;
+});
+
+// Watch for slider changes to reset current slide if needed
+watch(filteredSliders, () => {
+    currentSlide.value = 0;
+    stopAutoplay();
+    nextTick(() => {
+        resetLayers();
+        if (filteredSliders.value.length > 1) {
+            startAutoplay();
+        }
+    });
+}, { deep: true });
+
+const resetLayers = () => {
+    slideRefs.value.forEach((el, i) => {
+        if (el) {
+            gsap.set(el, { 
+                autoAlpha: i === 0 ? 1 : 0,
+                zIndex: i === 0 ? 1 : 0,
+                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
+            });
+        }
+    });
+};
+
+/* ================= MOBILE DETECTION ================= */
+const checkMobile = () => {
+    isMobile.value = window.innerWidth <= 768;
+};
+
+const getImageUrl = (slide) => {
+    if (isMobile.value && slide.mobile_image) {
+        return slide.mobile_image;
+    }
+    return slide.image;
+};
 
 /* ================= PROGRESS ================= */
 const resetProgress = () => {
@@ -132,7 +178,7 @@ const startProgress = () => {
 /* ================= AUTOPLAY (NO BUFFER) ================= */
 const startAutoplay = () => {
     stopAutoplay();
-    if (props.sliders.length <= 1) return;
+    if (filteredSliders.value.length <= 1) return;
 
     startProgress();
 
@@ -152,14 +198,14 @@ const stopAutoplay = () => {
 /* ================= SLIDER CONTROLS ================= */
 const next = () => {
     if (isAnimating.value) return;
-    animateSlide((currentSlide.value + 1) % props.sliders.length);
+    animateSlide((currentSlide.value + 1) % filteredSliders.value.length);
 };
 
 const prev = () => {
     if (isAnimating.value) return;
     animateSlide(
-        (currentSlide.value - 1 + props.sliders.length) %
-            props.sliders.length
+        (currentSlide.value - 1 + filteredSliders.value.length) %
+            filteredSliders.value.length
     );
 };
 
@@ -249,15 +295,19 @@ const handleTouchEnd = handleMouseUp;
 
 /* ================= INIT ================= */
 onMounted(() => {
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
     nextTick(() => {
-        slideRefs.value.forEach((el, i) => {
-            gsap.set(el, { autoAlpha: i === 0 ? 1 : 0 });
-        });
-        startAutoplay();
+        resetLayers();
+        if (filteredSliders.value.length > 1) {
+            startAutoplay();
+        }
     });
 });
 
 onUnmounted(() => {
+    window.removeEventListener("resize", checkMobile);
     stopAutoplay();
     gsap.killTweensOf(slideRefs.value);
     gsap.killTweensOf(imageRefs.value);
