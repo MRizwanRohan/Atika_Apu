@@ -30,6 +30,7 @@ const searchQuery = ref(props.appliedFilters?.search || "");
 
 // UI state
 const showFilters = ref(false);
+const isSortOpen = ref(false);
 const showBrands = ref(true);
 const showPrice = ref(true);
 const showCategories = ref(true);
@@ -260,7 +261,7 @@ const formatPrice = (price) => {
         <div class="min-h-screen bg-gray-50">
             <div class="container mx-auto px-4 py-6">
                 <!-- Page Header -->
-                <div class="mb-6">
+                <div class="mb-6 text-center">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
                         <span v-if="searchQuery"
                             >Search results for "{{ searchQuery }}"</span
@@ -272,414 +273,470 @@ const formatPrice = (price) => {
                     </h1>
                 </div>
 
-                <!-- Top Bar: Results count, Sort, Mobile Filter -->
-                <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-                    >
-                        <!-- Results count -->
-                        <div class="text-gray-600">
-                            <span class="font-semibold text-gray-900"
-                                >Showing:</span
+                <!-- Top Bar: Results count, Sort, Filter Button -->
+                <div class=" mb-8">
+                    <div class="flex items-center justify-between">
+                        <!-- Left: Filter Button -->
+                        <button
+                            @click="showFilters = true"
+                            class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors group"
+                        >
+                            <SlidersHorizontal
+                                class="w-4 h-4 group-hover:scale-110 transition-transform"
+                            />
+                            Filter
+                            <span
+                                v-if="activeFiltersCount > 0"
+                                class="ml-1 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full"
                             >
-                            ({{ products.total }} Items)
+                                {{ activeFiltersCount }}
+                            </span>
+                        </button>
+
+                        <!-- Center: Results count -->
+                        <div
+                            class="hidden md:block text-[10px] font-medium uppercase tracking-[0.2em] text-gray-500"
+                        >
+                            Showing {{ products.from }}-{{ products.to }} of
+                            {{ products.total }} products
                         </div>
 
-                        <div class="flex items-center gap-4">
-                            <!-- Sort dropdown -->
-                            <div class="flex items-center gap-2">
-                                <label
-                                    class="text-sm hidden sm:block text-gray-600 whitespace-nowrap"
-                                    >Sort By:</label
+                        <!-- Right: Sort Dropdown -->
+                        <div class="relative">
+                            <button
+                                @click="isSortOpen = !isSortOpen"
+                                class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                            >
+                                Sort By
+                                <ChevronDown
+                                    class="w-4 h-4 transition-transform duration-300"
+                                    :class="{ 'rotate-180': isSortOpen }"
+                                />
+                            </button>
+
+                            <!-- Custom Sort Dropdown Menu -->
+                            <transition
+                                enter-active-class="transition duration-200 ease-out"
+                                enter-from-class="translate-y-1 opacity-0"
+                                enter-to-class="translate-y-0 opacity-100"
+                                leave-active-class="transition duration-150 ease-in"
+                                leave-from-class="translate-y-0 opacity-100"
+                                leave-to-class="translate-y-1 opacity-0"
+                            >
+                                <div
+                                    v-if="isSortOpen"
+                                    class="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-sm border border-gray-100 py-2 z-50"
                                 >
-                                <select
-                                    v-model="sortBy"
-                                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
-                                >
-                                    <option
+                                    <button
                                         v-for="option in sortOptions"
                                         :key="option.value"
-                                        :value="option.value"
+                                        @click="
+                                            sortBy = option.value;
+                                            isSortOpen = false;
+                                        "
+                                        class="w-full text-left px-4 py-2 text-xs uppercase tracking-wider transition-colors hover:bg-gray-50"
+                                        :class="
+                                            sortBy === option.value
+                                                ? 'text-primary font-bold'
+                                                : 'text-gray-600'
+                                        "
                                     >
                                         {{ option.label }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <!-- Mobile filter toggle -->
-                            <button
-                                @click="showFilters = !showFilters"
-                                class="lg:hidden flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                            >
-                                <Filter class="w-4 h-4" />
-                                Filters
-                                <span
-                                    v-if="activeFiltersCount > 0"
-                                    class="bg-white text-primary text-xs font-bold px-1.5 py-0.5 rounded-full"
-                                >
-                                    {{ activeFiltersCount }}
-                                </span>
-                            </button>
+                                    </button>
+                                </div>
+                            </transition>
                         </div>
                     </div>
                 </div>
 
                 <!-- Active Filters Chips -->
-                <div
-                    v-if="activeFiltersCount > 0"
-                    class="mb-6 flex flex-wrap items-center gap-2"
-                >
-                    <span class="text-sm text-gray-600">Active Filters:</span>
 
-                    <!-- Search chip -->
-                    <button
-                        v-if="searchQuery"
-                        @click="removeFilter('search')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm hover:bg-primary/20 transition-colors"
-                    >
-                        Search: {{ searchQuery }}
-                        <X class="w-4 h-4" />
-                    </button>
-
-                    <!-- Category chip -->
-                    <button
-                        v-if="selectedCategory"
-                        @click="removeFilter('category')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                    >
-                        {{ getCategoryName(selectedCategory) }}
-                        <X class="w-4 h-4" />
-                    </button>
-
-                    <!-- Brand chips -->
-                    <button
-                        v-for="brandId in selectedBrands"
-                        :key="brandId"
-                        @click="removeFilter('brand', brandId)"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200 transition-colors"
-                    >
-                        {{ getBrandName(brandId) }}
-                        <X class="w-4 h-4" />
-                    </button>
-
-                    <!-- Attribute chips -->
-                    <template
-                        v-for="(values, attributeName) in selectedAttributes"
-                        :key="attributeName"
-                    >
-                        <button
-                            v-for="value in values"
-                            :key="`${attributeName}-${value}`"
-                            @click="
-                                removeFilter('attribute', value, attributeName)
-                            "
-                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors"
-                        >
-                            {{ attributeName }}: {{ value }}
-                            <X class="w-4 h-4" />
-                        </button>
-                    </template>
-
-                    <!-- Price chip -->
-                    <button
-                        v-if="minPrice || maxPrice"
-                        @click="removeFilter('price')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm hover:bg-purple-200 transition-colors"
-                    >
-                        ৳{{ minPrice || 0 }} - ৳{{ maxPrice || "Max" }}
-                        <X class="w-4 h-4" />
-                    </button>
-
-                    <!-- Clear all -->
-                    <button
-                        @click="clearAllFilters"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-sm hover:bg-red-200 transition-colors font-medium"
-                    >
-                        Clear All
-                        <X class="w-4 h-4" />
-                    </button>
-                </div>
 
                 <div class="flex gap-6">
-                    <!-- Sidebar Filters -->
-                    <aside
-                        :class="[
-                            'fixed lg:relative inset-0 z-50 lg:z-auto lg:w-72 lg:flex-shrink-0',
-                            showFilters ? 'block' : 'hidden lg:block',
-                        ]"
-                    >
-                        <!-- Mobile overlay -->
-                        <div
-                            v-if="showFilters"
-                            class="fixed inset-0 bg-black/50 lg:hidden"
-                            @click="showFilters = false"
-                        ></div>
-
-                        <!-- Filter panel -->
-                        <div
-                            class="fixed lg:relative top-0 left-0 h-full lg:h-auto w-80 lg:w-full bg-white lg:bg-transparent p-6 lg:p-0 overflow-y-auto lg:overflow-visible"
+                    <!-- Slide-out Sidebar Filters -->
+                    <teleport to="body">
+                        <transition
+                            enter-active-class="transition duration-500 ease-in-out"
+                            enter-from-class="-translate-x-full"
+                            enter-to-class="translate-x-0"
+                            leave-active-class="transition duration-500 ease-in-out"
+                            leave-from-class="translate-x-0"
+                            leave-to-class="-translate-x-full"
                         >
-                            <!-- Mobile header -->
-                            <div
-                                class="flex items-center justify-between mb-6 lg:hidden"
+                            <aside
+                                v-if="showFilters"
+                                class="fixed inset-y-0 left-0 z-[100] w-full sm:w-[400px] bg-white shadow-2xl flex flex-col"
                             >
-                                <h2 class="text-lg font-semibold">Filters</h2>
-                                <button
-                                    @click="showFilters = false"
-                                    class="p-2 hover:bg-gray-100 rounded-lg"
-                                >
-                                    <X class="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div
-                                class="bg-white rounded-lg shadow-sm lg:sticky lg:top-4"
-                            >
-                                <!-- Categories -->
-                                <div class="border-b border-gray-200">
-                                    <button
-                                        @click="
-                                            showCategories = !showCategories
-                                        "
-                                        class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                                    >
-                                        <span
-                                            class="font-semibold text-gray-900"
-                                            >Categories</span
-                                        >
-                                        <ChevronUp
-                                            v-if="showCategories"
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                        <ChevronDown
-                                            v-else
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                    </button>
-                                    <div
-                                        v-show="showCategories"
-                                        class="px-4 pb-4"
-                                    >
-                                        <CategoryFilterTree
-                                            :categories="filters.categories"
-                                            :selected="selectedCategory"
-                                            @select="selectCategory"
-                                        />
-                                    </div>
-                                </div>
-
-                                <!-- Brands -->
-                                <div class="border-b border-gray-200">
-                                    <button
-                                        @click="showBrands = !showBrands"
-                                        class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                                    >
-                                        <span
-                                            class="font-semibold text-gray-900"
-                                            >Brands</span
-                                        >
-                                        <ChevronUp
-                                            v-if="showBrands"
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                        <ChevronDown
-                                            v-else
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                    </button>
-                                    <div
-                                        v-show="showBrands"
-                                        class="px-4 pb-4 max-h-64 overflow-y-auto"
-                                    >
-                                        <div class="space-y-2">
-                                            <label
-                                                v-for="brand in filters.brands"
-                                                :key="brand.id"
-                                                class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    :checked="
-                                                        selectedBrands.includes(
-                                                            brand.id,
-                                                        )
-                                                    "
-                                                    @change="
-                                                        toggleBrand(brand.id)
-                                                    "
-                                                    class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                                />
-                                                <span
-                                                    class="text-sm text-gray-700 flex-1"
-                                                    >{{
-                                                        brand.brand_name
-                                                    }}</span
-                                                >
-                                                <span
-                                                    class="text-xs text-gray-400"
-                                                    >({{
-                                                        brand.products_count
-                                                    }})</span
-                                                >
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Attributes -->
+                                <!-- Header -->
                                 <div
-                                    v-for="attribute in filters.attributes"
-                                    :key="attribute.id"
-                                    class="border-b border-gray-200"
+                                    class="flex items-center justify-between p-6 border-b border-gray-100"
                                 >
+                                    <h2
+                                        class="text-sm font-bold uppercase tracking-[0.2em]"
+                                    >
+                                        Filter Options
+                                    </h2>
                                     <button
-                                        @click="
-                                            showAttributes[attribute.name] =
-                                                !showAttributes[attribute.name]
-                                        "
-                                        class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                                        @click="showFilters = false"
+                                        class="p-2 hover:bg-gray-100 rounded-full transition-colors"
                                     >
-                                        <span
-                                            class="font-semibold text-gray-900"
-                                            >{{ attribute.name }}</span
-                                        >
-                                        <ChevronUp
-                                            v-if="
-                                                showAttributes[attribute.name]
-                                            "
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                        <ChevronDown
-                                            v-else
-                                            class="w-5 h-5 text-gray-500"
-                                        />
+                                        <X class="w-5 h-5" />
                                     </button>
-                                    <div
-                                        v-show="showAttributes[attribute.name]"
-                                        class="px-4 pb-4 max-h-64 overflow-y-auto"
+                                </div>
+
+                                <!-- Filter Content -->
+                                <div
+                                    class="flex-1 overflow-y-auto custom-scrollbar p-6"
+                                >
+                                    <!-- Clear All Button -->
+                                    <button
+                                        v-if="activeFiltersCount > 0"
+                                        @click="clearAllFilters"
+                                        class="w-full mb-6 py-2.5 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <div class="space-y-2">
-                                            <label
-                                                v-for="attrValue in attribute.values"
-                                                :key="attrValue.id"
-                                                class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors"
+                                        Clear All Filters
+                                        <X class="w-4 h-4" />
+                                    </button>
+
+                                    <div class="space-y-0">
+                                        <!-- Categories -->
+                                        <div class="border-b border-gray-100">
+                                            <button
+                                                @click="
+                                                    showCategories =
+                                                        !showCategories
+                                                "
+                                                class="w-full flex items-center justify-between py-4 group"
                                             >
-                                                <input
-                                                    type="checkbox"
-                                                    :checked="
-                                                        selectedAttributes[
-                                                            attribute.name
-                                                        ]?.includes(
-                                                            attrValue.value,
-                                                        )
-                                                    "
-                                                    @change="
-                                                        toggleAttributeValue(
-                                                            attribute.name,
-                                                            attrValue.value,
-                                                        )
-                                                    "
-                                                    class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                                />
-                                                <div
-                                                    class="flex items-center gap-2 flex-1"
+                                                <span
+                                                    class="text-xs font-bold uppercase tracking-widest group-hover:text-primary transition-colors text-gray-900"
+                                                    >Categories</span
                                                 >
-                                                    <span
-                                                        v-if="
-                                                            isColorAttribute(
-                                                                attribute.name,
-                                                            ) && attrValue.color
+                                                <ChevronDown
+                                                    class="w-4 h-4 text-gray-400 transition-transform duration-300"
+                                                    :class="{
+                                                        'rotate-180':
+                                                            showCategories,
+                                                    }"
+                                                />
+                                            </button>
+                                            <transition
+                                                enter-active-class="transition-all duration-300 ease-out"
+                                                enter-from-class="max-h-0 opacity-0 overflow-hidden"
+                                                enter-to-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-active-class="transition-all duration-300 ease-in"
+                                                leave-from-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-to-class="max-h-0 opacity-0 overflow-hidden"
+                                            >
+                                                <div
+                                                    v-show="showCategories"
+                                                    class="pb-6"
+                                                >
+                                                    <CategoryFilterTree
+                                                        :categories="
+                                                            filters.categories
                                                         "
-                                                        class="w-4 h-4 rounded-full border border-gray-300"
-                                                        :style="{
-                                                            backgroundColor:
-                                                                attrValue.color,
-                                                        }"
-                                                    ></span>
-                                                    <span
-                                                        class="text-sm text-gray-700"
-                                                        >{{
-                                                            attrValue.value
-                                                        }}</span
-                                                    >
+                                                        :selected="
+                                                            selectedCategory
+                                                        "
+                                                        @select="selectCategory"
+                                                    />
                                                 </div>
-                                            </label>
+                                            </transition>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <!-- Price Range -->
-                                <div>
-                                    <button
-                                        @click="showPrice = !showPrice"
-                                        class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                                    >
-                                        <span
-                                            class="font-semibold text-gray-900"
-                                            >Price Range</span
+                                        <!-- Brands -->
+                                        <div class="border-b border-gray-100">
+                                            <button
+                                                @click="
+                                                    showBrands = !showBrands
+                                                "
+                                                class="w-full flex items-center justify-between py-4 group"
+                                            >
+                                                <span
+                                                    class="text-xs font-bold uppercase tracking-widest group-hover:text-primary transition-colors text-gray-900"
+                                                    >Brands</span
+                                                >
+                                                <ChevronDown
+                                                    class="w-4 h-4 text-gray-400 transition-transform duration-300"
+                                                    :class="{
+                                                        'rotate-180':
+                                                            showBrands,
+                                                    }"
+                                                />
+                                            </button>
+                                            <transition
+                                                enter-active-class="transition-all duration-300 ease-out"
+                                                enter-from-class="max-h-0 opacity-0 overflow-hidden"
+                                                enter-to-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-active-class="transition-all duration-300 ease-in"
+                                                leave-from-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-to-class="max-h-0 opacity-0 overflow-hidden"
+                                            >
+                                                <div
+                                                    v-show="showBrands"
+                                                    class="pb-6"
+                                                >
+                                                    <div class="space-y-1">
+                                                        <label
+                                                            v-for="brand in filters.brands"
+                                                            :key="brand.id"
+                                                            class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors group"
+                                                        >
+                                                            <div
+                                                                class="relative flex items-center"
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    :checked="
+                                                                        selectedBrands.includes(
+                                                                            brand.id,
+                                                                        )
+                                                                    "
+                                                                    @change="
+                                                                        toggleBrand(
+                                                                            brand.id,
+                                                                        )
+                                                                    "
+                                                                    class="peer w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20 transition-all"
+                                                                />
+                                                            </div>
+                                                            <span
+                                                                class="text-xs font-medium text-gray-600 flex-1 uppercase tracking-wider group-hover:text-gray-900"
+                                                                >{{
+                                                                    brand.brand_name
+                                                                }}</span
+                                                            >
+                                                            <span
+                                                                class="text-[10px] font-bold text-gray-400"
+                                                                >{{
+                                                                    brand.products_count
+                                                                }}</span
+                                                            >
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </transition>
+                                        </div>
+
+                                        <!-- Attributes -->
+                                        <div
+                                            v-for="attribute in filters.attributes"
+                                            :key="attribute.id"
+                                            class="border-b border-gray-100"
                                         >
-                                        <ChevronUp
-                                            v-if="showPrice"
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                        <ChevronDown
-                                            v-else
-                                            class="w-5 h-5 text-gray-500"
-                                        />
-                                    </button>
-                                    <div v-show="showPrice" class="px-4 pb-4">
-                                        <div class="text-xs text-gray-500 mb-3">
-                                            Range: ৳{{
-                                                formatPrice(
-                                                    filters.priceRange.min,
-                                                )
-                                            }}
-                                            - ৳{{
-                                                formatPrice(
-                                                    filters.priceRange.max,
-                                                )
-                                            }}
+                                            <button
+                                                @click="
+                                                    showAttributes[
+                                                        attribute.name
+                                                    ] =
+                                                        !showAttributes[
+                                                            attribute.name
+                                                        ]
+                                                "
+                                                class="w-full flex items-center justify-between py-4 group"
+                                            >
+                                                <span
+                                                    class="text-xs font-bold uppercase tracking-widest group-hover:text-primary transition-colors text-gray-900"
+                                                    >{{ attribute.name }}</span
+                                                >
+                                                <ChevronDown
+                                                    class="w-4 h-4 text-gray-400 transition-transform duration-300"
+                                                    :class="{
+                                                        'rotate-180':
+                                                            showAttributes[
+                                                                attribute.name
+                                                            ],
+                                                    }"
+                                                />
+                                            </button>
+                                            <transition
+                                                enter-active-class="transition-all duration-300 ease-out"
+                                                enter-from-class="max-h-0 opacity-0 overflow-hidden"
+                                                enter-to-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-active-class="transition-all duration-300 ease-in"
+                                                leave-from-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-to-class="max-h-0 opacity-0 overflow-hidden"
+                                            >
+                                                <div
+                                                    v-show="
+                                                        showAttributes[
+                                                            attribute.name
+                                                        ]
+                                                    "
+                                                    class="pb-6"
+                                                >
+                                                    <div class="space-y-1">
+                                                        <label
+                                                            v-for="attrValue in attribute.values"
+                                                            :key="attrValue.id"
+                                                            class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors group"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                :checked="
+                                                                    selectedAttributes[
+                                                                        attribute.name
+                                                                    ]?.includes(
+                                                                        attrValue.value,
+                                                                    )
+                                                                "
+                                                                @change="
+                                                                    toggleAttributeValue(
+                                                                        attribute.name,
+                                                                        attrValue.value,
+                                                                    )
+                                                                "
+                                                                class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
+                                                            />
+                                                            <div
+                                                                class="flex items-center gap-2 flex-1"
+                                                            >
+                                                                <span
+                                                                    v-if="
+                                                                        isColorAttribute(
+                                                                            attribute.name,
+                                                                        ) &&
+                                                                        attrValue.color
+                                                                    "
+                                                                    class="w-3 h-3 rounded-full border border-gray-200"
+                                                                    :style="{
+                                                                        backgroundColor:
+                                                                            attrValue.color,
+                                                                    }"
+                                                                ></span>
+                                                                <span
+                                                                    class="text-xs font-medium text-gray-600 uppercase tracking-wider group-hover:text-gray-900"
+                                                                    >{{
+                                                                        attrValue.value
+                                                                    }}</span
+                                                                >
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </transition>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex-1">
-                                                <input
-                                                    v-model="minPrice"
-                                                    type="number"
-                                                    placeholder="Min"
-                                                    :min="
-                                                        filters.priceRange.min
-                                                    "
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+
+                                        <!-- Price Range -->
+                                        <div class="border-b border-gray-100">
+                                            <button
+                                                @click="showPrice = !showPrice"
+                                                class="w-full flex items-center justify-between py-4 group"
+                                            >
+                                                <span
+                                                    class="text-xs font-bold uppercase tracking-widest group-hover:text-primary transition-colors text-gray-900"
+                                                    >Price Range</span
+                                                >
+                                                <ChevronDown
+                                                    class="w-4 h-4 text-gray-400 transition-transform duration-300"
+                                                    :class="{
+                                                        'rotate-180': showPrice,
+                                                    }"
                                                 />
-                                            </div>
-                                            <span class="text-gray-400">-</span>
-                                            <div class="flex-1">
-                                                <input
-                                                    v-model="maxPrice"
-                                                    type="number"
-                                                    placeholder="Max"
-                                                    :max="
-                                                        filters.priceRange.max
-                                                    "
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-                                                />
-                                            </div>
+                                            </button>
+                                            <transition
+                                                enter-active-class="transition-all duration-300 ease-out"
+                                                enter-from-class="max-h-0 opacity-0 overflow-hidden"
+                                                enter-to-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-active-class="transition-all duration-300 ease-in"
+                                                leave-from-class="max-h-[1000px] opacity-100 overflow-hidden"
+                                                leave-to-class="max-h-0 opacity-0 overflow-hidden"
+                                            >
+                                                <div
+                                                    v-show="showPrice"
+                                                    class="pb-6"
+                                                >
+                                                    <div
+                                                        class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4"
+                                                    >
+                                                        Range: ৳{{
+                                                            formatPrice(
+                                                                filters.priceRange
+                                                                    .min,
+                                                            )
+                                                        }}
+                                                        - ৳{{
+                                                            formatPrice(
+                                                                filters.priceRange
+                                                                    .max,
+                                                            )
+                                                        }}
+                                                    </div>
+                                                    <div
+                                                        class="flex items-center gap-3"
+                                                    >
+                                                        <div class="flex-1">
+                                                            <input
+                                                                v-model="
+                                                                    minPrice
+                                                                "
+                                                                type="number"
+                                                                placeholder="Min"
+                                                                :min="
+                                                                    filters
+                                                                        .priceRange
+                                                                        .min
+                                                                "
+                                                                class="w-full px-3 py-2 border border-gray-100 rounded-sm text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                        <span
+                                                            class="text-gray-300"
+                                                            >-</span
+                                                        >
+                                                        <div class="flex-1">
+                                                            <input
+                                                                v-model="
+                                                                    maxPrice
+                                                                "
+                                                                type="number"
+                                                                placeholder="Max"
+                                                                :max="
+                                                                    filters
+                                                                        .priceRange
+                                                                        .max
+                                                                "
+                                                                class="w-full px-3 py-2 border border-gray-100 rounded-sm text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </transition>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Mobile Apply button -->
-                            <div class="mt-6 lg:hidden">
-                                <button
-                                    @click="showFilters = false"
-                                    class="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                                >
-                                    Apply Filters
-                                </button>
-                            </div>
-                        </div>
-                    </aside>
+                                <!-- Footer (Mobile Apply) -->
+                                <div class="p-6 border-t border-gray-100">
+                                    <button
+                                        @click="showFilters = false"
+                                        class="w-full py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-gray-900 transition-colors"
+                                    >
+                                        View Products
+                                    </button>
+                                </div>
+                            </aside>
+                        </transition>
+
+                        <!-- Overlay -->
+                        <transition
+                            enter-active-class="transition duration-500 ease-in-out"
+                            enter-from-class="opacity-0"
+                            enter-to-class="opacity-100"
+                            leave-active-class="transition duration-500 ease-in-out"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                        >
+                            <div
+                                v-if="showFilters"
+                                class="fixed inset-0 bg-black/40 z-[90]"
+                                @click="showFilters = false"
+                            ></div>
+                        </transition>
+                    </teleport>
+
+                    <div class="w-full">
 
                     <!-- Product Grid -->
                     <div class="flex-1">
@@ -791,5 +848,25 @@ const formatPrice = (price) => {
                 </div>
             </div>
         </div>
-    </FrontendLayout>
+    </div>
+</FrontendLayout>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+}
+</style>

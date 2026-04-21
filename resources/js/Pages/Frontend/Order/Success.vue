@@ -3,6 +3,8 @@ import { computed, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import FrontendLayout from '@/Layouts/FrontendLayout.vue';
 import { useMetaPixel } from '@/Composables/useMetaPixel';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const props = defineProps({
     order: {
@@ -62,221 +64,343 @@ const estimatedDelivery = computed(() => {
     const options = { month: 'short', day: 'numeric' };
     return `${minDate.toLocaleDateString('en-US', options)} - ${maxDate.toLocaleDateString('en-US', options)}`;
 });
+
+const downloadInvoice = () => {
+    const doc = new jsPDF();
+    const currency = 'Tk. ';
+    const primaryColor = [17, 24, 39]; // Gray 900
+    const secondaryColor = [107, 114, 128]; // Gray 500
+    const accentColor = [13, 148, 136]; // Teal 600 (adjust to match your brand primary if needed)
+    
+    // Top Accent Bar
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    // Header - Title
+    doc.setFontSize(24);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE', 15, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`#${props.order.order_number}`, 15, 32);
+    
+    // Branding in Header
+    doc.setFontSize(20);
+    doc.text('XYLO', 195, 25, { align: 'right' });
+    doc.setFontSize(9);
+    doc.text(window.location.hostname, 195, 32, { align: 'right' });
+    
+    // Body starts here
+    let currentY = 55;
+    
+    // Status Badge
+    const status = props.order.payment_status?.toUpperCase() || 'UNPAID';
+    doc.setFontSize(8);
+    doc.setDrawColor(...secondaryColor);
+    doc.setFillColor(249, 250, 251);
+    doc.roundedRect(15, currentY - 5, 25, 6, 1, 1, 'FD');
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text(status, 27.5, currentY - 0.5, { align: 'center' });
+    
+    currentY += 15;
+    
+    // Section Boxes
+    // Left: Bill To
+    doc.setFontSize(9);
+    doc.setTextColor(...secondaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BILL TO', 15, currentY);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.text(props.order.customer_name || 'Customer', 15, currentY + 7);
+    
+    doc.setFontSize(9);
+    doc.setTextColor(...secondaryColor);
+    doc.setFont('helvetica', 'normal');
+    const splitAddress = doc.splitTextToSize(props.order.shipping_address || '', 70);
+    doc.text(splitAddress, 15, currentY + 13);
+    const addressHeight = splitAddress.length * 5;
+    doc.text(`Phone: ${props.order.customer_phone || ''}`, 15, currentY + 15 + addressHeight);
+    
+    // Right: Order Info
+    const rightSideX = 130;
+    doc.setFontSize(9);
+    doc.setTextColor(...secondaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE DETAILS', rightSideX, currentY);
+    
+    doc.setFontSize(9);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'normal');
+    
+    const details = [
+        ['Date:', formatDate(props.order.created_at)],
+        ['Payment:', props.order.payment_method === 'cod' ? 'Cash on Delivery' : props.order.payment_method?.toUpperCase()],
+        ['Currency:', 'BDT (Tk.)']
+    ];
+    
+    details.forEach((item, index) => {
+        doc.setTextColor(...secondaryColor);
+        doc.text(item[0], rightSideX, currentY + 7 + (index * 6));
+        doc.setTextColor(...primaryColor);
+        doc.text(item[1], 195, currentY + 7 + (index * 6), { align: 'right' });
+    });
+    
+    currentY = Math.max(currentY + 25 + addressHeight, currentY + 35);
+    
+    // Items Table
+    const tableData = props.order.items.map((item, index) => [
+        String(index + 1).padStart(2, '0'),
+        item.product?.name + (item.product_variation?.attributes?.map(a => ` (${a.value?.value})`).join('') || ''),
+        item.quantity,
+        `${parseFloat(item.subtotal / (item.quantity || 1)).toFixed(2)}`,
+        `${parseFloat(item.subtotal || 0).toFixed(2)}`
+    ]);
+    
+    autoTable(doc, {
+        startY: currentY,
+        head: [['#', 'PRODUCT DESCRIPTION', 'QTY', 'UNIT PRICE', 'AMOUNT']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { 
+            fillColor: primaryColor, 
+            textColor: [255, 255, 255], 
+            fontSize: 8, 
+            fontStyle: 'bold',
+            halign: 'left',
+            cellPadding: 4
+        },
+        bodyStyles: { 
+            fontSize: 9, 
+            textColor: primaryColor,
+            cellPadding: 4
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            1: { halign: 'left' },
+            2: { halign: 'center', cellWidth: 20 },
+            3: { halign: 'right', cellWidth: 30 },
+            4: { halign: 'right', cellWidth: 30 }
+        },
+        margin: { left: 15, right: 15 }
+    });
+    
+    currentY = doc.lastAutoTable.finalY + 15;
+    
+    // Summary Section
+    const summaryX = 130;
+    const valueX = 195;
+    
+    const summaryLines = [
+        ['Subtotal', `${currency}${parseFloat(props.order.subtotal || 0).toFixed(2)}`],
+        ['Shipping', `${currency}${parseFloat(props.order.shipping_cost || 0).toFixed(2)}`]
+    ];
+    
+    if (parseFloat(props.order.discount_total || props.order.discount || 0) > 0) {
+        summaryLines.push(['Discount', `-${currency}${parseFloat(props.order.discount_total || props.order.discount || 0).toFixed(2)}`]);
+    }
+    
+    summaryLines.forEach((line, index) => {
+        doc.setFontSize(9);
+        doc.setTextColor(...secondaryColor);
+        doc.text(line[0], summaryX, currentY + (index * 7));
+        doc.setTextColor(...primaryColor);
+        doc.text(line[1], valueX, currentY + (index * 7), { align: 'right' });
+    });
+    
+    currentY += (summaryLines.length * 7) + 5;
+    
+    // Total Line
+    doc.setFillColor(249, 250, 251);
+    doc.rect(summaryX - 5, currentY - 5, (valueX - summaryX) + 10, 12, 'F');
+    
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL AMOUNT', summaryX, currentY + 3);
+    doc.setFontSize(13);
+    doc.text(`${currency}${parseFloat(props.order.total || 0).toFixed(2)}`, valueX, currentY + 3, { align: 'right' });
+    
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // Payment Notice
+    doc.setFontSize(8);
+    doc.setTextColor(...secondaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAYMENT INFORMATION', 15, pageHeight - 35);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Please keep this invoice for your records.', 15, pageHeight - 30);
+    doc.text('For any queries, contact our support team.', 15, pageHeight - 26);
+    
+    // Bottom Bar
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, pageHeight - 15, 210, 15, 'F');
+    
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Thank you for choosing XYLO. Your satisfaction is our priority.', 105, pageHeight - 6, { align: 'center' });
+    
+    doc.save(`Invoice-${props.order.order_number}.pdf`);
+};
 </script>
 
 <template>
     <Head title="Order Confirmed" />
-    <!-- <pre>{{ order }}</pre> -->
     <FrontendLayout>
-        <div class="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-3xl mx-auto">
-                <!-- Success Animation Container -->
-                <div class="text-center mb-8">
-                    <!-- Animated Success Icon -->
-                    <div class="relative inline-flex">
-                        <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center animate-pulse">
-                            <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path 
-                                    stroke-linecap="round" 
-                                    stroke-linejoin="round" 
-                                    stroke-width="2.5" 
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
-                        </div>
-                        <!-- Decorative rings -->
-                        <div class="absolute inset-0 w-24 h-24 bg-green-200 rounded-full animate-ping opacity-20"></div>
-                    </div>
-                    
-                    <h1 class="mt-6 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                        Order Confirmed!
+        <div class="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Success Header -->
+                <div class="text-center mb-12">
+                    <!-- <div class="inline-flex items-center justify-center w-20 h-20 bg-green-50 rounded-full mb-6">
+                        <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" class="checkmark-path" />
+                        </svg>
+                    </div> -->
+                    <h1 class="text-4xl font-light text-gray-900 tracking-tight mb-4">
+                        Thank you for your order
                     </h1>
-                    <p class="mt-3 text-lg text-gray-600">
-                        Thank you for your order. We've received your order and will begin processing it soon.
+                    <p class="text-lg text-gray-500 font-light max-w-xl mx-auto">
+                        Your order has been placed successfully. We've sent a confirmation email to your registered address.
                     </p>
                 </div>
 
-                <!-- Order Details Card -->
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <!-- Order Header -->
-                    <div class="bg-gradient-to-r from-primary to-primary/90 px-6 py-5">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p class="text-white/70 text-sm font-medium">Order Number</p>
-                                <p class="text-white text-xl font-bold tracking-wide">{{ order.order_number }}</p>
-                            </div>
-                            <div class="mt-3 sm:mt-0 text-left sm:text-right">
-                                <p class="text-white/70 text-sm font-medium">Order Date</p>
-                                <p class="text-white font-medium">{{ formatDate(order.created_at) }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order Status Timeline -->
-                    <div class="px-6 py-5 border-b border-gray-100 bg-gray-50">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-semibold text-gray-900">Order Placed</p>
-                                    <p class="text-xs text-gray-500">We have received your order</p>
-                                </div>
-                            </div>
-                            <div class="hidden sm:block text-right">
-                                <p class="text-sm font-medium text-gray-700">Estimated Delivery</p>
-                                <p class="text-sm text-primary font-semibold">{{ estimatedDelivery }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Customer & Shipping Info -->
-                    <div class="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-gray-100">
-                        <!-- Customer Info -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Customer Details</h3>
-                            <div class="space-y-2">
-                                <p class="text-gray-900 font-medium">{{ order.customer_name }}</p>
-                                <p class="text-gray-600 flex items-center">
-                                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    {{ order.customer_phone }}
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Shipping Address -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Shipping Address</h3>
-                            <p class="text-gray-600 flex items-start">
-                                <svg class="w-4 h-4 mr-2 mt-1 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {{ order.shipping_address }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Order Items -->
-                    <div class="px-6 py-5">
-                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Order Items</h3>
-                        <div class="space-y-4">
-                            <div 
-                                v-for="item in order.items" 
-                                :key="item.id"
-                                class="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl"
-                            >
-                                <!-- Product Image -->
-                                <div class="w-20 h-20 bg-white rounded-lg overflow-hidden shadow-sm flex-shrink-0">
-                                    <img 
-                                        v-if="item.product?.feature_image"
-                                        :src="item.product.feature_image"
-                                        :alt="item.product?.name"
-                                        class="w-full h-full object-cover"
-                                    />
-                                    <div v-else class="w-full h-full flex items-center justify-center text-gray-300">
-                                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-12">
+                    <!-- Order Items & Details -->
+                    <div class="lg:col-span-3 space-y-10">
+                        <!-- Items Section -->
+                        <section>
+                            <h2 class="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-6">Your Items</h2>
+                            <div class="divide-y divide-gray-100">
+                                <div 
+                                    v-for="item in order.items" 
+                                    :key="item.id"
+                                    class="py-6 first:pt-0 last:pb-0 flex gap-6"
+                                >
+                                    <div class="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                                        <img 
+                                            v-if="item.product?.feature_image"
+                                            :src="item.product.feature_image"
+                                            :alt="item.product?.name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <div v-else class="w-full h-full flex items-center justify-center text-gray-200">
+                                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 flex flex-col justify-center">
+                                        <h3 class="text-base font-medium text-gray-900 mb-1">{{ item.product?.name }}</h3>
+                                        <div v-if="item.product_variation?.attributes?.length" class="text-sm text-gray-400 mb-1 space-x-2">
+                                            <span v-for="(attr, index) in item.product_variation.attributes" :key="attr.id">
+                                                {{ attr.value?.value }}
+                                                <span v-if="index < item.product_variation.attributes.length - 1" class="ml-2">|</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-2">
+                                            <span class="text-sm text-gray-500 font-light">Qty {{ item.quantity }}</span>
+                                            <span class="text-sm font-medium text-gray-900">৳{{ parseFloat(item.subtotal || 0).toFixed(2) }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Product Details -->
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="text-base font-semibold text-gray-900 truncate">{{ item.product?.name }}</h4>
-                                    <!-- Variation Attributes -->
-                                    <p v-if="item.product_variation?.attributes?.length" class="text-sm text-gray-500 mt-1">
-                                        <span v-for="(attr, index) in item.product_variation.attributes" :key="attr.id">
-                                            {{ attr.value?.attribute?.name }}: {{ attr.value?.value }}
-                                            <span v-if="index < item.product_variation.attributes.length - 1"> | </span>
+                            </div>
+                        </section>
+
+                        <!-- Delivery Status -->
+                        <section class="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 flex items-center gap-6">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900">Order Placed Successfully</h3>
+                                <p class="text-sm text-gray-500 font-light">Estimated delivery: <span class="text-primary font-medium">{{ estimatedDelivery }}</span></p>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Order Sidebar -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <!-- Brief Summary -->
+                        <div class="bg-gray-50 rounded-2xl p-8 sticky top-8">
+                            <h2 class="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-6">Order Summary</h2>
+                            
+                            <div class="space-y-4 mb-8">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Order Number</span>
+                                    <span class="font-medium text-gray-900">{{ order.order_number }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Subtotal</span>
+                                    <span class="text-gray-900 font-medium">৳{{ parseFloat(order.subtotal || 0).toFixed(2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Delivery</span>
+                                    <span class="text-gray-900 font-medium">৳{{ parseFloat(order.shipping_cost || 0).toFixed(2) }}</span>
+                                </div>
+                                <div v-if="parseFloat(order.discount_total || order.discount || 0) > 0" class="flex justify-between text-sm">
+                                    <span class="text-green-600 font-medium">Discount</span>
+                                    <span class="font-medium text-green-600">-৳{{ parseFloat(order.discount_total || order.discount || 0).toFixed(2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-xl font-bold border-t border-gray-200 pt-6 mt-6">
+                                    <span class="text-gray-900">Total</span>
+                                    <span class="text-primary">৳{{ parseFloat(order.total || 0).toFixed(2) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6 pt-6 border-t border-gray-200">
+                                <div>
+                                    <h3 class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Shipping to</h3>
+                                    <p class="text-sm text-gray-600 font-light leading-relaxed">
+                                        <span class="font-semibold text-gray-900 block mb-1">{{ order.customer_name }}</span>
+                                        {{ order.shipping_address }}<br>
+                                        {{ order.customer_phone }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Payment</h3>
+                                    <p class="text-sm text-gray-600 font-light">
+                                        {{ order.payment_method === 'cod' ? 'Cash on Delivery' : order.payment_method }}
+                                        <span class="block text-xs uppercase tracking-wider text-amber-600 font-bold mt-1">
+                                            {{ order.payment_status === 'unpaid' ? 'Pending Payment' : 'Paid' }}
                                         </span>
                                     </p>
-                                    <p class="text-sm text-gray-500 mt-1">Qty: {{ item.quantity }}</p>
-                                </div>
-                                
-                                <!-- Item Price -->
-                                <div class="text-right">
-                                    <p class="text-lg font-semibold text-gray-900">৳{{ parseFloat(item.subtotal || 0).toFixed(2) }}</p>
-                                    <p class="text-sm text-gray-500">৳{{ parseFloat(item.unit_price || 0).toFixed(2) }} each</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Order Summary -->
-                    <div class="px-6 py-5 bg-gray-50 border-t border-gray-100">
-                        <div class="max-w-xs ml-auto space-y-2">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Subtotal</span>
-                                <span class="font-medium text-gray-900">৳{{ parseFloat(order.subtotal || 0).toFixed(2) }}</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Shipping</span>
-                                <span class="font-medium text-gray-900">৳{{ parseFloat(order.shipping_cost || 0).toFixed(2) }}</span>
-                            </div>
-                            <div v-if="parseFloat(order.discount_total || order.discount || 0) > 0" class="flex justify-between text-sm">
-                                <span class="text-gray-600">Discount</span>
-                                <span class="font-medium text-green-600">-৳{{ parseFloat(order.discount_total || order.discount || 0).toFixed(2) }}</span>
-                            </div>
-                            <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
-                                <span class="text-gray-900">Total</span>
-                                <span class="text-primary">৳{{ parseFloat(order.total || 0).toFixed(2) }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Info -->
-                    <div class="px-6 py-4 bg-amber-50 border-t border-amber-100">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-amber-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <div>
-                                <p class="text-sm font-semibold text-amber-800">
-                                    Payment Method: {{ order.payment_method === 'cod' ? 'Cash on Delivery' : order.payment_method }}
-                                </p>
-                                <p class="text-xs text-amber-600">
-                                    Status: {{ order.payment_status === 'unpaid' ? 'Pay on delivery' : order.payment_status }}
-                                </p>
+                            <div class="mt-10 flex flex-col gap-3">
+                                <Link 
+                                    href="/"
+                                    class="w-full py-4 px-6 bg-gray-900 text-white rounded-xl text-center font-medium hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl"
+                                >
+                                    Continue Shopping
+                                </Link>
+                                <Link 
+                                    v-if="isAuthenticated"
+                                    :href="route('user.dashboard')"
+                                    class="w-full py-4 px-6 bg-white border border-gray-200 text-gray-900 rounded-xl text-center font-medium hover:bg-gray-50 transition-all"
+                                >
+                                    View Orders
+                                </Link>
+                                <button 
+                                    @click="downloadInvoice"
+                                    class="w-full py-4 px-6 bg-primary/10 text-primary rounded-xl text-center font-medium hover:bg-primary/20 transition-all flex items-center justify-center gap-2 group border border-primary/20"
+                                >
+                                    <svg class="w-5 h-5 transition-transform group-hover:-translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Download Invoice
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link 
-                        href="/"
-                        class="inline-flex items-center justify-center px-8 py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        Continue Shopping
-                    </Link>
-                    <Link 
-                        v-if="isAuthenticated"
-                        :href="route('user.dashboard')"
-                        class="inline-flex items-center justify-center px-8 py-4 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl shadow-lg border border-gray-200 transition-all hover:shadow-xl"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        View My Orders
-                    </Link>
-                </div>
-
-                <!-- Additional Info -->
-                <div class="mt-8 text-center">
-                    <p class="text-sm text-gray-500">
-                        Need help? Contact us at 
-                        <a href="tel:+8801XXXXXXXXX" class="text-primary hover:underline font-medium">+880 1XX-XXXXXXX</a>
-                    </p>
                 </div>
             </div>
         </div>
@@ -284,11 +408,14 @@ const estimatedDelivery = computed(() => {
 </template>
 
 <style scoped>
-@keyframes checkmark {
-    0% {
-        stroke-dashoffset: 100;
-    }
-    100% {
+.checkmark-path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: dash 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes dash {
+    to {
         stroke-dashoffset: 0;
     }
 }
