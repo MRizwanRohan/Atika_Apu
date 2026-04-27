@@ -333,10 +333,10 @@ class ProductController extends Controller
 
         if ($result['success']) {
             $this->clearAllProductCaches();
-            return response()->json(['success' => true, 'message' => 'Order updated successfully!']);
+            return redirect()->back()->with('success', 'Order updated successfully!');
         }
 
-        return response()->json(['success' => false, 'message' => 'Failed to update order'], 500);
+        return redirect()->back()->with('error', 'Failed to update order');
     }
 
 
