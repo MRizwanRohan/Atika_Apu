@@ -24,11 +24,11 @@ const swiperModules = [Autoplay, Navigation];
 
 const swiperBreakpoints = {
     320: {
-        slidesPerView: 2,
+        slidesPerView: 3,
         spaceBetween: 10,
     },
     640: {
-        slidesPerView: 3,
+        slidesPerView: 4,
         spaceBetween: 15,
     },
     768: {

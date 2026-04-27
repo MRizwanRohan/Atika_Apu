@@ -1147,13 +1147,20 @@ const sendToSteadfastSingle = async (order) => {
                                             class="w-3 h-3 mr-1 text-gray-500"
                                         />{{ order.customer?.email }}
                                     </p>
-                                    <p
-                                        class="text-gray-600 flex items-center text-xs mt-1"
+                                    <div
+                                        class="text-gray-600 flex items-center flex-wrap gap-1 text-xs mt-1"
                                     >
                                         <Phone
-                                            class="w-3 h-3 mr-1 text-gray-500"
-                                        />{{ order.customer?.phone }}
-                                    </p>
+                                            class="w-3 h-3 text-gray-500"
+                                        /><span>{{ order.customer?.phone }}</span>
+                                        <span
+                                            v-if="order.duplicate_percentage > 0"
+                                            class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200"
+                                            title="Duplicate order from this phone number"
+                                        >
+                                            Duplicate {{ order.duplicate_percentage }}%
+                                        </span>
+                                    </div>
                                     <p
                                         class="text-gray-600 flex items-center text-xs mt-1"
                                     >

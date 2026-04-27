@@ -145,8 +145,12 @@ public function getPaginatedOrders(
     protected function formatOrder($order): array
     {
         Log::info('Formatting order mamun', ['order' => $order]);
+
+        $duplicatePercentage = $this->calculateDuplicatePercentage($order);
+
         return [
             'id' => $order->id,
+            'duplicate_percentage' => $duplicatePercentage,
             'order_number' => $order->order_number,
             'status' => $order->status,
             'courier_name' => $order->courier_name ?? 'N/A',
@@ -228,6 +232,53 @@ public function getPaginatedOrders(
             'image' => $product->feature_image,
             'type' => $product->type
         ];
+    }
+
+    /**
+     * Calculate duplicate percentage for an order
+     *
+     * @param mixed $order
+     * @return int
+     */
+    protected function calculateDuplicatePercentage($order): int
+    {
+        $duplicatePercentage = 0;
+        if (!empty($order->customer_phone) && $order->items && $order->items->isNotEmpty()) {
+            $previousOrder = \App\Models\Order::select('orders.id', 'orders.created_at')
+                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+                ->where('orders.customer_phone', $order->customer_phone)
+                ->where('orders.id', '!=', $order->id)
+                ->where('orders.created_at', '<=', $order->created_at)
+                ->where(function ($query) use ($order) {
+                    foreach ($order->items as $item) {
+                        $query->orWhere(function ($q) use ($item) {
+                            $q->where('order_items.product_id', $item->product_id);
+                            if ($item->product_variation_id) {
+                                $q->where('order_items.product_variation_id', $item->product_variation_id);
+                            } else {
+                                $q->whereNull('order_items.product_variation_id');
+                            }
+                        });
+                    }
+                })
+                ->orderBy('orders.created_at', 'desc')
+                ->first();
+
+            if ($previousOrder) {
+                $daysDifference = \Carbon\Carbon::parse($order->created_at)->startOfDay()->diffInDays(\Carbon\Carbon::parse($previousOrder->created_at)->startOfDay());
+                if ($daysDifference == 0) {
+                    $duplicatePercentage = 100;
+                } elseif ($daysDifference == 1) {
+                    $duplicatePercentage = 80;
+                } elseif ($daysDifference == 2) {
+                    $duplicatePercentage = 50;
+                } elseif ($daysDifference <= 3) {
+                    $duplicatePercentage = 30;
+                }
+            }
+        }
+
+        return $duplicatePercentage;
     }
 
     /**
