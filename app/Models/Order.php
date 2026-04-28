@@ -49,7 +49,10 @@ class Order extends Model
         'consignment_id',
         'delivery_status',
         'paid_amount',
-        'return_charge'
+        'return_charge',
+        'actual_courier_fee',
+        'gateway_fee',
+        'packaging_cost'
     ];
 
     protected $casts = [
@@ -60,7 +63,10 @@ class Order extends Model
         'return_charge' => 'decimal:2',
         'pos_discount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
-        'is_courier' => 'boolean'
+        'is_courier' => 'boolean',
+        'actual_courier_fee' => 'decimal:2',
+        'gateway_fee' => 'decimal:2',
+        'packaging_cost' => 'decimal:2',
     ];
 
     /**

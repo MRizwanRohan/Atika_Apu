@@ -486,12 +486,16 @@ class OrderService implements OrderInterface
 
         $finalPrice = $subtotal - $discountAmount;
 
+        // Snapshot the current unit cost for profit calculation
+        $unitCost = $variation ? ($variation->unit_cost ?? 0) : ($product->unit_cost ?? 0);
+
         return OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $product->id,
             'product_variation_id' => $variation?->id,
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
+            'unit_cost' => $unitCost,
             'subtotal' => $subtotal,
             'discount_type' => $itemData['discount_type'] ?? null,
             'discount_amount' => $itemData['discount_amount'] ?? 0,
@@ -579,17 +583,31 @@ class OrderService implements OrderInterface
         // Combine item-level discounts and POS discount into total discount
         $totalDiscount = $discountTotal + $posDiscountAmount;
 
+        // Estimate actual courier fee and packaging cost if not set
+        $actualCourierFee = $order->actual_courier_fee > 0 ? $order->actual_courier_fee : 0;
+        $packagingCost = $order->packaging_cost > 0 ? $order->packaging_cost : 0;
+
+        // Default estimates for financial auditing if manually not entered
+        if ($actualCourierFee == 0) {
+            $actualCourierFee = ($order->area === 'inside_dhaka') ? 60 : 120;
+        }
+        if ($packagingCost == 0) {
+            $packagingCost = 10; // Default 10 TK packaging
+        }
+
         // Calculate grand total and ensure it does not go below zero
         $total = $subtotal - $totalDiscount + $shippingCost;
         if ($total < 0) {
             $total = 0;
         }
 
-        // Update order with calculated totals (also reflect POS discount in overall discount_total)
+        // Update order with calculated totals and estimated hidden costs
         $order->update([
             'subtotal' => $subtotal,
             'discount_total' => $totalDiscount,
-            'total' => $total
+            'total' => $total,
+            'actual_courier_fee' => $actualCourierFee,
+            'packaging_cost' => $packagingCost
         ]);
     }
 

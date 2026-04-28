@@ -6,5 +6,6 @@ return [
     App\Providers\CouponServiceProvider::class,
     App\Providers\EventServiceProvider::class,
     App\Providers\OrderServiceProvider::class,
-    App\Providers\CourierServiceProvider::class
+    App\Providers\CourierServiceProvider::class,
+    App\Providers\PurchaseServiceProvider::class,
 ];

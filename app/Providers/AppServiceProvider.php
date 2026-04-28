@@ -47,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             \App\Services\MetaConversion\MetaConversionService::class
         );
+
+        $this->app->bind(
+            \App\Services\Report\FinancialReportServiceInterface::class,
+            \App\Services\Report\FinancialReportService::class
+        );
     }
 
     /**

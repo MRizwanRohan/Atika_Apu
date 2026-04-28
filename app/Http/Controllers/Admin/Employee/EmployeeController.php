@@ -28,11 +28,19 @@ class EmployeeController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
+        $stats = [
+            'total' => Employee::count(),
+            'active' => Employee::where('status', 'active')->count(),
+            'inactive' => Employee::where('status', 'inactive')->count(),
+            'total_salary' => Employee::where('status', 'active')->sum('monthly_salary'),
+        ];
+
         return Inertia::render('Admin/Employee/Index', [
             'employees' => $employees,
             'filters' => [
                 'search' => $search,
             ],
+            'stats' => $stats,
         ]);
     }
 

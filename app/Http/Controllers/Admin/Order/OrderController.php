@@ -352,6 +352,14 @@ class OrderController extends Controller
         ]);
 
         $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
+        $newStatus = $validated['status'] ?? $oldStatus;
+
+        // If status is changing, use the service to handle inventory logic
+        if ($oldStatus !== $newStatus) {
+            $this->orderService->updateOrderStatus($id, $newStatus);
+            $order = $order->fresh(); // Refresh order after status update
+        }
 
         $order->update([
             'customer_name' => $validated['customer_name'],
@@ -365,7 +373,6 @@ class OrderController extends Controller
             'discount_type' => $validated['discount_type'] ?? 'fixed',
             'shipping_cost' => $validated['shipping_cost'] ?? $order->shipping_cost,
             'area' => $validated['area'] ?? $order->area,
-            'status' => $validated['status'] ?? $order->status,
         ]);
 
 

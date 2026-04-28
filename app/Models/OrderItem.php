@@ -16,6 +16,7 @@ class OrderItem extends Model
         'product_variation_id',
         'quantity',
         'unit_price',
+        'unit_cost',
         'subtotal',
         'discount_type',
         'discount_amount',

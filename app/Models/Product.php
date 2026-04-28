@@ -23,6 +23,7 @@ class Product extends Model
         'is_daily_product',
         'type',
         'price',
+        'unit_cost',
         'previous_price',
         'youtube_video',
         'feature_image',
@@ -60,6 +61,11 @@ class Product extends Model
     public function variations()
     {
         return $this->hasMany(ProductVariation::class);
+    }
+
+    public function purchaseItems()
+    {
+        return $this->hasMany(PurchaseItem::class);
     }
 
     public function coupons(): BelongsToMany

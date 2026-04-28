@@ -23,9 +23,10 @@ class ExpensesController extends Controller
             ]);
         }
 
-        $expenses = Expense::orderBy('created_at', 'desc')->paginate(10);
-        return Inertia::render('Admin/Expense/Index', [
+        $expenses = Expense::with('category')->orderBy('created_at', 'desc')->paginate(15);
+        return Inertia::render('Admin/Expenses/Index', [
             'expenses' => $expenses,
+            'categories' => \App\Models\ExpenseCategory::all(),
         ]);
     }
 
@@ -66,6 +67,7 @@ class ExpensesController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
+            'expense_category_id' => 'required|exists:expense_categories,id',
             'month' => 'required|string|max:255',
             'date' => 'required|date',
             'note' => 'nullable|string',

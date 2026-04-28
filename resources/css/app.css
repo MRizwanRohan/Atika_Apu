@@ -41,6 +41,14 @@ table tbody tr td {
     @apply list-disc list-inside;
 }
 
+.label {
+    @apply block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5;
+}
+
+.form-input {
+    @apply w-full bg-gray-50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none;
+}
+
 .main-table {
     @apply overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800;
 }

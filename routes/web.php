@@ -201,8 +201,18 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
 
     // Expenses
     Route::resource('expenses', ExpensesController::class);
+    Route::resource('expense-categories', \App\Http\Controllers\Admin\Expenses\ExpenseCategoryController::class);
 
-    // Product Purchase Costs
+    // Suppliers
+    Route::get('/suppliers/ledger-report', [\App\Http\Controllers\Admin\Purchase\SupplierController::class, 'ledgerReport'])->name('suppliers.ledger-report');
+    Route::post('/suppliers/record-payment', [\App\Http\Controllers\Admin\Purchase\SupplierController::class, 'recordPayment'])->name('suppliers.record-payment');
+    Route::resource('suppliers', \App\Http\Controllers\Admin\Purchase\SupplierController::class);
+
+    // Product Purchase Management (Modern system)
+    Route::resource('purchases', \App\Http\Controllers\Admin\Purchase\PurchaseController::class);
+    Route::post('/purchases/{id}/receive', [\App\Http\Controllers\Admin\Purchase\PurchaseController::class, 'markAsReceived'])->name('purchases.receive');
+
+    // Product Purchase Costs (Legacy - keeping for now to avoid breakage, but should migrate)
     Route::resource('product-purchase-costs', ExpensesController::class);
 
     // Business Dashboard

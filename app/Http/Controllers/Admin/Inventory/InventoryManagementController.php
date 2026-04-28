@@ -66,10 +66,10 @@ public function generateReport(Request $request)
     $report = \Cache::remember('inventory_dashboard_report', 600, function () {
         // Optimized Aggregate Queries
         $simpleStats = \App\Models\Product::where('type', 'simple')
-            ->selectRaw('count(*) as count, sum(stock) as stock, sum(sold_stock) as sold, sum(stock * price) as value')
+            ->selectRaw('count(*) as count, sum(stock) as stock, sum(sold_stock) as sold, sum(stock * IFNULL(unit_cost, 0)) as value')
             ->first();
 
-        $variationStats = \App\Models\ProductVariation::selectRaw('count(*) as count, sum(stock) as stock, sum(sold_stock) as sold, sum(stock * price) as value')
+        $variationStats = \App\Models\ProductVariation::selectRaw('count(*) as count, sum(stock) as stock, sum(sold_stock) as sold, sum(stock * IFNULL(unit_cost, 0)) as value')
             ->first();
 
         $totalStock = ($simpleStats->stock ?? 0) + ($variationStats->stock ?? 0);
@@ -83,9 +83,9 @@ public function generateReport(Request $request)
             ->get()->mapWithKeys(function ($cat) {
                 $ids = \App\Models\Product::where('category_id', $cat->id)->pluck('id');
                 $simple = \App\Models\Product::where('category_id', $cat->id)->where('type', 'simple')
-                    ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * price) as v')->first();
+                    ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * IFNULL(unit_cost, 0)) as v')->first();
                 $variations = \App\Models\ProductVariation::whereIn('product_id', $ids)
-                    ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * price) as v')->first();
+                    ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * IFNULL(unit_cost, 0)) as v')->first();
                 
                 $stock = ($simple->s ?? 0) + ($variations->s ?? 0);
                 $sold = ($simple->sl ?? 0) + ($variations->sl ?? 0);

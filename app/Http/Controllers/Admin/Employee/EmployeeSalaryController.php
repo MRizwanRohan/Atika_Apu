@@ -27,6 +27,13 @@ class EmployeeSalaryController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
+        $stats = [
+            'total_paid' => EmployeeSalary::sum('amount'),
+            'this_month_paid' => EmployeeSalary::where('month', date('F Y'))->sum('amount'),
+            'last_month_paid' => EmployeeSalary::where('month', date('F Y', strtotime('last month')))->sum('amount'),
+            'total_transactions' => EmployeeSalary::count(),
+        ];
+
         $employees = Employee::select('id', 'name', 'monthly_salary')->get();
 
         return Inertia::render('Admin/Employee/Salary/Index', [
@@ -35,6 +42,7 @@ class EmployeeSalaryController extends Controller
             'filters' => [
                 'search' => $search,
             ],
+            'stats' => $stats,
         ]);
     }
 

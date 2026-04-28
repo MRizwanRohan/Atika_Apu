@@ -393,15 +393,35 @@ const navigationItems = [
                 permission: "admin.business-dashboard.index",
             },
             {
+                label: "Suppliers",
+                route: "admin.suppliers.index",
+                permission: "admin.suppliers.index",
+            },
+            {
+                label: "Purchases",
+                route: "admin.purchases.index",
+                permission: "admin.purchases.index",
+            },
+            // {
+            //     label: "Expenses",
+            //     route: "admin.expenses.index",
+            //     permission: "admin.expenses.index",
+            // },
+            {
+                label: "Expense Categories",
+                route: "admin.expense-categories.index",
+                permission: "admin.expense-categories.index",
+            },
+            {
                 label: "Expenses",
                 route: "admin.expenses.index",
                 permission: "admin.expenses.index",
             },
-            {
-                label: "Purchase Costs",
-                route: "admin.product-purchase-costs.index",
-                permission: "admin.product-purchase-costs.index",
-            },
+            // {
+            //     label: "Purchase Costs (Legacy)",
+            //     route: "admin.product-purchase-costs.index",
+            //     permission: "admin.product-purchase-costs.index",
+            // },
         ],
     },
     {

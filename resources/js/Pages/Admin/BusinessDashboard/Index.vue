@@ -1,200 +1,203 @@
 <template>
+  <Head title="Business Dashboard" />
   <AdminLayout>
-    <div class="p-6 bg-gray-50 min-h-screen">
-      <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900">Business Dashboard</h1>
-          <p class="text-gray-600 mt-2">Monitor your business performance and revenue</p>
+    <div class="px-4 pr-0 sm:px-6 lg:px-8 py-8 bg-gray-50/50 min-h-screen">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Business Intel</h1>
+          <p class="text-sm text-gray-500 mt-1">Real-time performance metrics and financial analysis.</p>
         </div>
+        
+        <!-- Quick Filters -->
+        <div class="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm">
+          <button 
+            v-for="t in ['weekly', 'monthly', 'yearly', 'custom']" 
+            :key="t"
+            @click="filter = t; (t !== 'custom' && applyFilter())"
+            :class="[
+              'px-4 py-2 text-xs font-medium rounded-xl transition-all',
+              filter === t ? 'bg-blue-600 text-white shadow-md shadow-blue-100' : 'text-gray-500 hover:bg-gray-50'
+            ]"
+          >
+            {{ t.charAt(0).toUpperCase() + t.slice(1) }}
+          </button>
+        </div>
+      </div>
 
-        <!-- Filter Section -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div class="flex flex-wrap items-end gap-4">
-            <!-- Filter Type -->
-            <div class="min-w-[200px]">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
-              <select
-                v-model="filter"
-                @change="applyFilter"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-                <option value="custom">Custom Range</option>
-              </select>
+      <!-- Custom Date Range Picker (Conditional) -->
+      <transition name="fade">
+        <div v-if="filter === 'custom'" class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm mb-8 animate-in slide-in-from-top-4 duration-300">
+          <div class="flex flex-wrap items-end gap-6">
+            <div class="flex-1 min-w-[200px]">
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block">Start Date</label>
+              <div class="relative">
+                <Calendar size="16" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="date" v-model="startDate" class="w-full pl-11 pr-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none" />
+              </div>
             </div>
-
-            <!-- Start Date (for custom range) -->
-            <div v-if="filter === 'custom'" class="min-w-[150px]">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-              <input
-                type="date"
-                v-model="startDate"
-                @change="applyFilter"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div class="flex-1 min-w-[200px]">
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-1 mb-2 block">End Date</label>
+              <div class="relative">
+                <Calendar size="16" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="date" v-model="endDate" class="w-full pl-11 pr-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none" />
+              </div>
             </div>
-
-            <!-- End Date (for custom range) -->
-            <div v-if="filter === 'custom'" class="min-w-[150px]">
-              <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-              <input
-                type="date"
-                v-model="endDate"
-                @change="applyFilter"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Apply Button -->
-            <div>
-              <button
-                @click="applyFilter"
-                class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
-              >
-                Apply Filter
-              </button>
-            </div>
+            <button @click="applyFilter" class="px-8 py-3 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-black transition-all shadow-lg active:scale-95">
+              Refine Results
+            </button>
           </div>
         </div>
+      </transition>
 
-        <!-- Metrics Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <!-- Total Revenue Card -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-gray-600 text-sm font-medium">Total Revenue</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ formatCurrency(revenue) }}</p>
-                <p class="text-green-600 text-sm mt-1 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                  </svg>
-                  +12.5% from last {{ getFilterLabel().toLowerCase() }}
-                </p>
-              </div>
-              <div class="bg-green-100 p-3 rounded-full">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                </svg>
-              </div>
-            </div>
+      <!-- Main Metrics Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <!-- Revenue -->
+        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group">
+          <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+            <TrendingUp size="20" />
           </div>
-
-          <!-- Total Expenses Card -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-gray-600 text-sm font-medium">Total Expenses</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ formatCurrency(expenses) }}</p>
-                <p class="text-red-600 text-sm mt-1 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
-                  </svg>
-                  +8.2% from last {{ getFilterLabel().toLowerCase() }}
-                </p>
-              </div>
-              <div class="bg-red-100 p-3 rounded-full">
-                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Net Profit Card -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-gray-600 text-sm font-medium">Net Profit</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ formatCurrency(profit) }}</p>
-                <p class="text-green-600 text-sm mt-1 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                  </svg>
-                  +15.3% from last {{ getFilterLabel().toLowerCase() }}
-                </p>
-              </div>
-              <div class="bg-blue-100 p-3 rounded-full">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total Orders Card -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-gray-600 text-sm font-medium">Total Orders</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ totalOrders }}</p>
-                <p class="text-green-600 text-sm mt-1 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                  </svg>
-                  +5.7% from last {{ getFilterLabel().toLowerCase() }}
-                </p>
-              </div>
-              <div class="bg-purple-100 p-3 rounded-full">
-                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-              </div>
-            </div>
-          </div>
+          <p class="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Total Revenue</p>
+          <h3 class="text-xl font-semibold text-gray-900 mt-1">৳{{ Number(revenue).toLocaleString() }}</h3>
         </div>
 
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <!-- Revenue vs Expenses Chart -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue vs Expenses Trend</h3>
-            <apexchart
-              type="area"
-              height="300"
-              :options="chartOptions"
-              :series="chartSeries"
-            ></apexchart>
+        <!-- COGS -->
+        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group">
+          <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+            <Box size="20" />
           </div>
-
-          <!-- Revenue Breakdown Pie Chart -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue Breakdown</h3>
-            <apexchart
-              type="pie"
-              height="300"
-              :options="pieChartOptions"
-              :series="pieChartSeries"
-            ></apexchart>
-          </div>
+          <p class="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Cost of Goods</p>
+          <h3 class="text-xl font-semibold text-gray-900 mt-1">৳{{ Number(cogs).toLocaleString() }}</h3>
         </div>
 
-        <!-- Additional Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Orders Trend Chart -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Orders Trend</h3>
-            <apexchart
-              type="line"
-              height="300"
-              :options="ordersChartOptions"
-              :series="ordersChartSeries"
-            ></apexchart>
+        <!-- Gross Profit -->
+        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group">
+          <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+            <Target size="20" />
           </div>
+          <p class="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Gross Profit</p>
+          <h3 class="text-xl font-semibold text-gray-900 mt-1">৳{{ Number(gross_profit).toLocaleString() }}</h3>
+        </div>
 
-          <!-- Monthly Overview Chart -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Overview</h3>
-            <apexchart
-              type="bar"
-              height="300"
-              :options="monthlyOverviewChartOptions"
-              :series="monthlyOverviewChartSeries"
-            ></apexchart>
+
+
+        <!-- Net Profit -->
+        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group overflow-hidden relative">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full -mr-8 -mt-8 blur-2xl"></div>
+          <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 relative">
+            <Zap size="20" />
           </div>
+          <p class="text-[10px] font-medium text-gray-400 uppercase tracking-widest relative">Net Profit</p>
+          <h3 class="text-xl font-semibold text-indigo-600 mt-1 relative">৳{{ Number(profit).toLocaleString() }}</h3>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <!-- Trend Chart -->
+        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="text-lg font-semibold text-gray-900">Revenue & Expense Flow</h3>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                <span class="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Revenue</span>
+              </div>
+            </div>
+          </div>
+          <VueApexCharts
+            type="area"
+            height="320"
+            :options="chartOptions"
+            :series="chartSeries"
+          />
+        </div>
+
+        <!-- Revenue Breakdown -->
+        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-8">Category Share</h3>
+          <VueApexCharts
+            type="donut"
+            height="320"
+            :options="pieChartOptions"
+            :series="pieChartSeries"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <!-- Orders Trend -->
+        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-8">Volume Trend (Orders)</h3>
+          <VueApexCharts
+            type="line"
+            height="320"
+            :options="ordersChartOptions"
+            :series="ordersChartSeries"
+          />
+        </div>
+
+        <!-- Monthly Overview -->
+        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-8">Component Overview</h3>
+          <VueApexCharts
+            type="bar"
+            height="320"
+            :options="monthlyOverviewChartOptions"
+            :series="monthlyOverviewChartSeries"
+          />
+        </div>
+      </div>
+
+      <!-- Analysis Table -->
+      <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Product Profit Analysis</h3>
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Net gain after weighted average COGS</p>
+          </div>
+          <div class="px-4 py-1.5 bg-white border border-gray-100 rounded-full text-[10px] font-semibold text-blue-600 shadow-sm uppercase tracking-widest">
+            Top 20 Performers
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-gray-50/50">
+                <th class="px-8 py-5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Product Intel</th>
+                <th class="px-8 py-5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest text-center">Volume</th>
+                <th class="px-8 py-5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest text-right">Revenue</th>
+                <th class="px-8 py-5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest text-right">Direct Cost</th>
+                <th class="px-8 py-5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest text-right">Net Profit</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              <tr v-for="item in productProfitReport" :key="item.product_id" class="hover:bg-gray-50/50 transition-colors group">
+                <td class="px-8 py-5">
+                  <p class="text-sm font-medium text-gray-900">{{ item.product_name }}</p>
+                  <p class="text-[10px] text-gray-400 mt-0.5">SKU: {{ item.product_id }}</p>
+                </td>
+                <td class="px-8 py-5 text-center text-sm text-gray-600 font-medium font-mono">
+                  {{ item.sold_quantity }}
+                </td>
+                <td class="px-8 py-5 text-right text-sm font-medium text-gray-900">
+                  ৳{{ Number(item.revenue).toLocaleString() }}
+                </td>
+                <td class="px-8 py-5 text-right text-sm text-rose-500 font-medium">
+                  ৳{{ Number(item.cost).toLocaleString() }}
+                </td>
+                <td class="px-8 py-5 text-right">
+                  <span class="text-sm font-semibold text-emerald-600 tracking-tight">৳{{ Number(item.profit).toLocaleString() }}</span>
+                </td>
+              </tr>
+              <tr v-if="productProfitReport.length === 0">
+                <td colspan="5" class="px-8 py-20 text-center text-gray-400 italic text-sm">
+                  No analytical data found for this period. Try adjusting your filters.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -204,356 +207,154 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import { ref, onMounted, watch, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, Head } from '@inertiajs/vue3'
+import VueApexCharts from "vue3-apexcharts";
+import { 
+  TrendingUp, Box, Coins, Wallet, BarChart3, 
+  Calendar, Zap, Target, Search, X 
+} from 'lucide-vue-next'
 
-// Props
 const props = defineProps({
-  revenue: {
-    type: Number,
-    default: 0
-  },
-  expenses: {
-    type: Number,
-    default: 0
-  },
-  profit: {
-    type: Number,
-    default: 0
-  },
-  totalOrders: {
-    type: Number,
-    default: 0
-  },
-  filter: {
-    type: String,
-    default: 'monthly'
-  },
-  startDate: {
-    type: String,
-    default: null
-  },
-  endDate: {
-    type: String,
-    default: null
-  },
-  chartData: {
-    type: Object,
-    default: () => ({
-      categories: [],
-      revenue: [],
-      expenses: []
-    })
-  },
-  ordersChartData: {
-    type: Object,
-    default: () => ({
-      categories: [],
-      orders: []
-    })
-  },
-  monthlyOverviewData: {
-    type: Object,
-    default: () => ({
-      categories: [],
-      salary: [],
-      expenses: [],
-      purchases: [],
-      revenue: []
-    })
-  }
+  revenue: Number,
+  cogs: Number,
+  gross_profit: Number,
+  expenses: Number,
+  profit: Number,
+  totalOrders: Number,
+  filter: String,
+  startDate: String,
+  endDate: String,
+  chartData: Object,
+  ordersChartData: Object,
+  monthlyOverviewData: Object,
+  productProfitReport: Array
 })
 
-// Reactive data - sync with props
 const filter = ref(props.filter)
 const startDate = ref(props.startDate)
 const endDate = ref(props.endDate)
 
-// Watch for prop changes and update refs
-watch(() => props.filter, (newFilter) => {
-  filter.value = newFilter
-})
-watch(() => props.startDate, (newStartDate) => {
-  startDate.value = newStartDate
-})
-watch(() => props.endDate, (newEndDate) => {
-  endDate.value = newEndDate
-})
+watch(() => props.filter, (v) => filter.value = v)
+watch(() => props.startDate, (v) => startDate.value = v)
+watch(() => props.endDate, (v) => endDate.value = v)
 
-// Methods
 const applyFilter = () => {
-  const params = {
-    filter: filter.value
-  }
-
+  const params = { filter: filter.value }
   if (filter.value === 'custom') {
     params.start_date = startDate.value
     params.end_date = endDate.value
   }
-
   router.get(route('admin.business-dashboard.index'), params, {
     preserveState: true,
     replace: true
   })
 }
 
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
-}
-
-const getFilterLabel = () => {
-  switch (filter.value) {
-    case 'weekly':
-      return 'This Week'
-    case 'monthly':
-      return 'This Month'
-    case 'yearly':
-      return 'This Year'
-    case 'custom':
-      return startDate.value && endDate.value
-        ? `${startDate.value} to ${endDate.value}`
-        : 'Custom Range'
-    default:
-      return ''
-  }
-}
-
-// Computed properties for charts
 const chartOptions = computed(() => ({
   chart: {
     type: 'area',
-    height: 300,
-    toolbar: {
-      show: false
-    }
+    toolbar: { show: false },
+    fontFamily: 'inherit'
   },
-  colors: ['#10B981', '#EF4444'],
-  dataLabels: {
-    enabled: false
-  },
-  stroke: {
-    curve: 'smooth',
-    width: 2
-  },
+  colors: ['#10B981'],
+  dataLabels: { enabled: false },
+  stroke: { curve: 'smooth', width: 2 },
   fill: {
     type: 'gradient',
     gradient: {
-      shade: 'light',
-      type: 'vertical',
-      opacityFrom: 0.4,
-      opacityTo: 0.1,
+      shadeIntensity: 1,
+      opacityFrom: 0.45,
+      opacityTo: 0.05,
+      stops: [50, 100]
     }
   },
   xaxis: {
     categories: props.chartData.categories || [],
-    labels: {
-      style: {
-        colors: '#6B7280'
-      }
-    }
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    labels: { style: { colors: '#94A3B8', fontSize: '10px', fontWeight: 500 } }
   },
   yaxis: {
     labels: {
-      style: {
-        colors: '#6B7280'
-      },
-      formatter: function(value) {
-        return '$' + value.toLocaleString();
-      }
+      style: { colors: '#94A3B8', fontSize: '10px', fontWeight: 500 },
+      formatter: (v) => '৳' + Number(v).toLocaleString()
     }
   },
-  tooltip: {
-    y: {
-      formatter: function(value) {
-        return '$' + value.toLocaleString();
-      }
-    }
-  },
-  legend: {
-    position: 'top',
-    horizontalAlign: 'right'
-  }
-}));
+  grid: { borderColor: '#F1F5F9', strokeDashArray: 4 },
+  tooltip: { theme: 'light', x: { show: false } }
+}))
 
 const chartSeries = computed(() => [
-  {
-    name: 'Revenue',
-    data: props.chartData.revenue || []
-  },
-  {
-    name: 'Expenses',
-    data: props.chartData.expenses || []
-  }
-]);
+  { name: 'Revenue', data: props.chartData.revenue || [] }
+])
 
 const pieChartOptions = computed(() => ({
-  chart: {
-    type: 'pie',
-    height: 300
-  },
-  colors: ['#10B981', '#EF4444', '#3B82F6', '#F59E0B'],
-  labels: ['Revenue', 'Expenses', 'Profit', 'Other'],
-  legend: {
-    position: 'bottom'
-  },
-  tooltip: {
-    y: {
-      formatter: function(value) {
-        return '$' + Number(value).toLocaleString();
+  chart: { type: 'donut' },
+  colors: ['#10B981', '#6366F1', '#F59E0B'],
+  labels: ['Revenue', 'Profit', 'Other'],
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '75%',
+        labels: {
+          show: true,
+          name: { fontSize: '12px', color: '#64748B', fontWeight: 600 },
+          value: { fontSize: '18px', fontWeight: 700, formatter: (v) => '৳' + Number(v).toLocaleString() },
+          total: { show: true, label: 'Performance', color: '#94A3B8' }
+        }
       }
     }
   },
-  responsive: [{
-    breakpoint: 480,
-    options: {
-      chart: {
-        width: 200
-      },
-      legend: {
-        position: 'bottom'
-      }
-    }
-  }]
-}));
+  legend: { position: 'bottom', fontSize: '12px', fontWeight: 500 },
+  stroke: { show: false }
+}))
 
 const pieChartSeries = computed(() => {
-  const revenue = Number(props.revenue) || 0;
-  const expenses = Number(props.expenses) || 0;
-  const profit = Number(props.profit) || 0;
-
-  // Calculate other income (if any) - for now, just ensure we have valid numbers
-  const other = Math.max(0, revenue - expenses - profit);
-
-  return [revenue, expenses, profit, other];
-});
+  const rev = Number(props.revenue) || 0
+  const prf = Number(props.profit) || 0
+  const oth = Math.max(0, rev - prf)
+  return [rev, prf, oth]
+})
 
 const ordersChartOptions = computed(() => ({
-  chart: {
-    type: 'line',
-    height: 300,
-    toolbar: {
-      show: false
-    }
-  },
-  colors: ['#8B5CF6'],
-  stroke: {
-    curve: 'smooth',
-    width: 3
-  },
-  markers: {
-    size: 5,
-    colors: ['#8B5CF6'],
-    strokeColors: '#fff',
-    strokeWidth: 2
-  },
+  chart: { type: 'line', toolbar: { show: false } },
+  colors: ['#6366F1'],
+  stroke: { curve: 'smooth', width: 4 },
+  markers: { size: 6, colors: ['#6366F1'], strokeWidth: 3, strokeColors: '#fff' },
   xaxis: {
     categories: props.ordersChartData.categories || [],
-    labels: {
-      style: {
-        colors: '#6B7280'
-      }
-    }
+    labels: { style: { colors: '#94A3B8', fontSize: '10px' } }
   },
-  yaxis: {
-    labels: {
-      style: {
-        colors: '#6B7280'
-      }
-    }
-  },
-  tooltip: {
-    y: {
-      formatter: function(value) {
-        return value + ' orders';
-      }
-    }
-  }
-}));
+  grid: { borderColor: '#F1F5F9' },
+  yaxis: { labels: { style: { colors: '#94A3B8', fontSize: '10px' } } }
+}))
 
-const ordersChartSeries = computed(() => [
-  {
-    name: 'Orders',
-    data: props.ordersChartData.orders || []
-  }
-]);
+const ordersChartSeries = computed(() => [{ name: 'Orders', data: props.ordersChartData.orders || [] }])
 
 const monthlyOverviewChartOptions = computed(() => ({
-  chart: {
-    type: 'bar',
-    height: 300,
-    toolbar: {
-      show: false
-    },
-    stacked: true
-  },
-  colors: ['#3B82F6', '#EF4444', '#F59E0B', '#10B981'],
-  plotOptions: {
-    bar: {
-      borderRadius: 4,
-      columnWidth: '70%',
-      distributed: false
-    }
-  },
+  chart: { type: 'bar', toolbar: { show: false }, stacked: true },
+  colors: ['#3B82F6', '#F59E0B', '#10B981'],
+  plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
   xaxis: {
     categories: props.monthlyOverviewData.categories || [],
-    labels: {
-      style: {
-        colors: '#6B7280'
-      }
-    }
+    labels: { style: { colors: '#94A3B8', fontSize: '10px' } }
   },
-  yaxis: {
-    labels: {
-      style: {
-        colors: '#6B7280'
-      },
-      formatter: function(value) {
-        return '$' + value.toLocaleString();
-      }
-    }
-  },
-  tooltip: {
-    y: {
-      formatter: function(value) {
-        return '$' + Number(value).toLocaleString();
-      }
-    }
-  },
-  dataLabels: {
-    enabled: false
-  },
-  legend: {
-    position: 'top',
-    horizontalAlign: 'right'
-  }
-}));
+  grid: { show: false },
+  legend: { show: true, position: 'top', horizontalAlign: 'right' },
+  dataLabels: { enabled: false }
+}))
 
 const monthlyOverviewChartSeries = computed(() => [
-  {
-    name: 'Salary',
-    data: props.monthlyOverviewData.salary || []
-  },
-  {
-    name: 'Expenses',
-    data: props.monthlyOverviewData.expenses || []
-  },
-  {
-    name: 'Purchases',
-    data: props.monthlyOverviewData.purchases || []
-  },
-  {
-    name: 'Revenue',
-    data: props.monthlyOverviewData.revenue || []
-  }
-]);
-
-// Initialize
-onMounted(() => {
-  // Any initialization logic here
-})
+  { name: 'Salary', data: props.monthlyOverviewData.salary || [] },
+  { name: 'Purchases', data: props.monthlyOverviewData.purchases || [] },
+  { name: 'Revenue', data: props.monthlyOverviewData.revenue || [] }
+])
 </script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>
 
 <style scoped>
 /* Additional styles if needed */
