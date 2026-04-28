@@ -51,7 +51,7 @@
       </transition>
 
       <!-- Main Metrics Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-10">
         <!-- Revenue -->
         <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group">
           <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
@@ -79,6 +79,15 @@
           <h3 class="text-xl font-semibold text-gray-900 mt-1">৳{{ Number(gross_profit).toLocaleString() }}</h3>
         </div>
 
+        <!-- Expenses -->
+        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group">
+          <div class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+            <Wallet size="20" />
+          </div>
+          <p class="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Total Expenses</p>
+          <h3 class="text-xl font-semibold text-gray-900 mt-1 uppercase">৳{{ Number(expenses).toLocaleString() }}</h3>
+        </div>
+
 
 
         <!-- Net Profit -->
@@ -102,6 +111,10 @@
               <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
                 <span class="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Revenue</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                <span class="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Expense</span>
               </div>
             </div>
           </div>
@@ -256,7 +269,7 @@ const chartOptions = computed(() => ({
     toolbar: { show: false },
     fontFamily: 'inherit'
   },
-  colors: ['#10B981'],
+  colors: ['#10B981', '#F43F5E'],
   dataLabels: { enabled: false },
   stroke: { curve: 'smooth', width: 2 },
   fill: {
@@ -285,13 +298,14 @@ const chartOptions = computed(() => ({
 }))
 
 const chartSeries = computed(() => [
-  { name: 'Revenue', data: props.chartData.revenue || [] }
+  { name: 'Revenue', data: props.chartData.revenue || [] },
+  { name: 'Expenses', data: props.chartData.expenses || [] }
 ])
 
 const pieChartOptions = computed(() => ({
   chart: { type: 'donut' },
-  colors: ['#10B981', '#6366F1', '#F59E0B'],
-  labels: ['Revenue', 'Profit', 'Other'],
+  colors: ['#10B981', '#F43F5E', '#6366F1', '#F59E0B'],
+  labels: ['Revenue', 'Expenses', 'Profit', 'Other'],
   plotOptions: {
     pie: {
       donut: {
@@ -311,9 +325,10 @@ const pieChartOptions = computed(() => ({
 
 const pieChartSeries = computed(() => {
   const rev = Number(props.revenue) || 0
+  const exp = Number(props.expenses) || 0
   const prf = Number(props.profit) || 0
-  const oth = Math.max(0, rev - prf)
-  return [rev, prf, oth]
+  const oth = Math.max(0, rev - exp - prf)
+  return [rev, exp, prf, oth]
 })
 
 const ordersChartOptions = computed(() => ({
@@ -333,7 +348,7 @@ const ordersChartSeries = computed(() => [{ name: 'Orders', data: props.ordersCh
 
 const monthlyOverviewChartOptions = computed(() => ({
   chart: { type: 'bar', toolbar: { show: false }, stacked: true },
-  colors: ['#3B82F6', '#F59E0B', '#10B981'],
+  colors: ['#3B82F6', '#F43F5E', '#F59E0B', '#10B981'],
   plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
   xaxis: {
     categories: props.monthlyOverviewData.categories || [],
@@ -346,6 +361,7 @@ const monthlyOverviewChartOptions = computed(() => ({
 
 const monthlyOverviewChartSeries = computed(() => [
   { name: 'Salary', data: props.monthlyOverviewData.salary || [] },
+  { name: 'Expenses', data: props.monthlyOverviewData.expenses || [] },
   { name: 'Purchases', data: props.monthlyOverviewData.purchases || [] },
   { name: 'Revenue', data: props.monthlyOverviewData.revenue || [] }
 ])

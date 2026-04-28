@@ -43,16 +43,15 @@ class FinancialReportService implements FinancialReportServiceInterface
         $salaries = EmployeeSalary::whereBetween('paid_date', [$boundaries[0], $boundaries[1]])
             ->sum('amount');
 
-        // 4. Hidden Costs (Shipping loss, Packaging, Gateway fees)
-        $hiddenCosts = Order::where(function($q) {
+        // 4. Return Revenue
+        $returnCharges = Order::where(function($q) {
                 $q->where('payment_status', 'paid')->orWhere('payment_status', 'partially_paid');
             })
             ->where($dateRange)
-            ->selectRaw('SUM(actual_courier_fee + gateway_fee + packaging_cost) as total_hidden_costs, SUM(return_charge) as total_return_charges')
-            ->first();
+            ->sum('return_charge');
 
-        $totalOperationalExpenses = $generalExpenses + $salaries + (float)($hiddenCosts->total_hidden_costs ?? 0);
-        $totalReturnRevenue = (float)($hiddenCosts->total_return_charges ?? 0);
+        $totalOperationalExpenses = $generalExpenses + $salaries;
+        $totalReturnRevenue = (float)$returnCharges;
 
         // 5. Profits
         $grossProfit = $revenue - $cogs;
