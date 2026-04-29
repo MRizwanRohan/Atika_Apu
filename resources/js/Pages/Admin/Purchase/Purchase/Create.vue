@@ -114,7 +114,16 @@
               </div>
 
               <div class="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
-                <div class="flex justify-between text-sm">
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status *</label>
+                  <select v-model="form.status" class="w-full rounded-xl border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-sm focus:ring-blue-500">
+                    <option value="received_no_stock">Received (No Stock Update)</option>
+                    <option value="received">Received (Updates Stock)</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+
+                <div class="flex justify-between text-sm pt-2">
                    <span class="text-gray-500">Subtotal</span>
                    <span class="font-medium text-gray-900 dark:text-white">৳{{ subtotal.toFixed(2) }}</span>
                 </div>
@@ -173,6 +182,7 @@ const form = reactive({
   supplier_id: '',
   reference_no: '',
   purchase_date: new Date().toISOString().substr(0, 10),
+  status: 'received_no_stock',
   shipping_cost: 0,
   paid_amount: 0,
   note: '',

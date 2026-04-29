@@ -16,7 +16,10 @@
              <Printer size="18" class="mr-2" /> Print Invoice
            </button>
            <button v-if="purchase.status === 'pending'" @click="receivePurchase" class="btn btn-success flex items-center">
-             <CheckCircle size="18" class="mr-2" /> Mark as Received
+             <CheckCircle size="18" class="mr-2" /> Receive Item
+           </button>
+           <button v-if="purchase.status === 'received_no_stock'" @click="updateStock" class="btn flex items-center bg-orange-500 text-white hover:bg-orange-600">
+             <PackagePlus size="18" class="mr-2" /> Update Stock
            </button>
         </div>
       </div>
@@ -73,9 +76,11 @@
                   <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</div>
                   <span :class="[
                     'px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight',
-                    purchase.status === 'pending' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
+                    purchase.status === 'pending' ? 'bg-blue-50 text-blue-700' :
+                    purchase.status === 'received_no_stock' ? 'bg-orange-50 text-orange-700' :
+                    'bg-emerald-50 text-emerald-700'
                   ]">
-                    {{ purchase.status }}
+                    {{ statusLabels[purchase.status] || purchase.status }}
                   </span>
                </div>
                <div>
@@ -198,13 +203,19 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { MoveLeft, Package, FileText, Calendar, CheckCircle, Printer } from 'lucide-vue-next';
+import { MoveLeft, Package, FileText, Calendar, CheckCircle, Printer, PackagePlus } from 'lucide-vue-next';
 import { toast } from "@steveyuowo/vue-hot-toast";
 import { onMounted } from 'vue';
 
 const props = defineProps({
   purchase: Object,
 });
+
+const statusLabels = {
+  'pending': 'Pending',
+  'received': 'Received',
+  'received_no_stock': 'Received (No Stock)',
+};
 
 const formatDate = (date) => {
   if (!date) return 'N/A';
@@ -216,9 +227,17 @@ const formatVariation = (v) => {
 };
 
 const receivePurchase = () => {
-    if (confirm('Verify stock receipt?')) {
+    if (confirm('Verify stock receipt? Stock and costs will be updated.')) {
         router.post(route('admin.purchases.receive', props.purchase.id), {}, {
-            onSuccess: () => toast.success('Success!')
+            onSuccess: () => toast.success('Purchase received and stock updated!')
+        });
+    }
+};
+
+const updateStock = () => {
+    if (confirm('This will update product stock for all items in this purchase. Continue?')) {
+        router.post(route('admin.purchases.receive', props.purchase.id), {}, {
+            onSuccess: () => toast.success('Stock updated successfully!')
         });
     }
 };

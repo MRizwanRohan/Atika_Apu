@@ -17,7 +17,7 @@ class StorePurchaseRequest extends FormRequest
             'supplier_id' => 'required|exists:suppliers,id',
             'reference_no' => 'nullable|string|unique:purchases,reference_no',
             'purchase_date' => 'required|date',
-            'status' => 'nullable|in:pending,received',
+            'status' => 'nullable|in:pending,received,received_no_stock',
             'shipping_cost' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
             'note' => 'nullable|string',

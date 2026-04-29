@@ -82,19 +82,16 @@
                     'inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest',
                     statusClasses[purchase.status] || 'bg-gray-100 text-gray-800'
                   ]">
-                    {{ purchase.status === 'pending' ? 'Pending' : 'Received' }}
+                    {{ statusLabels[purchase.status] || purchase.status }}
                   </span>
                 </td>
                 <td class="px-6 py-5 text-right space-x-1">
-                  <button v-if="purchase.status === 'pending'" @click="receivePurchase(purchase)" class="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                  <!-- <button v-if="purchase.status === 'pending'" @click="receivePurchase(purchase)" class="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
                     Receive Item
-                  </button>
+                  </button> -->
                   <Link :href="route('admin.purchases.show', purchase.id)" class="p-2.5 text-gray-400 hover:bg-blue-500 hover:text-white rounded-xl transition-all inline-block">
                     <Eye size="16" />
                   </Link>
-                  <!-- <button @click="printPurchase(purchase.id)" class="p-2.5 text-gray-400 hover:bg-gray-900 hover:text-white rounded-xl transition-all inline-block">
-                    <Printer size="16" />
-                  </button> -->
                 </td>
               </tr>
               <tr v-if="purchases.data.length === 0">
@@ -138,7 +135,14 @@ const search = ref(props.filters.search || '');
 const statusClasses = {
   'pending': 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
   'received': 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400',
+  'received_no_stock': 'bg-orange-50 text-orange-600 border border-orange-100 dark:bg-orange-900/30 dark:text-orange-400',
   'Cancelled': 'bg-red-50 text-red-600 border border-red-100 dark:bg-red-900/30 dark:text-red-400',
+};
+
+const statusLabels = {
+  'pending': 'Pending',
+  'received': 'Received',
+  'received_no_stock': 'Received (No Stock)',
 };
 
 const formatDate = (date) => {

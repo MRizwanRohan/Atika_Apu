@@ -1604,22 +1604,21 @@ const submit = () => {
                                         </div>
                                     </div>
 
-                                    <!-- Stock input disabled to prevent double counting. Stock should be managed via Purchases. -->
                                     <div v-if="form.type === 'simple'">
                                         <label for="stock" class="block text-sm font-semibold text-gray-700 mb-2">Total Stock Quantity</label>
-                                        <div class="relative">
-                                            <input
-                                                id="stock"
-                                                :value="form.stock"
-                                                disabled
-                                                type="number"
-                                                class="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-500 cursor-not-allowed text-lg font-semibold"
-                                            />
-                                            <div class="mt-2 p-2 bg-blue-50 text-blue-700 text-xs rounded-lg flex items-center gap-2">
-                                                <Zap class="w-3 h-3" />
-                                                Stock is automatically managed via Purchase records.
-                                            </div>
+                                        <input
+                                            v-if="!form.is_pre_order"
+                                            id="stock"
+                                            v-model="form.stock"
+                                            type="number"
+                                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all bg-gray-50/50 focus:bg-white text-lg font-semibold"
+                                            placeholder="Enter quantity"
+                                        />
+                                        <div v-else class="w-full px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl text-emerald-700 border-2 border-emerald-200 flex items-center font-semibold">
+                                            <TruckIcon class="h-5 w-5 mr-2" />
+                                            Unlimited (Pre-Order)
                                         </div>
+                                        <p v-if="form.errors.stock" class="mt-2 text-sm text-red-600">{{ form.errors.stock }}</p>
                                     </div>
 
                                     <div v-else>
@@ -1733,8 +1732,6 @@ const submit = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <!-- Bulk Stock Disabled -->
-                                        <!-- 
                                         <div>
                                             <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Bulk Stock</label>
                                             <div class="flex rounded-xl overflow-hidden border-2 border-gray-200 focus-within:border-indigo-500 transition-colors">
@@ -1752,8 +1749,7 @@ const submit = () => {
                                                     Apply
                                                 </button>
                                             </div>
-                                        </div> 
-                                        -->
+                                        </div>
 
                                         <div>
                                             <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Bulk Previous Price</label>
@@ -1889,13 +1885,13 @@ const submit = () => {
                                                 <div>
                                                     <label class="flex items-center gap-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
                                                         <BoxIcon class="w-3.5 h-3.5 text-blue-500" />
-                                                        Stock (Auto)
+                                                        Stock
                                                     </label>
                                                     <input
-                                                        :value="variation.stock"
-                                                        disabled
+                                                        v-model="variation.stock"
                                                         type="number"
-                                                        class="w-full py-3 px-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-500 cursor-not-allowed"
+                                                        class="w-full py-3 px-4 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                                                        placeholder="0"
                                                     />
                                                 </div>
                                             </div>

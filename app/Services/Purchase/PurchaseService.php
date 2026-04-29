@@ -45,9 +45,9 @@ class PurchaseService implements PurchaseServiceInterface
                 $data['reference_no'] = 'PUR-' . date('Ymd') . '-' . substr(str_shuffle("0123456789ABCDEF"), 0, 4);
             }
 
-            // Default status to pending
+            // Default status to received_no_stock (recorded but no stock update)
             if (empty($data['status'])) {
-                $data['status'] = 'pending';
+                $data['status'] = 'received_no_stock';
             }
 
             // Create purchase
@@ -74,10 +74,11 @@ class PurchaseService implements PurchaseServiceInterface
                 ]);
             }
 
-            // If it's already received on creation, process stock and costs
+            // Only update stock when status is explicitly 'received'
             if ($purchase->status === 'received') {
                 $this->processReceivedPurchase($purchase);
             }
+            // 'received_no_stock' = purchase recorded/received, but stock NOT updated
 
             DB::commit();
             return $purchase;
@@ -93,7 +94,7 @@ class PurchaseService implements PurchaseServiceInterface
         try {
             $purchase = $this->purchaseRepository->find($id);
 
-            // Prevent updating if already received (business logic)
+            // Prevent updating if already received with stock update (business logic)
             if ($purchase->status === 'received') {
                 throw new Exception("Cannot update a purchase that has already been received.");
             }
@@ -129,10 +130,11 @@ class PurchaseService implements PurchaseServiceInterface
                 ]);
             }
 
-            // If changing status to received, process stock
+            // Only process stock if explicitly marked as 'received'
             if (isset($data['status']) && $data['status'] === 'received') {
                 $this->processReceivedPurchase($purchase);
             }
+            // 'received_no_stock' skips stock update intentionally
 
             DB::commit();
             return $purchase;
@@ -151,6 +153,7 @@ class PurchaseService implements PurchaseServiceInterface
             if ($purchase->status === 'received') {
                 throw new Exception("Purchase is already marked as received.");
             }
+            // Allow 'received_no_stock' to be re-processed and update stock via this method
 
             $purchase = $this->purchaseRepository->updatePurchaseStatus($id, 'received');
             $this->processReceivedPurchase($purchase);
