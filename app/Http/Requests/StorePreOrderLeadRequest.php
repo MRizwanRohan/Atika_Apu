@@ -23,7 +23,7 @@ class StorePreOrderLeadRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'product_interest' => 'required|string|max:255',
             'message' => 'nullable|string|max:1000',

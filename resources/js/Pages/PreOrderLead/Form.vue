@@ -46,35 +46,19 @@
               <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
             </div>
 
-            <!-- Email & Phone -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
-                <input
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  required
-                  placeholder="Enter Email"
-                  class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-500': errors.email }"
-                />
-                <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
-              </div>
-
-              <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label>
-                <input
-                  id="phone"
-                  v-model="form.phone"
-                  type="tel"
-                  required
-                  placeholder="Enter Phone Number"
-                  class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-500': errors.phone }"
-                />
-                <p v-if="errors.phone" class="mt-1 text-sm text-red-600">{{ errors.phone }}</p>
-              </div>
+            <!-- Phone -->
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label>
+              <input
+                id="phone"
+                v-model="form.phone"
+                type="tel"
+                required
+                placeholder="Enter Phone Number"
+                class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-500': errors.phone }"
+              />
+              <p v-if="errors.phone" class="mt-1 text-sm text-red-600">{{ errors.phone }}</p>
             </div>
 
             <!-- Address -->
@@ -179,13 +163,10 @@
 import FrontendLayout from '@/Layouts/FrontendLayout.vue'
 import { ref, reactive } from 'vue'
 import { router, Link, Head } from '@inertiajs/vue3'
-import { useToast } from '@/Composables/useToast'
 
-const { success, error } = useToast()
 
 const form = reactive({
   name: '',
-  email: '',
   phone: '',
   product_interest: '',
   address: '',
@@ -249,7 +230,6 @@ const submitForm = () => {
 
   const formData = new FormData()
   formData.append('name', form.name)
-  formData.append('email', form.email)
   formData.append('phone', form.phone)
   formData.append('product_interest', form.product_interest)
   formData.append('address', form.address)
@@ -259,11 +239,9 @@ const submitForm = () => {
   }
 
   router.post('/pre-order-lead', formData, {
-    onSuccess: (page) => {
-      success(page.props.flash?.success || 'Your pre-order lead has been submitted successfully!')
+    onSuccess: () => {
       // Reset form
       form.name = ''
-      form.email = ''
       form.phone = ''
       form.product_interest = ''
       form.address = ''
@@ -277,7 +255,6 @@ const submitForm = () => {
     },
     onError: (err) => {
       errors.value = err
-      error('Failed to submit lead. Please check the form and try again.')
     },
     onFinish: () => {
       loading.value = false

@@ -5,7 +5,7 @@ namespace App\DTOs;
 class PreOrderLeadDTO
 {
     public string $name;
-    public string $email;
+    public ?string $email;
     public ?string $phone;
     public string $productInterest;
     public ?string $message;
@@ -14,7 +14,7 @@ class PreOrderLeadDTO
 
     public function __construct(
         string $name,
-        string $email,
+        ?string $email,
         ?string $phone,
         string $productInterest,
         ?string $message,
@@ -34,7 +34,7 @@ class PreOrderLeadDTO
     {
         return new self(
             $data['name'],
-            $data['email'],
+            $data['email'] ?? null,
             $data['phone'] ?? null,
             $data['product_interest'],
             $data['message'] ?? null,

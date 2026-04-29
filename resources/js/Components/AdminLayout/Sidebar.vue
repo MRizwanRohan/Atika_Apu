@@ -283,12 +283,12 @@ const navigationItems = [
         icon: ShoppingCart,
         permission: "admin.orders.index",
     },
-    // {
-    //     label: "Pre-Order Leads",
-    //     route: "admin.leads.index",
-    //     icon: UserRoundPlus,
-    //     permission: "admin.leads.index",
-    // },
+    {
+        label: "Pre-Order Leads",
+        route: "admin.leads.index",
+        icon: UserRoundPlus,
+        permission: "admin.leads.index",
+    },
     {
         label: "POS",
         route: "admin.pos.index",
