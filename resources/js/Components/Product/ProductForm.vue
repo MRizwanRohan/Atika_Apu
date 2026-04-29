@@ -175,6 +175,7 @@ const form = useForm({
     product_tags: [],
     specification: [],
     stock: "",
+    fake_sold_count: 0,
     remarks: "",
     meta_title: "",
     meta_description: "",
@@ -231,6 +232,7 @@ const initializeForm = () => {
         form.meta_title = props.product.meta_title || "";
         form.meta_description = props.product.meta_description || "";
         form.stock = props.product.stock || "";
+        form.fake_sold_count = props.product.fake_sold_count || 0;
 
         form.product_tags = parseJsonField(props.product.product_tags);
         form.specification = parseJsonField(props.product.specification);
@@ -1638,6 +1640,36 @@ const submit = () => {
                                             <Check class="w-4 h-4 text-emerald-500" />
                                             Automatically calculated from all variation stocks
                                         </p>
+                                    </div>
+
+                                    <!-- Fake Sold Count -->
+                                    <div class="mt-8 pt-8 border-t border-gray-100">
+                                        <div class="flex items-center gap-3 mb-6">
+                                            <div class="p-2.5 bg-blue-50 rounded-xl">
+                                                <Zap class="w-5 h-5 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-gray-900">Storefront Sales Booster</h4>
+                                                <p class="text-sm text-gray-500">Add initial sales count to show on the product page.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label for="fake_sold_count" class="block text-sm font-semibold text-gray-700 mb-2">Initial Sales Count</label>
+                                                <div class="relative">
+                                                    <input
+                                                        id="fake_sold_count"
+                                                        v-model="form.fake_sold_count"
+                                                        type="number"
+                                                        min="0"
+                                                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all bg-gray-50/50 focus:bg-white text-lg font-semibold"
+                                                        placeholder="e.g. 100"
+                                                    />
+                                                </div>
+                                                <p v-if="form.errors.fake_sold_count" class="mt-2 text-sm text-red-600">{{ form.errors.fake_sold_count }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

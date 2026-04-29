@@ -33,6 +33,7 @@ class Product extends Model
         'specification',
         'stock',
         'sold_stock',
+        'fake_sold_count',
         'view_count',
         'is_free_delivery',
         'is_pre_order',

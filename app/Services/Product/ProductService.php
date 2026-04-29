@@ -813,6 +813,7 @@ class ProductService
       'product_tags' => $request->product_tags ?? [],
       'specification' => $request->specification ?? [],
       'stock' => $totalStock,
+      'fake_sold_count' => $request->fake_sold_count ?? 0,
       'is_free_delivery' => $request->is_free_delivery ?? 0,
       'remarks' => $request->remarks,
       'meta_title' => $request->meta_title,

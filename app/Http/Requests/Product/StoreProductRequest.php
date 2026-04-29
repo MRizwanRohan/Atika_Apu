@@ -83,6 +83,7 @@ class StoreProductRequest extends FormRequest
             'product_tags.*' => 'string|max:50',
             'specification' => 'nullable|array',
             'stock' => 'required_if:type,simple|integer|min:0',
+            'fake_sold_count' => 'nullable|integer|min:0',
             'is_free_delivery' => 'nullable|boolean',
             'remarks' => 'nullable|in:New,Popular,Trending,Hot,Special',
             'meta_title' => 'nullable|string|max:255',

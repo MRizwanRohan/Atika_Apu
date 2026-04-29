@@ -588,7 +588,7 @@ watch(
             </div>
             
             <div class="flex items-center gap-2 md:text-sm text-xs text-gray-400">
-                <span class="font-medium text-gray-400">{{ product.sold_stock || 0 }} Sold</span>
+                <span class="font-medium text-gray-400">{{ (product.sold_stock || 0) + (product.fake_sold_count || 0) }} Sold</span>
                 <span>•</span>
                 <div class="flex items-center gap-1">
                     <svg class="w-4 h-4 text-orange-400 fill-current" viewBox="0 0 20 20">

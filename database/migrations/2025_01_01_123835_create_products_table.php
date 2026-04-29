@@ -34,6 +34,7 @@ return new class extends Migration
             $table->json('specification')->nullable();
             $table->integer('stock')->default(0);
             $table->integer('sold_stock')->nullable()->default(0);
+            $table->integer('fake_sold_count')->default(0);
             $table->integer('view_count')->default(0);
             $table->boolean('is_free_delivery')->default(0);
             $table->boolean('is_pre_order')->default(0);

@@ -103,6 +103,7 @@ class UpdateProductRequest extends FormRequest
             'product_tags.*' => 'string|max:255',
             'specification' => 'nullable|array',
             'stock' => 'nullable|integer|min:0',
+            'fake_sold_count' => 'nullable|integer|min:0',
             'is_free_delivery' => 'nullable|boolean',
             'remarks' => 'nullable|in:New,Popular,Trending,Hot,Special',
             'meta_title' => 'nullable|string|max:255',
