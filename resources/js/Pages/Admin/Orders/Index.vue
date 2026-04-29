@@ -1150,9 +1150,11 @@ const sendToSteadfastSingle = async (order) => {
                                     <div
                                         class="text-gray-600 flex items-center flex-wrap gap-1 text-xs mt-1"
                                     >
-                                        <Phone
+                                        <a class="underline text-blue-500 flex gap-1" :href="`tel:${order.customer?.phone}`">
+                                            <Phone
                                             class="w-3 h-3 text-gray-500"
                                         /><span>{{ order.customer?.phone }}</span>
+                                        </a>
                                         <span
                                             v-if="order.duplicate_percentage > 0"
                                             class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200"
@@ -1703,19 +1705,19 @@ const sendToSteadfastSingle = async (order) => {
                                 {{ order.customer.name.charAt(0).toUpperCase() }}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5 text-gray-700 text-[12px] font-bold">
+                                <a :href="`tel:${order.customer.phone}`" class="flex items-center gap-1.5 text-blue-500 underline text-[12px] font-bold">
                                     <Phone class="w-3.5 h-3.5" />
                                     <span>{{ order.customer.phone }}</span>
-                                </div>
+                                </a>
                                 <div class="flex items-start gap-1.5 mt-1 text-gray-500 text-[11px] font-medium leading-normal">
                                     <MapPin class="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                                    <span class="line-clamp-2 uppercase">{{ order.customer.address }}</span>
+                                    <span class="line-clamp-2">{{ order.customer.address }}</span>
                                 </div>
                             </div>
                             <!-- Courier Mini Card -->
                             <div v-if="order.is_courier" class="bg-blue-50/80 px-2 py-1.5 rounded-xl flex flex-col items-center gap-1 border border-blue-100 min-w-[65px]">
                                 <Truck class="w-3.5 h-3.5 text-blue-600" />
-                                <span class="text-[8px] font-black text-blue-700 uppercase tracking-tighter line-clamp-1">{{ order.courier_name }}</span>
+                                <span class="text-[8px] font-black text-blue-700 tracking-tighter line-clamp-1">{{ order.courier_name }}</span>
                                 <a 
                                     v-if="order.tracking_number"
                                     :href="order.courier_name === 'pathao' ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}` : `https://steadfast.com.bd/t/${order.tracking_number}`"
@@ -1741,7 +1743,7 @@ const sendToSteadfastSingle = async (order) => {
                                     </span>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-[11px] font-bold text-gray-800 line-clamp-1 uppercase">{{ item.product.name }}</h4>
+                                    <h4 class="text-[11px] font-bold text-gray-800 line-clamp-1">{{ item.product.name }}</h4>
                                     <div class="text-[10px] text-blue-600 font-black mt-0.5">
                                         ৳{{ item.price }}
                                         <span v-if="item.variation" class="text-gray-400 font-normal ml-1 border-l border-gray-300 pl-1 uppercase">

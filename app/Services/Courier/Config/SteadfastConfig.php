@@ -9,19 +9,32 @@ class SteadfastConfig implements CourierConfigInterface
 {
     private $settings;
 
+    private function getSettings()
+    {
+        if ($this->settings === null) {
+            try {
+                $this->settings = CourierSetting::first() ?? new CourierSetting();
+            } catch (\Exception $e) {
+                $this->settings = new CourierSetting();
+            }
+        }
+
+        return $this->settings;
+    }
+
     public function __construct()
     {
-        $this->settings = CourierSetting::first();
+        // Settings are lazily loaded
     }
 
     public function getApiKey(): string
     {
-        return $this->settings->steadfast_api_key ?? '';
+        return $this->getSettings()->steadfast_api_key ?? '';
     }
 
     public function getSecretKey(): string
     {
-        return $this->settings->steadfast_secret_key ?? '';
+        return $this->getSettings()->steadfast_secret_key ?? '';
     }
 
     public function getBaseUrl(): string
