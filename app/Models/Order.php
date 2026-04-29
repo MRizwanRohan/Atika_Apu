@@ -18,6 +18,7 @@ class Order extends Model
         'session_id',
         'cart_id',
         'status',
+        'source',
         'customer_email',
         'customer_phone',
         'customer_name',

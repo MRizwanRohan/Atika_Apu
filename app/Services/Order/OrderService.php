@@ -209,6 +209,7 @@ class OrderService implements OrderInterface
             'shipping_cost' => $validatedData['shipping_cost'] ?? 0,
             'payment_method' => $validatedData['payment_method'],
             'status' => $validatedData['status'] ?? 'pending',
+            'source' => $validatedData['source'] ?? 'website',
             'total' => 0, // Will be calculated later
             'subtotal' => 0, // Will be calculated later
             // Persist POS discount fields
@@ -245,6 +246,7 @@ class OrderService implements OrderInterface
             'customer_phone' => ['required', 'string', 'max:255'],
             'landing_order' => ['nullable', 'boolean'],
             'status' => ['nullable', 'in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed'],
+            'source' => ['nullable', 'string', 'in:website,facebook,whatsapp,phone_call,telegram,tiktok,manual'],
             'customer_name' => ['required', 'string', 'max:255'],
             'shipping_address' => ['required', 'string', 'max:500'],
             'area' => ['nullable', 'string', 'max:255'],
@@ -675,6 +677,8 @@ class OrderService implements OrderInterface
             'order_number' => $params['filters']['order_number'] ?? null,
             'min_total' => $params['filters']['min_total'] ?? null,
             'max_total' => $params['filters']['max_total'] ?? null,
+            'source' => $params['filters']['source'] ?? null,
+            'delivery_status' => $params['filters']['delivery_status'] ?? null,
         ];
 
         return $this->orderRepository->getPaginatedOrders(
@@ -686,27 +690,61 @@ class OrderService implements OrderInterface
     }
 
 
-    public function getStatusCounts()
+    public function getStatusCounts(array $filters = [])
     {
+        $applyDateFilters = function($query) use ($filters) {
+            if (!empty($filters['date_from'])) {
+                $query->whereDate('created_at', '>=', $filters['date_from']);
+            }
+            if (!empty($filters['date_to'])) {
+                $query->whereDate('created_at', '<=', $filters['date_to']);
+            }
+        };
+
         $statusCounts = Order::query()
             ->select('status', DB::raw('count(*) as count'), DB::raw('SUM(total) as sales'))
+            ->where($applyDateFilters)
             ->groupBy('status')
             ->get()
             ->toArray();
 
-            // ❌ incomplete বাদ দিয়ে total count
+        // Total orders (filtered by date)
         $totalOrderCount = Order::query()
             ->where('status', '!=', 'incomplete')
+            ->where($applyDateFilters)
             ->count();
-        $totalSales = Order::query()->sum('total');
+            
+        $totalSales = Order::query()
+            ->where($applyDateFilters)
+            ->sum('total');
+            
         $statusCounts[] = ['status' => 'total', 'count' => $totalOrderCount, 'sales' => $totalSales];
 
-        // Add today's statistics
-        $todayOrderCount = Order::query()->whereDate('created_at', today())->count();
-        $todaySales = Order::query()->whereDate('created_at', today())->sum('total');
+        // Today's stats (Asia/Dhaka)
+        $today = \Carbon\Carbon::today('Asia/Dhaka');
+        $todayOrderCount = Order::query()->whereDate('created_at', $today)->count();
+        $todaySales = Order::query()->whereDate('created_at', $today)->sum('total');
         $statusCounts[] = ['status' => 'today', 'count' => $todayOrderCount, 'sales' => $todaySales];
 
-        return $statusCounts;
+        // Source statistics (filtered by date)
+        $sourceCounts = Order::query()
+            ->select('source', DB::raw('count(*) as count'))
+            ->where('status', '!=', 'incomplete')
+            ->where($applyDateFilters)
+            ->groupBy('source')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'source' => $item->source ?: 'website',
+                    'count' => (int) $item->count
+                ];
+            })
+            ->toArray();
+
+        return [
+            'statuses' => $statusCounts,
+            'sources' => $sourceCounts
+        ];
     }
 
 
@@ -820,6 +858,7 @@ class OrderService implements OrderInterface
             'pos_discount' => ['nullable', 'numeric', 'min:0'],
             'discount_type' => ['nullable', 'in:percentage,fixed'],
             'status' => ['nullable', 'in:pending,processing,completed,cancelled,incomplete,on_hold,confirmed'],
+            'source' => ['nullable', 'string', 'in:website,facebook,whatsapp,phone_call,telegram,tiktok,manual'],
             'payment_status' => ['nullable', 'in:unpaid,paid,refunded'],
             'items' => ['nullable', 'array'],
             'items.*.id' => ['required_with:items', 'integer'],
@@ -857,7 +896,8 @@ class OrderService implements OrderInterface
             'payment_status',
             'area',
             'pos_discount',
-            'discount_type'
+            'discount_type',
+            'source'
         ];
 
         $updates = [];

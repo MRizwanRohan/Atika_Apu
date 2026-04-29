@@ -14,7 +14,7 @@ interface OrderInterface
 
     public function getOrders(array $params = []): LengthAwarePaginator;
 
-    public function getStatusCounts();
+    public function getStatusCounts(array $filters = []);
 
     // updateOrderStatus
     public function updateOrderStatus(int $orderId, string $status): Order;

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('session_id')->nullable();
             $table->enum('status', ['pending', 'processing', 'cancelled', 'shipped', 'delivered', 'returned', 'incomplete', 'on_hold', 'confirmed'])->default('pending');
+            $table->string('source')->default('website');
 
             $table->string('customer_email')->nullable();
             $table->string('customer_phone')->nullable();

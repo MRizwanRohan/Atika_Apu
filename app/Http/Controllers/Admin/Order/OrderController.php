@@ -56,6 +56,7 @@ class OrderController extends Controller
             'order_number' => $request->input('order_number'),
             'min_total' => $request->input('min_total'),
             'max_total' => $request->input('max_total'),
+            'source' => $request->input('source'),
         ];
 
         $perPage = (int) $request->input('per_page', 10);
@@ -78,7 +79,7 @@ class OrderController extends Controller
         // ]);
 
 
-        $statusCounts = $this->orderService->getStatusCounts();
+        $statusCounts = $this->orderService->getStatusCounts($filters);
 
         // Collect IDs of current page orders that already have a sent Purchase event
         $orderIds = collect($orders->items())->pluck('id');
@@ -349,6 +350,7 @@ class OrderController extends Controller
             'shipping_cost' => 'nullable|numeric|min:0',
             'area' => 'nullable|in:inside_dhaka,outside_dhaka',
             'status' => 'nullable|in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed',
+            'source' => 'nullable|in:website,facebook,whatsapp,phone_call,telegram,tiktok,manual',
         ]);
 
         $order = Order::findOrFail($id);
@@ -373,6 +375,7 @@ class OrderController extends Controller
             'discount_type' => $validated['discount_type'] ?? 'fixed',
             'shipping_cost' => $validated['shipping_cost'] ?? $order->shipping_cost,
             'area' => $validated['area'] ?? $order->area,
+            'source' => $validated['source'] ?? $order->source,
         ]);
 
 

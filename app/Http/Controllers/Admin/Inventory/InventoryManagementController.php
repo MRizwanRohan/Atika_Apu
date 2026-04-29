@@ -31,6 +31,8 @@ public function generateReport(Request $request)
         'min_total' => $request->input('min_total'),
         'max_total' => $request->input('max_total'),
         'order_number' => $request->input('order_number'),
+        'source' => $request->input('source'),
+        'delivery_status' => $request->input('delivery_status'),
     ];
 
     $perPage = (int) $request->input('per_page', 10);
@@ -60,6 +62,8 @@ public function generateReport(Request $request)
         ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
         ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
         ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
+        ->when($filters['source'], fn($q) => $q->where('source', $filters['source']))
+        ->when($filters['delivery_status'], fn($q) => $q->where('delivery_status', $filters['delivery_status']))
         ->sum('total');
 
     // 2. Extract Inventory Stats (Cached for 10 minutes)
@@ -122,9 +126,28 @@ public function generateReport(Request $request)
 
     $orders->withPath(route('admin.reports.generateReport'));
 
+    // 3. Source-wise performance breakdown (Filtered by Date)
+    $sourceStats = \App\Models\Order::query()
+        ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
+        ->when($filters['date_to'], fn($q) => $q->whereDate('created_at', '<=', $filters['date_to']))
+        ->selectRaw("
+            CASE 
+                WHEN source IS NULL OR source = '' THEN 'website'
+                ELSE source 
+            END as source_name,
+            SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_count,
+            SUM(CASE WHEN status = 'delivered' THEN total ELSE 0 END) as delivered_revenue,
+            SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count,
+            SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) as returned_count,
+            COUNT(*) as total_orders
+        ")
+        ->groupBy('source_name')
+        ->get();
+
     return Inertia::render('Admin/Reports/Index', array_merge([
         'orders' => $orders,
         'grandTotalRevenue' => (float) $grandTotalRevenue,
+        'sourceStats' => $sourceStats,
         'overallSellThroughRate' => ($report['totalStock'] + $report['totalSold']) > 0 
             ? ($report['totalSold'] / ($report['totalStock'] + $report['totalSold'])) * 100 
             : 0,
@@ -142,6 +165,8 @@ public function exportOrders(Request $request)
         'min_total' => $request->input('min_total'),
         'max_total' => $request->input('max_total'),
         'order_number' => $request->input('order_number'),
+        'source' => $request->input('source'),
+        'delivery_status' => $request->input('delivery_status'),
     ];
 
     $orders = \App\Models\Order::query()
@@ -159,6 +184,8 @@ public function exportOrders(Request $request)
         ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
         ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
         ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
+        ->when($filters['source'], fn($q) => $q->where('source', $filters['source']))
+        ->when($filters['delivery_status'], fn($q) => $q->where('delivery_status', $filters['delivery_status']))
         ->latest()
         ->get();
 
@@ -209,6 +236,8 @@ public function exportOrdersPDF(Request $request)
         'min_total' => $request->input('min_total'),
         'max_total' => $request->input('max_total'),
         'order_number' => $request->input('order_number'),
+        'source' => $request->input('source'),
+        'delivery_status' => $request->input('delivery_status'),
     ];
 
     $orders = \App\Models\Order::query()
@@ -226,6 +255,8 @@ public function exportOrdersPDF(Request $request)
         ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
         ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
         ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
+        ->when($filters['source'], fn($q) => $q->where('source', $filters['source']))
+        ->when($filters['delivery_status'], fn($q) => $q->where('delivery_status', $filters['delivery_status']))
         ->latest()
         ->get();
 

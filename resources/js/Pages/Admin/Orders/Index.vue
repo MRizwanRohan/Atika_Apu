@@ -132,6 +132,7 @@ const initFilters = () => {
         per_page: parseInt(url.searchParams.get("per_page")) || 10,
         sort_by: url.searchParams.get("sort_by") || "created_at",
         sort_direction: url.searchParams.get("sort_direction") || "desc",
+        source: url.searchParams.get("source") || "",
     };
 };
 
@@ -364,8 +365,21 @@ const applyFilters = () => {
 
 // Reset filters
 const resetFilters = () => {
-    filters.value = initFilters();
-    currentPage.value = 1; // Reset to page 1 when filters are reset
+    filters.value = {
+        status: "",
+        payment_status: "",
+        date_from: "",
+        date_to: "",
+        customer_search: "",
+        order_number: "",
+        min_total: "",
+        max_total: "",
+        per_page: 10,
+        sort_by: "created_at",
+        sort_direction: "desc",
+        source: "",
+    };
+    currentPage.value = 1;
     applyFilters();
 };
 
@@ -434,8 +448,16 @@ const activeFilterCount = computed(() => {
     if (filters.value.order_number) count++;
     if (filters.value.min_total) count++;
     if (filters.value.max_total) count++;
+    if (filters.value.source) count++;
     return count;
 });
+
+const filterToday = () => {
+    const dhakaDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
+    filters.value.date_from = dhakaDate;
+    filters.value.date_to = dhakaDate;
+    applyFilters();
+};
 
 // Handle status card click
 const selectStatus = (status) => {
@@ -710,6 +732,32 @@ const sendToSteadfastSingle = async (order) => {
     }
 };
 
+const getSourceColorClass = (source) => {
+    const classes = {
+        website: 'bg-blue-600 text-white shadow-blue-100',
+        facebook: 'bg-[#1877F2] text-white shadow-blue-100',
+        whatsapp: 'bg-[#25D366] text-white shadow-green-100',
+        phone_call: 'bg-orange-500 text-white shadow-orange-100',
+        telegram: 'bg-[#0088cc] text-white shadow-blue-100',
+        tiktok: 'bg-[#EE1D52] text-white shadow-pink-100',
+        manual: 'bg-gray-600 text-white shadow-gray-100'
+    };
+    return classes[source] || 'bg-gray-600 text-white';
+};
+
+const getSourceSoftColorClass = (source) => {
+    const classes = {
+        website: 'bg-blue-50 text-blue-700 border-blue-100',
+        facebook: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+        whatsapp: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+        phone_call: 'bg-orange-50 text-orange-700 border-orange-100',
+        telegram: 'bg-cyan-50 text-cyan-700 border-cyan-100',
+        tiktok: 'bg-pink-50 text-pink-700 border-pink-100',
+        manual: 'bg-gray-50 text-gray-700 border-gray-100'
+    };
+    return classes[source] || 'bg-gray-50 text-gray-700 border-gray-100';
+};
+
 
 </script>
 
@@ -752,7 +800,7 @@ const sendToSteadfastSingle = async (order) => {
                         </svg>
                         Incomplete:
                         {{
-                            props.statusCounts.find(
+                            props.statusCounts.statuses.find(
                                 (s) => s.status === "incomplete",
                             )?.count || 0
                         }}
@@ -780,7 +828,19 @@ const sendToSteadfastSingle = async (order) => {
                         <div class="w-1.5 h-1.5 rounded-full" :class="filters.status === '' ? 'bg-blue-400' : 'bg-gray-300'"></div>
                         Total
                         <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" :class="filters.status === '' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-400'">
-                            {{ props.statusCounts.find(s => s.status === 'total')?.count || 0 }}
+                            {{ props.statusCounts.statuses.find(s => s.status === 'total')?.count || 0 }}
+                        </span>
+                    </button>
+
+                    <!-- Today's Orders Chip -->
+                    <button
+                        @click="filterToday"
+                        class="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 font-black text-[11px] uppercase tracking-tighter border shadow-sm bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100"
+                    >
+                        <div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                        Today's Orders
+                        <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-orange-200/50 text-orange-900">
+                            {{ props.statusCounts.statuses.find(s => s.status === 'today')?.count || 0 }}
                         </span>
                     </button>
 
@@ -795,9 +855,30 @@ const sendToSteadfastSingle = async (order) => {
                         <div class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(status)"></div>
                         {{ status.replace('_', ' ') }}
                         <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" :class="filters.status === status ? 'bg-white/20 text-white' : 'bg-black/5 text-black/40'">
-                            {{ props.statusCounts.find(s => s.status === status)?.count || 0 }}
+                            {{ props.statusCounts.statuses.find(s => s.status === status)?.count || 0 }}
                         </span>
                     </button>
+                </div>
+
+                <!-- Source Counts section -->
+                <div class="mt-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300">
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Orders by Source (Current Date Range)</label>
+                        <div v-if="filters.date_from || filters.date_to" class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold">Filtered by Date</div>
+                    </div>
+                    <div class="flex items-center flex-wrap gap-2">
+                        <div 
+                            v-for="source in props.statusCounts.sources" 
+                            :key="source.source"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all hover:shadow-sm"
+                            :class="getSourceSoftColorClass(source.source)"
+                        >
+                            <span class="text-[10px] font-black uppercase tracking-tighter">{{ source.source.replace('_', ' ') }}</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-white/50 text-gray-900">
+                                {{ source.count }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -912,6 +993,24 @@ const sendToSteadfastSingle = async (order) => {
                                 class="flex-1 px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20"
                             />
                         </div>
+                    </div>
+
+                    <!-- Order Source -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Order Source</label>
+                        <select
+                            v-model="filters.source"
+                            class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                        >
+                            <option value="">All Sources</option>
+                            <option value="website">Website</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="phone_call">Phone Call</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="manual">Manual</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -1102,6 +1201,12 @@ const sendToSteadfastSingle = async (order) => {
                                         N
                                     </span>
                                 </p>
+                                <span
+                                    class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter shadow-sm border border-black/5"
+                                    :class="getSourceColorClass(order.source || 'website')"
+                                >
+                                    {{ (order.source || 'website').replace('_', ' ') }}
+                                </span>
                                 <!-- Meta event sent badge -->
                                 <span
                                     v-if="localSentOrderIds.has(order.id)"
@@ -1644,6 +1749,12 @@ const sendToSteadfastSingle = async (order) => {
                             <div class="flex flex-col">
                                 <span class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tight w-fit">
                                     {{ order.order_number }}
+                                </span>
+                                <span
+                                    class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shadow-sm w-fit"
+                                    :class="getSourceColorClass(order.source || 'website')"
+                                >
+                                    {{ (order.source || 'website').replace('_', ' ') }}
                                 </span>
                                 <span class="text-[11px] font-bold text-gray-900 mt-0.5">
                                     {{ order.customer.name }}

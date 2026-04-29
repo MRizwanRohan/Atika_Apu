@@ -71,6 +71,7 @@ const form = useForm({
   shipping_cost: props.order.shipping_cost || 0,
   area: props.order.area || 'inside_dhaka',
   status: props.order.status || 'pending',
+  source: props.order.source || 'website',
 });
 
 // Initialize quantities and search value on mount
@@ -797,6 +798,19 @@ const submitForm = () => {
               <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Email Address</label>
                 <input v-model="form.customer_email" type="email" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter email address" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Order Source</label>
+                <select v-model="form.source" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                  <option value="website">Website</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="phone_call">Phone Call</option>
+                  <option value="telegram">Telegram</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="manual">Manual</option>
+                </select>
               </div>
 
               <div>

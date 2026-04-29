@@ -152,6 +152,7 @@ public function getPaginatedOrders(
             'id' => $order->id,
             'duplicate_percentage' => $duplicatePercentage,
             'order_number' => $order->order_number,
+            'source' => $order->source ?? 'website',
             'status' => $order->status,
             'courier_name' => $order->courier_name ?? 'N/A',
             'tracking_number' => $order->tracking_number ?? 'N/A',
@@ -329,6 +330,7 @@ public function getPaginatedOrders(
                 'orders.zone_name',
                 'orders.area_name',
                 'orders.is_courier',
+                'orders.source',
                 'orders.created_at',
                 'orders.updated_at'
             ]);
@@ -374,6 +376,24 @@ public function getPaginatedOrders(
                 $query->whereIn('payment_status', $filters['payment_status']);
             } else {
                 $query->where('payment_status', $filters['payment_status']);
+            }
+        }
+        
+        // Filter by delivery status
+        if (!empty($filters['delivery_status'])) {
+            if (is_array($filters['delivery_status'])) {
+                $query->whereIn('delivery_status', $filters['delivery_status']);
+            } else {
+                $query->where('delivery_status', $filters['delivery_status']);
+            }
+        }
+
+        // Filter by source
+        if (!empty($filters['source'])) {
+            if (is_array($filters['source'])) {
+                $query->whereIn('source', $filters['source']);
+            } else {
+                $query->where('source', $filters['source']);
             }
         }
 

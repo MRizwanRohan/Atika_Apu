@@ -50,6 +50,7 @@ const shippingForm = ref({
     area: "inside_dhaka",
     payment_method: "cod",
     payment_status: "unpaid",
+    source: "website",
     // POS specific discount fields
     pos_discount: 0.0,
     discount_type: "fixed", // 'fixed' or 'percentage'
@@ -681,6 +682,7 @@ const handleCheckout = async () => {
             area: shippingForm.value.area,
             payment_method: shippingForm.value.payment_method,
             payment_status: shippingForm.value.payment_status,
+            source: shippingForm.value.source || 'website',
             items: items,
             // POS discount values
             pos_discount: shippingForm.value.pos_discount || 0,
@@ -695,6 +697,7 @@ const handleCheckout = async () => {
         shippingForm.value.area = "inside_dhaka";
         shippingForm.value.payment_method = "cod";
         shippingForm.value.payment_status = "unpaid";
+        shippingForm.value.source = "website";
         toast.success(response.data.message || "Order created successfully");
     } catch (error) {
         console.error("Error creating order:", error);
@@ -1270,6 +1273,24 @@ onMounted(async () => {
                                     <option value="paid">Paid</option>
                                     <option value="refunded">Refunded</option>
                                     <option value="failed">Failed</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1"
+                                    >Order Source</label
+                                >
+                                <select
+                                    v-model="shippingForm.source"
+                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                >
+                                    <option value="website">Website</option>
+                                    <option value="facebook">Facebook</option>
+                                    <option value="whatsapp">WhatsApp</option>
+                                    <option value="phone_call">Phone Call</option>
+                                    <option value="telegram">Telegram</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="manual">Manual</option>
                                 </select>
                             </div>
 

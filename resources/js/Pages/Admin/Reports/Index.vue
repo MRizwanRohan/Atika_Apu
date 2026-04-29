@@ -3,17 +3,93 @@
     <AdminLayout>
         <div class="reports-dashboard p-6 bg-gray-50 min-h-screen">
             <!-- Header -->
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    Reports Dashboard
-                </h1>
-                <p class="text-gray-600">
-                    Track your business performance and inventory insights
-                </p>
+            <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                        Reports Dashboard
+                    </h1>
+                    <p class="text-gray-600">
+                        Track your business performance and inventory insights
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button 
+                        @click="filterToday"
+                        class="px-4 py-2 bg-orange-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all flex items-center gap-2"
+                    >
+                        <TrendingUp :size="16" />
+                        Today's Report
+                    </button>
+                </div>
             </div>
 
 
-            <!-- Stats Cards with Premium Glassmorphism -->
+            <!-- Source-wise Performance Summary -->
+            <div class="mb-10">
+                <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div 
+                        v-for="source in sourceStats" 
+                        :key="source.source_name"
+                        class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/40 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500"
+                    >
+                        <!-- Decorative Background Blob -->
+                        <div class="absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.07] transition-opacity" :class="getSourceBadgeClass(source.source_name)"></div>
+
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3.5 rounded-[1.25rem] shadow-lg transition-transform group-hover:rotate-12 duration-500" :class="getSourceBadgeClass(source.source_name)">
+                                    <component :is="getSourceIcon(source.source_name)" :size="22" stroke-width="2.5" />
+                                </div>
+                                <div>
+                                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1.5">{{ source.source_name }}</h4>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[11px] font-black text-gray-900 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-100">{{ source.total_orders }} ORDERS</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="flex flex-col items-end">
+                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Conversion</span>
+                                    <span class="text-lg font-black text-blue-600 leading-none">{{ getSuccessRate(source).toFixed(0) }}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden mb-8 border border-gray-100">
+                            <div 
+                                class="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(59,130,246,0.5)]" 
+                                :style="{ width: getSuccessRate(source) + '%' }"
+                            ></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-5 relative z-10">
+                            <div class="bg-gradient-to-br from-emerald-50/80 to-emerald-100/50 p-5 rounded-[2rem] border border-emerald-200/30">
+                                <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-2">Delivered</p>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-3xl font-black text-gray-900 leading-none">{{ source.delivered_count }}</span>
+                                </div>
+                                <p class="text-xs font-black text-emerald-700 mt-2">৳{{ source.delivered_revenue.toLocaleString() }}</p>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-rose-50/80 to-orange-50/50 p-5 rounded-[2rem] border border-rose-200/30">
+                                <p class="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-2">Lost Deals</p>
+                                <div class="flex items-center gap-4">
+                                    <div>
+                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Cancel</p>
+                                        <p class="text-xl font-black text-rose-600 leading-none">{{ source.cancelled_count }}</p>
+                                    </div>
+                                    <div class="w-px h-10 bg-gray-200/50"></div>
+                                    <div>
+                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Return</p>
+                                        <p class="text-xl font-black text-amber-600 leading-none">{{ source.returned_count }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- Total Products -->
                 <div class="stat-card group">
@@ -132,6 +208,7 @@
                             <tr>
                                 <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Product</th>
                                 <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Category</th>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Source</th>
                                 <th class="text-center py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Stock</th>
                                 <th class="text-center py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Sold</th>
                                 <th class="text-right py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Sell-Through</th>
@@ -234,6 +311,43 @@
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                                >Order Source</label
+                            >
+                            <select
+                                v-model="filters.source"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">All Sources</option>
+                                <option value="website">Website</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="phone_call">Phone Call</option>
+                                <option value="telegram">Telegram</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="manual">Manual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                                >Delivery Status</label
+                            >
+                            <select
+                                v-model="filters.delivery_status"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">All Delivery</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="returned">Returned</option>
+                                <option value="lost">Lost</option>
                             </select>
                         </div>
                     </div>
@@ -371,6 +485,7 @@
                                 <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Date</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Customer</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Source</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Payment</th>
                                 <th class="text-right py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Total Amount</th>
                             </tr>
@@ -398,6 +513,11 @@
                                 <td class="py-3 px-4">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm" :class="getStatusColor(order.status)">
                                         {{ order.status }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
+                                        {{ order.source || 'website' }}
                                     </span>
                                 </td>
                                 <td class="py-3 px-4">
@@ -479,7 +599,15 @@ import {
     FileText,
     AlertCircle,
     CheckCircle,
-    Layers
+    Layers,
+    Facebook,
+    Globe,
+    MessageCircle,
+    Phone,
+    Send,
+    User,
+    Music,
+    Terminal
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -494,6 +622,7 @@ const props = defineProps({
     lowStockProducts: Array,
     productsByCategory: Object,
     topPerformers: Array,
+    sourceStats: Array,
 });
 
 const filters = reactive({
@@ -506,6 +635,8 @@ const filters = reactive({
     min_total: "",
     max_total: "",
     per_page: 10,
+    source: "",
+    delivery_status: "",
 });
 
 const selectedOrders = ref([]);
@@ -549,6 +680,44 @@ onMounted(() => {
         }
     });
 });
+
+const filterToday = () => {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
+    filters.date_from = today;
+    filters.date_to = today;
+    applyFilters();
+};
+
+const getSourceBadgeClass = (source) => {
+    const classes = {
+        website: 'bg-blue-600 text-white shadow-blue-100',
+        facebook: 'bg-[#1877F2] text-white shadow-blue-100/50',
+        whatsapp: 'bg-[#25D366] text-white shadow-green-100/50',
+        phone_call: 'bg-orange-500 text-white shadow-orange-100/50',
+        telegram: 'bg-[#0088cc] text-white shadow-blue-100/50',
+        tiktok: 'bg-[#EE1D52] text-white shadow-pink-100/50',
+        manual: 'bg-gray-700 text-white shadow-gray-100/50'
+    };
+    return classes[source] || 'bg-gray-600 text-white';
+};
+
+const getSourceIcon = (source) => {
+    const icons = {
+        website: Globe,
+        facebook: Facebook,
+        whatsapp: MessageCircle,
+        phone_call: Phone,
+        telegram: Send,
+        tiktok: Music,
+        manual: User
+    };
+    return icons[source] || Terminal;
+};
+
+const getSuccessRate = (source) => {
+    if (source.total_orders === 0) return 0;
+    return (source.delivered_count / source.total_orders) * 100;
+};
 
 // Toggle select all orders
 const toggleSelectAll = () => {
