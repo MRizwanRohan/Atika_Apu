@@ -28,12 +28,17 @@ class FinancialReportService implements FinancialReportServiceInterface
             ->sum('total');
 
         // 2. COGS (Cost of Goods Sold)
-        $cogs = OrderItem::whereHas('order', function($q) use ($dateRange) {
-                $q->where(function($qq) {
-                    $qq->where('payment_status', 'paid')->orWhere('payment_status', 'partially_paid');
-                })->where($dateRange);
+        $cogs = OrderItem::whereHas('order', function($q) use ($boundaries) {
+                $q->whereIn('payment_status', ['paid', 'partially_paid'])
+                ->where('status', 'delivered') // important
+                ->whereBetween('created_at', [$boundaries[0], $boundaries[1]]);
             })
-            ->selectRaw('SUM(unit_cost * (quantity - IFNULL(returned_quantity, 0))) as total_cogs')
+            ->selectRaw('
+                SUM(
+                    unit_cost * 
+                    GREATEST(quantity - IFNULL(returned_quantity, 0), 0)
+                ) as total_cogs
+            ')
             ->value('total_cogs') ?? 0;
 
         // 3. Operational Expenses

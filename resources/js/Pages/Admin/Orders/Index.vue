@@ -1049,14 +1049,14 @@ const sendToSteadfastSingle = async (order) => {
                                     Status {{ getSortIcon("status") }}
                                 </div>
                             </th>
-                            <th
+                            <!-- <th
                                 @click="toggleSort('payment_status')"
                                 class="px-3 py-4 text-left text-xs font-semibold min-w-[100px] uppercase tracking-wider cursor-pointer !hover:bg-gray-800 transition-colors duration-200"
                             >
                                 <div class="flex items-center gap-1">
                                     Payment {{ getSortIcon("payment_status") }}
                                 </div>
-                            </th>
+                            </th> -->
                             <th
                                 class="px-3 py-4 text-left text-xs min-w-[150px] font-semibold uppercase tracking-wider transition-colors duration-200"
                             >
@@ -1371,7 +1371,7 @@ const sendToSteadfastSingle = async (order) => {
                                     @status-change="updateOrderStatus"
                                 />
                             </td>
-                            <td
+                            <!-- <td
                                 class="px-1 py-3 text-sm gap-1"
                             >
                                 <div
@@ -1390,7 +1390,7 @@ const sendToSteadfastSingle = async (order) => {
                                 >
                                     {{ order.payment_status }}
                                 </div>
-                            </td>
+                            </td> -->
                             <td class="px-2 py-2 text-sm w-32">
                                 <div
                                     v-if="order.is_courier"
