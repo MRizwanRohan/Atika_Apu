@@ -43,27 +43,49 @@ class CourierController extends Controller
     public function storeOrUpdate(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'client_id' => 'required|string',
-                'client_secret' => 'required|string',
-                'username' => 'required|string',
-                'password' => 'required|string',
-                'is_enabled' => 'required|in:yes,no',
-                'StoreId' => 'required|integer',
-            ]);
+            $rules = [];
+            
+            // Pathao validation rules
+            if ($request->hasAny(['client_id', 'client_secret', 'username', 'password', 'is_enabled', 'StoreId'])) {
+                $rules = array_merge($rules, [
+                    'client_id' => 'required|string',
+                    'client_secret' => 'required|string',
+                    'username' => 'required|string',
+                    'password' => 'required|string',
+                    'is_enabled' => 'required|in:yes,no',
+                    'StoreId' => 'required|integer',
+                ]);
+            }
+
+            // Steadfast validation rules
+            if ($request->hasAny(['steadfast_api_key', 'steadfast_secret_key', 'steadfast_is_enabled'])) {
+                $rules = array_merge($rules, [
+                    'steadfast_api_key' => 'required|string',
+                    'steadfast_secret_key' => 'required|string',
+                    'steadfast_is_enabled' => 'required|in:yes,no',
+                ]);
+            }
+
+            if (empty($rules)) {
+                 return redirect()->back()->with(['error' => 'No settings provided']);
+            }
+
+            $validated = $request->validate($rules);
 
             $settings = CourierSetting::first();
 
             if ($settings) {
-                // Check if credentials changed to force a new token
-                $credentialsChanged = $settings->client_id !== $validated['client_id'] ||
-                                     $settings->client_secret !== $validated['client_secret'] ||
-                                     $settings->username !== $validated['username'] ||
-                                     $settings->password !== $validated['password'];
+                // Check if Pathao credentials changed to force a new token
+                if (isset($validated['client_id'])) {
+                    $credentialsChanged = ($settings->client_id !== $validated['client_id']) ||
+                                         ($settings->client_secret !== $validated['client_secret']) ||
+                                         ($settings->username !== $validated['username']) ||
+                                         ($settings->password !== $validated['password']);
 
-                if ($credentialsChanged) {
-                    $validated['access_token'] = null;
-                    $validated['expires_at'] = null;
+                    if ($credentialsChanged) {
+                        $validated['access_token'] = null;
+                        $validated['expires_at'] = null;
+                    }
                 }
 
                 $settings->update($validated);

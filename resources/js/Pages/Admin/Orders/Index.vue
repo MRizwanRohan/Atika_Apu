@@ -618,8 +618,48 @@ const updateOrderStatus = async (orderId, newStatus) => {
 const showModal = ref(false);
 const fraudData = ref({});
 
+const viewFraudDetails = (data) => {
+    fraudData.value = data;
+    showModal.value = true;
+};
+
 const checkFraudLoading = ref(false);
+const isBulkCheckingFraud = ref(false);
 const showFilters = ref(false);
+
+const bulkCheckFraud = async () => {
+    if (selectedOrders.value.length === 0) {
+        toast.error("No orders selected");
+        return;
+    }
+
+    const phones = [...new Set(visibleOrders.value
+        .filter(order => selectedOrders.value.includes(order.id))
+        .map(order => order.customer.phone))];
+
+    if (phones.length === 0) {
+        toast.error("No valid phone numbers found");
+        return;
+    }
+
+    try {
+        isBulkCheckingFraud.value = true;
+        const response = await axios.post(route("admin.fraud-check.bulk"), { phones });
+        toast.success(response.data.message || `${phones.length} phone numbers checked successfully`);
+        router.reload();
+    } catch (error) {
+        console.error("Bulk fraud check error:", error);
+        toast.error(error.response?.data?.message || "Failed to check bulk fraud");
+    } finally {
+        isBulkCheckingFraud.value = false;
+    }
+};
+
+const getFraudProgressColor = (rate) => {
+    if (rate > 70) return 'bg-green-500';
+    if (rate > 40) return 'bg-amber-500';
+    return 'bg-red-500';
+};
 
 const checkFraud = async (phone) => {
     try {
@@ -1034,6 +1074,23 @@ const getSourceSoftColorClass = (source) => {
                     }}
                 </button>
                 <button
+                    v-if="selectedOrders.length > 0"
+                    @click="bulkCheckFraud"
+                    :disabled="isBulkCheckingFraud"
+                    class="px-2 py-2 bg-slate-800 text-white rounded-md text-sm font-medium hover:bg-slate-900 disabled:opacity-60 flex items-center gap-1"
+                >
+                    <span
+                        v-if="isBulkCheckingFraud"
+                        class="loading loading-spinner loading-xs"
+                    ></span>
+                    <span v-else>🛡️</span>
+                    {{
+                        isBulkCheckingFraud
+                            ? "Checking..."
+                            : `Check Fraud (${selectedOrders.length})`
+                    }}
+                </button>
+                <button
                     v-if="selectedOrders.length > 0 && courierSettings?.steadfast_is_enabled === 'yes'"
                     @click="sendBulkToSteadfast"
                     class="px-2 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 hover:shadow-lg transition-all duration-200"
@@ -1126,6 +1183,11 @@ const getSourceSoftColorClass = (source) => {
                                 <div class="flex items-center gap-1">
                                     Customer {{ getSortIcon("customer_name") }}
                                 </div>
+                            </th>
+                            <th
+                                class="px-3 py-4 text-left text-xs min-w-[130px] font-semibold uppercase tracking-wider transition-colors duration-200"
+                            >
+                                Fraud Score
                             </th>
                             <th
                                 class="px-3 py-4 text-left text-xs min-w-[200px] font-semibold uppercase tracking-wider transition-colors duration-200"
@@ -1359,6 +1421,35 @@ const getSourceSoftColorClass = (source) => {
                                         }}
                                     </button>
                                 </div>
+                            </td>
+                            <td class="px-1 py-3 text-sm">
+                                <div v-if="order.customer?.fraud_data?.aggregated" class="group relative space-y-1.5 bg-gray-50/50 p-2 rounded-xl border border-gray-100 hover:bg-white hover:shadow-md transition-all duration-300">
+                                    <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
+                                        <span :class="order.customer?.fraud_data?.aggregated?.success_rate > 70 ? 'text-green-600' : (order.customer?.fraud_data?.aggregated?.success_rate > 40 ? 'text-amber-600' : 'text-red-600')">
+                                            {{ order.customer?.fraud_data?.aggregated?.success_rate }}% Score
+                                        </span>
+                                        <button 
+                                            @click="viewFraudDetails(order.customer.fraud_data)"
+                                            class="p-1 rounded-md bg-white border border-gray-100 text-gray-500 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"
+                                            title="View Details"
+                                        >
+                                            <Eye class="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div 
+                                            class="h-1.5 rounded-full transition-all duration-500" 
+                                            :class="getFraudProgressColor(order.customer?.fraud_data?.aggregated?.success_rate)"
+                                            :style="{ width: `${order.customer?.fraud_data?.aggregated?.success_rate}%` }"
+                                        ></div>
+                                    </div>
+                                    <div class="flex justify-between text-[8px] text-gray-500 font-bold">
+                                        <span>S:{{ order.customer?.fraud_data?.aggregated?.total_success }}</span>
+                                        <span>C:{{ order.customer?.fraud_data?.aggregated?.total_cancel }}</span>
+                                        <span>T:{{ order.customer?.fraud_data?.aggregated?.total_orders }}</span>
+                                    </div>
+                                </div>
+                                <div v-else class="text-center text-[10px] text-gray-300 italic">No Data</div>
                             </td>
                             <td class="px-1 py-3 text-sm">
                                 <div class="flex flex-col gap-2">
@@ -1707,7 +1798,7 @@ const getSourceSoftColorClass = (source) => {
                         </tr>
                         <tr v-if="visibleOrders.length === 0">
                             <td
-                                colspan="10"
+                                colspan="11"
                                 class="px-1 py-6 text-center text-black"
                             >
                                 No orders found matching your filters.
@@ -1769,6 +1860,28 @@ const getSourceSoftColorClass = (source) => {
                                 <span class="text-[11px] font-bold text-gray-900 mt-0.5">
                                     {{ order.customer.name }}
                                 </span>
+                                <!-- Mobile Fraud Score Badge -->
+                                <div v-if="order.customer?.fraud_data?.aggregated" class="mt-1 flex items-center gap-1.5">
+                                    <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200">
+                                        <span class="text-[8px] font-black text-gray-500 uppercase">Fraud</span>
+                                        <span class="text-[8px] font-black" :class="order.customer?.fraud_data?.aggregated?.success_rate > 70 ? 'text-green-600' : (order.customer?.fraud_data?.aggregated?.success_rate > 40 ? 'text-amber-600' : 'text-red-600')">
+                                            {{ order.customer?.fraud_data?.aggregated?.success_rate }}%
+                                        </span>
+                                        <button 
+                                            @click.stop="viewFraudDetails(order.customer.fraud_data)"
+                                            class="ml-1 text-gray-400 hover:text-blue-600"
+                                        >
+                                            <Eye class="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                    <div class="h-1 w-12 bg-gray-200 rounded-full overflow-hidden">
+                                        <div 
+                                            class="h-full rounded-full" 
+                                            :class="getFraudProgressColor(order.customer?.fraud_data?.aggregated?.success_rate)"
+                                            :style="{ width: `${order.customer?.fraud_data?.aggregated?.success_rate}%` }"
+                                        ></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         

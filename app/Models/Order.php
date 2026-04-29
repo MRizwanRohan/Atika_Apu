@@ -104,8 +104,13 @@ class Order extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function cart()
+    public function latestFraudLog()
     {
-        return $this->belongsTo(Cart::class);
+        return $this->hasOne(CourierFraudLog::class, 'phone', 'customer_phone')
+            ->ofMany([
+                'id' => 'max',
+            ], function ($query) {
+                $query->where('courier_name', 'all');
+            });
     }
 }

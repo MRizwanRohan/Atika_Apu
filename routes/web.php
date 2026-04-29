@@ -184,6 +184,8 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     //fraud check
     Route::post('/fraud-check', [FraudcheckController::class, 'fetchSuccessRate'])
         ->name('fraud-check.fetchSuccessRate');
+    Route::post('/fraud-check/bulk', [FraudcheckController::class, 'bulkFetchSuccessRate'])
+        ->name('fraud-check.bulk');
 
 
     Route::resource('landing-pages', LandingPageController::class);

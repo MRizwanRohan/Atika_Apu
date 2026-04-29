@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\Couriers\Pathao\PathaoSuccessRateService;
 use App\Services\Couriers\Steadfast\SteadfastService;
 use Illuminate\Support\Facades\Log;
+use App\Models\Order;
 
 class FraudcheckController extends Controller
 {
@@ -44,7 +45,59 @@ class FraudcheckController extends Controller
             'aggregated' => $aggregated,
         ];
 
+        // Save to database for caching (use courier_name 'all' for aggregated results)
+        \App\Models\CourierFraudLog::create([
+            'phone' => $phone,
+            'courier_name' => 'all',
+            'response_data' => $data,
+        ]);
+
+        Order::incrementCacheVersion();
+
         return response()->json($data);
+    }
+
+    public function bulkFetchSuccessRate(Request $request)
+    {
+        $phones = array_unique($request->input('phones', []));
+        
+        if (empty($phones)) {
+            return response()->json(['error' => 'No phone numbers provided'], 400);
+        }
+
+        $results = [];
+        foreach ($phones as $phone) {
+             // Fetch Steadfast data
+             $steadfastResponse = $this->fetchSteadfastData($phone);
+             $steadfastData = $steadfastResponse->getData(true);
+
+             // Pathao fallback/aggregated
+             $pathaoData = []; 
+             $aggregated = $this->calculateAggregatedMetrics($pathaoData, $steadfastData);
+
+             $data = [
+                 'phone' => $phone,
+                 'steadfast' => $steadfastData,
+                 'pathao' => $pathaoData,
+                 'aggregated' => $aggregated,
+             ];
+
+             // Save to database
+             \App\Models\CourierFraudLog::create([
+                 'phone' => $phone,
+                 'courier_name' => 'all',
+                 'response_data' => $data,
+             ]);
+
+             $results[$phone] = $data;
+        }
+
+        Order::incrementCacheVersion();
+
+        return response()->json([
+            'success' => true,
+            'results' => $results,
+        ]);
     }
 
     private function fetchPathaoData($phone)
@@ -74,7 +127,7 @@ class FraudcheckController extends Controller
         // Extract relevant metrics
         $pathaoSuccess = $pathaoData['successful_delivery'] ?? 0;
         $pathaoTotal = $pathaoData['total_delivery'] ?? 0;
-        $pathaoCancel = $pathaoTotal - $pathaoSuccess; // Assuming cancel = total - success
+        $pathaoCancel = $pathaoTotal - $pathaoSuccess; 
 
         $steadfastSuccess = $steadfastData['success'] ?? 0;
         $steadfastCancel = $steadfastData['cancel'] ?? 0;
@@ -87,7 +140,7 @@ class FraudcheckController extends Controller
 
         // Calculate success rate
         $successRate = $totalOrders > 0 ? ($totalSuccess / $totalOrders) * 100 : 0;
-        $successRate = round($successRate, 2); // Round to 2 decimal places
+        $successRate = round($successRate, 2); 
 
         return [
             'total_success' => $totalSuccess,

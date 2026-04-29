@@ -98,6 +98,7 @@ public function getPaginatedOrders(
         $query = $this->buildOrderQuery($filters, $sortBy, $sortDirection);
 
         return $query->with([
+            'latestFraudLog',
             'items' => function ($query) {
                 $query->select([
                     'id',
@@ -179,7 +180,8 @@ public function getPaginatedOrders(
                 'address' => $order->shipping_address ?? 'N/A',
                 'district' => $order->shipping_district ?? 'N/A',
                 'thana' => $order->shipping_thana ?? 'N/A',
-                'note' => $order->customer_notes ?? 'N/A'
+                'note' => $order->customer_notes ?? 'N/A',
+                'fraud_data' => $order->latestFraudLog ? $order->latestFraudLog->response_data : null,
             ],
             'total' => $order->total ?? 0.00,
             'paid_amount' => $order->paid_amount ?? 0.00,
