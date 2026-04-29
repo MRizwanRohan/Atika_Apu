@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from "vue";
+import hierarchyData from "../../../../../public/jsondata/bangladesh_hierarchy.json";
 import { useForm, usePage, Head, Link } from "@inertiajs/vue3";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import { useCart } from "@/Composables/useCart";
@@ -46,6 +47,8 @@ const form = useForm({
     customer_name: props.user?.name || "",
     customer_phone: props.user?.phone || "",
     shipping_address: props.user?.address || "",
+    shipping_district: "",
+    shipping_thana: "",
     shipping_cost: 0,
     area: "inside_dhaka",
     customer_notes: "",
@@ -271,6 +274,44 @@ const submitOrder = () => {
     });
 };
 
+// Bangladesh Hierarchy Logic
+const districts = ref([]);
+const thanas = ref([]);
+
+onMounted(() => {
+    // Flatten all districts from all divisions
+    if (hierarchyData) {
+        districts.value = hierarchyData.flatMap(division => 
+            division.districts.map(district => ({
+                id: district.id,
+                name: district.name,
+                upazilas: district.upazilas
+            }))
+        ).sort((a, b) => a.name.localeCompare(b.name));
+    }
+});
+
+watch(() => form.shipping_district, (newDistrictName) => {
+    const selectedDistrict = districts.value.find(d => d.name === newDistrictName);
+    if (selectedDistrict) {
+        thanas.value = (selectedDistrict.upazilas || []).sort((a, b) => a.name.localeCompare(b.name));
+        // Reset Thana if not in new list
+        if (!thanas.value.find(t => t.name === form.shipping_thana)) {
+            form.shipping_thana = "";
+        }
+    } else {
+        thanas.value = [];
+        form.shipping_thana = "";
+    }
+
+    // Auto-update area based on district
+    if (newDistrictName === 'Dhaka') {
+        form.area = 'inside_dhaka';
+    } else if (newDistrictName) {
+        form.area = 'outside_dhaka';
+    }
+});
+
 
 
 const { trackInitiateCheckout } = useMetaPixel();
@@ -457,20 +498,66 @@ onMounted(() => {
                                         </p>
                                     </div>
 
+                                    <!-- District and Thana -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+                                        <div>
+                                            <label for="shipping_district" class="block text-sm font-medium text-gray-700 mb-1">
+                                                District <span class="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                id="shipping_district"
+                                                v-model="form.shipping_district"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                                :class="{ 'border-red-500': form.errors.shipping_district }"
+                                                required
+                                            >
+                                                <option value="" disabled>Select District</option>
+                                                <option v-for="district in districts" :key="district.id" :value="district.name">
+                                                    {{ district.name }}
+                                                </option>
+                                            </select>
+                                            <p v-if="form.errors.shipping_district" class="mt-1 text-sm text-red-500">
+                                                {{ form.errors.shipping_district }}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label for="shipping_thana" class="block text-sm font-medium text-gray-700 mb-1">
+                                                Thana/Upazila <span class="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                id="shipping_thana"
+                                                v-model="form.shipping_thana"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                                :class="{ 'border-red-500': form.errors.shipping_thana }"
+                                                :disabled="!form.shipping_district"
+                                                required
+                                            >
+                                                <option value="" disabled>Select Thana</option>
+                                                <option v-for="thana in thanas" :key="thana.id" :value="thana.name">
+                                                    {{ thana.name }}
+                                                </option>
+                                            </select>
+                                            <p v-if="form.errors.shipping_thana" class="mt-1 text-sm text-red-500">
+                                                {{ form.errors.shipping_thana }}
+                                            </p>
+                                        </div>
+                                    </div>
+
                                     <!-- Full Address (Moved here) -->
                                     <div class="md:col-span-2">
                                         <label
                                             for="shipping_address"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Full Address
+                                            Full Address (House/Road/Village)
                                             <span class="text-red-500">*</span>
                                         </label>
                                         <textarea
                                             id="shipping_address"
                                             v-model="form.shipping_address"
                                             rows="2"
-                                            placeholder="House no, Road, Area, District"
+                                            placeholder="House no, Road, Area"
                                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
                                             :class="{
                                                 'border-red-500':

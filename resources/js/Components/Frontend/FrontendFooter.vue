@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import { MessageSquareText, X } from 'lucide-vue-next';
 
 const props = defineProps({
     settings: {
@@ -42,6 +43,14 @@ const storeAddress = computed(() => general.value?.address || '');
 
 const paymentMethodsImage = computed(() => media.value?.footer_payment_logo || null);
 
+// Live chat integration
+const facebookPageId = computed(() => general.value?.facebook_page_id || null);
+const whatsappNumber = computed(() => general.value?.whatsapp_number || null);
+
+const messengerLink = computed(() => facebookPageId.value ? `https://m.me/${facebookPageId.value}` : null);
+const whatsappLink = computed(() => whatsappNumber.value ? `https://wa.me/${whatsappNumber.value}` : null);
+
+
 // Footer sections
 const categoriesList = computed(() => props.categories?.slice(0, 6) || []);
 const pagesList = computed(() => props.pages || []);
@@ -56,6 +65,11 @@ const policyPages = computed(() => {
     const policies = ['privacy-policy', 'terms-and-conditions', 'shipping-policy', 'refund-policy'];
     return pagesList.value.filter(p => policies.includes(p.slug.toLowerCase()));
 });
+
+const isChatOpen = ref(false);
+const toggleChat = () => {
+    isChatOpen.value = !isChatOpen.value;
+};
 
 // Scroll to top helper
 const scrollToTop = () => {
@@ -91,6 +105,8 @@ const scrollToTop = () => {
                 </div>
             </div>
         </div>
+
+        
 
         <!-- Main Footer Content -->
         <div class="container mx-auto px-4 py-20">
@@ -220,16 +236,83 @@ const scrollToTop = () => {
                 </div>
             </div>
         </div>
-        <!-- Back to Top Button -->
-        <button
-            @click="scrollToTop"
-            class="fixed bottom-8 right-8 z-50 hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white shadow-lg transition-transform duration-300 hover:scale-110 group"
-        >
-            <svg class="w-6 h-6 transition-transform group-hover:-translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
-        </button>
+
     </footer>
+
+        <!-- Live Chat & scroll to top Container -->
+        <div class="fixed bottom-16 right-4 md:bottom-8 md:right-8 z-[100] flex flex-col items-end gap-3 md:gap-4">
+            <!-- Scroll to Top Button (Small) -->
+            <!-- <button
+                @click="scrollToTop"
+                class="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-900/80 backdrop-blur-sm text-zinc-400 border border-zinc-800 hover:text-white hover:border-primary/50 transition-all duration-300 group"
+                aria-label="Scroll to top"
+            >
+                <svg class="w-4 h-4 md:w-5 md:h-5 transition-transform group-hover:-translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+            </button> -->
+
+            <!-- Chat Options Menu -->
+            <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="transform scale-95 opacity-0 translate-y-4"
+                enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                leave-to-class="transform scale-95 opacity-0 translate-y-4"
+            >
+                <div v-if="isChatOpen" class="flex flex-col gap-4 mb-2">
+                    <!-- WhatsApp -->
+                    <a
+                        v-if="whatsappLink"
+                        :href="whatsappLink"
+                        target="_blank"
+                        class="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#25D366] text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:-rotate-12 group relative"
+                        aria-label="Chat on WhatsApp"
+                    >
+                        <svg class="w-6 h-6 md:w-8 md:h-8" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.672 1.433 5.66 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                        <span class="absolute right-full mr-3 md:mr-4 px-2 md:px-3 py-1 md:py-1.5 bg-white text-[#25D366] text-[10px] md:text-xs font-bold rounded-lg shadow-xl whitespace-nowrap">
+                            WhatsApp
+                        </span>
+                    </a>
+
+                    <!-- Messenger -->
+                    <a
+                        v-if="messengerLink"
+                        :href="messengerLink"
+                        target="_blank"
+                        class="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-tr from-[#0084FF] to-[#00C6FF] text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:rotate-12 group relative"
+                        aria-label="Chat on Messenger"
+                    >
+                        <MessageSquareText class="w-6 h-6 md:w-8 md:h-8" />
+                        <span class="absolute right-full mr-3 md:mr-4 px-2 md:px-3 py-1 md:py-1.5 bg-white text-[#0084FF] text-[10px] md:text-xs font-bold rounded-lg shadow-xl whitespace-nowrap">
+                            Messenger
+                        </span>
+                    </a>
+                </div>
+            </Transition>
+
+            <!-- Main Toggle Button -->
+            <button
+                @click="toggleChat"
+                class="flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full shadow-2xl transition-all duration-500 hover:scale-105 active:scale-95 group relative border-2 md:border-4 border-zinc-900/50 overflow-hidden"
+                :class="isChatOpen ? 'bg-zinc-800 text-white' : 'bg-primary text-white'"
+                aria-label="Toggle chat menu"
+            >
+                <div class="relative z-10">
+                    <MessageSquareText v-if="!isChatOpen" class="w-6 h-6 md:w-8 md:h-8 transition-all duration-300" />
+                    <X v-else class="w-6 h-6 md:w-8 md:h-8 transition-all duration-300 rotate-90" />
+                </div>
+                
+                <!-- Animated Background Background -->
+                <div v-if="!isChatOpen" class="absolute inset-0 bg-primary-dark/20 animate-pulse"></div>
+                
+                <!-- Ping Effect when closed -->
+                <span v-if="!isChatOpen" class="absolute inset-0 rounded-full bg-primary animate-ping opacity-40"></span>
+            </button>
+        </div>
 </template>
 
 <style scoped>

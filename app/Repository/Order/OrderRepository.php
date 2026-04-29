@@ -177,6 +177,8 @@ public function getPaginatedOrders(
                 'email' => $order->customer_email ?? 'N/A',
                 'phone' => $order->customer_phone ?? 'N/A',
                 'address' => $order->shipping_address ?? 'N/A',
+                'district' => $order->shipping_district ?? 'N/A',
+                'thana' => $order->shipping_thana ?? 'N/A',
                 'note' => $order->customer_notes ?? 'N/A'
             ],
             'total' => $order->total ?? 0.00,
@@ -308,6 +310,8 @@ public function getPaginatedOrders(
                 'orders.customer_phone',
                 'orders.customer_name',
                 'orders.shipping_address',
+                'orders.shipping_district',
+                'orders.shipping_thana',
                 'orders.area',
                 'orders.shipping_cost',
                 'orders.subtotal',

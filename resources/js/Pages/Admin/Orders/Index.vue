@@ -1276,6 +1276,16 @@ const getSourceSoftColorClass = (source) => {
                                         />{{ order.customer?.address }}
                                     </p>
                                     <p
+                                        v-if="order.customer?.district && order.customer.district !== 'N/A'"
+                                        class="text-gray-600 flex items-center text-[10px] mt-1 bg-blue-50 w-fit px-1.5 py-0.5 rounded border border-blue-100"
+                                    >
+                                        <MapPin class="w-2.5 h-2.5 mr-1 text-blue-500" />
+                                        <span class="font-bold text-blue-700">{{ order.customer.district }}</span>
+                                        <span v-if="order.customer?.thana && order.customer.thana !== 'N/A'" class="text-blue-600">
+                                            &nbsp;• {{ order.customer.thana }}
+                                        </span>
+                                    </p>
+                                    <p
                                         v-if="
                                             order.customer?.note &&
                                             order.customer.note !== 'N/A'
@@ -1823,6 +1833,10 @@ const getSourceSoftColorClass = (source) => {
                                 <div class="flex items-start gap-1.5 mt-1 text-gray-500 text-[11px] font-medium leading-normal">
                                     <MapPin class="w-3.5 h-3.5 shrink-0 mt-0.5" />
                                     <span class="line-clamp-2">{{ order.customer.address }}</span>
+                                    <div v-if="order.customer?.district && order.customer.district !== 'N/A'" class="mt-1 flex items-center gap-1 text-[10px] font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-fit">
+                                        {{ order.customer.district }}
+                                        <span v-if="order.customer?.thana && order.customer.thana !== 'N/A'"> • {{ order.customer.thana }}</span>
+                                    </div>
                                 </div>
                             </div>
                             <!-- Courier Mini Card -->

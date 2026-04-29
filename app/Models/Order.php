@@ -24,6 +24,7 @@ class Order extends Model
         'customer_name',
         'shipping_address',
         'shipping_district',
+        'shipping_thana',
         'area',
         'shipping_cost',
     'pos_discount',

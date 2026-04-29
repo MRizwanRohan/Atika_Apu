@@ -349,6 +349,8 @@ class OrderController extends Controller
             'discount_type' => 'nullable|in:fixed,percentage',
             'shipping_cost' => 'nullable|numeric|min:0',
             'area' => 'nullable|in:inside_dhaka,outside_dhaka',
+            'shipping_district' => 'nullable|string|max:255',
+            'shipping_thana' => 'nullable|string|max:255',
             'status' => 'nullable|in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed',
             'source' => 'nullable|in:website,facebook,whatsapp,phone_call,telegram,tiktok,manual',
         ]);
@@ -368,6 +370,8 @@ class OrderController extends Controller
             'customer_phone' => $validated['customer_phone'],
             'customer_email' => $validated['customer_email'],
             'shipping_address' => $validated['shipping_address'],
+            'shipping_district' => $validated['shipping_district'] ?? $order->shipping_district,
+            'shipping_thana' => $validated['shipping_thana'] ?? $order->shipping_thana,
             'admin_notes' => $validated['admin_notes'] ?? null,
             'payment_status' => $validated['payment_status'],
             'payment_method' => $validated['payment_method'],

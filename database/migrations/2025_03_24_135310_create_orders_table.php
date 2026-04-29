@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('customer_name');
             $table->text('shipping_address');
             $table->string('shipping_district')->nullable();
+            $table->string('shipping_thana')->nullable();
             $table->string('area')->nullable();
             $table->foreignId('cart_id')->nullable()->constrained('carts')->nullOnDelete();
 
