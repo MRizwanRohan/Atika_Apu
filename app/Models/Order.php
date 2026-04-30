@@ -51,7 +51,8 @@ class Order extends Model
         'consignment_id',
         'delivery_status',
         'paid_amount',
-        'return_charge'
+        'return_charge',
+        'payment_verification_status'
     ];
 
     protected $casts = [

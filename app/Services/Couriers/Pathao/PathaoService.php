@@ -180,7 +180,7 @@ class PathaoService
             'item_quantity' => $itemQuantity,
             'item_weight' => $itemWeight,
             'item_description' => $itemDescription,
-            'amount_to_collect' => $order->payment_status === 'paid' ? 0 : (float) $order->total,
+            'amount_to_collect' => (float) ($order->total - ($order->paid_amount ?? 0)),
         ];
 
         $response = $this->makeRequest('POST', '/aladdin/api/v1/orders', $payload);
@@ -257,7 +257,7 @@ class PathaoService
                 'special_instruction' => $orderData['specialInstruction'] ?? 'Need to Delivery before 5 PM',
                 'item_quantity' => $itemQuantity,
                 'item_weight' => $itemWeight,
-                'amount_to_collect' => $order->payment_status === 'paid' ? 0 : (float) $order->total,
+                'amount_to_collect' => (float) ($order->total - ($order->paid_amount ?? 0)),
                 'item_description' => $itemDescription,
             ];
         }

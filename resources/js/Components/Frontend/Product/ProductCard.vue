@@ -111,7 +111,7 @@ const currentStock = computed(() => {
 
 // For variable products, we only allow adding if we have a match OR if no attributes are needed (unlikely for variable)
 const canAddToCart = computed(() => {
-    if (!isVariable.value) return props.product.stock > 0;
+    if (!isVariable.value) return props.product.stock > 0 || props.product.is_pre_order;
 
     // Check if all attributes are selected
     const requiredAttrs = availableAttributes.value.map((a) => a.key);
@@ -121,7 +121,7 @@ const canAddToCart = computed(() => {
     if (!allSelected) return false;
 
     const variation = getMatchingVariation();
-    return variation && variation.stock > 0;
+    return variation && (variation.stock > 0 || props.product.is_pre_order);
 });
 
 const handleAddToCartClick = (e) => {
@@ -282,7 +282,9 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
-const isOutOfStock = computed(() => props.product.stock <= 0);
+const isOutOfStock = computed(() => props.product.stock <= 0 && !props.product.is_pre_order);
+
+const isPreOrderMode = computed(() => props.product.stock <= 0 && props.product.is_pre_order);
 
 const discountBadgeText = computed(() => {
     if (!pricing.value.cross) return null;
@@ -373,6 +375,17 @@ onUnmounted(() => {
                 :href="route('product.details', product.slug)"
                 class="block relative w-full aspect-[2/3] overflow-hidden group/image"
             >
+                <!-- Pre-Order Badge -->
+                <div
+                    v-if="product.is_pre_order"
+                    class="absolute top-3 left-3 z-20"
+                >
+                    <span class="bg-indigo-600 text-white px-2 py-1 text-[10px] font-black uppercase tracking-wider shadow-lg rounded-sm flex items-center gap-1">
+                        <Truck :size="12" />
+                        Pre-Order
+                    </span>
+                </div>
+
                 <img
                     :src="product.feature_image"
                     :alt="product.name"
@@ -681,7 +694,7 @@ onUnmounted(() => {
                         ></path>
                     </svg>
                     <span class="hidden md:block">{{
-                        isOutOfStock ? "Sold Out" : "Add To Cart"
+                        isOutOfStock ? "Sold Out" : (isPreOrderMode ? "Pre-Order" : "Add To Cart")
                     }}</span>
                 </button>
             </div>

@@ -276,6 +276,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::post('/orders/{orderId}/update', [OrderController::class, 'updateNewOrders'])->name('orders.update-new');
     Route::post('/orders/{orderId}/basic-info', [OrderController::class, 'updateBasicInfo'])->name('orders.basic-info');
     Route::put('/orders/{orderId}/admin-notes', [OrderController::class, 'updateAdminNotes'])->name('orders.update-notes');
+    Route::put('/orders/{orderId}/advance-payment', [OrderController::class, 'verifyAdvancePayment'])->name('orders.verify-advance-payment');
     Route::put('/orders/{order}/items/{item}', [OrderController::class, 'updateItemQuantity'])->name('orders.items.update');
     Route::delete('/orders/{order}/items/{item}', [OrderController::class, 'destroyItem'])->name('orders.items.destroy');
 });

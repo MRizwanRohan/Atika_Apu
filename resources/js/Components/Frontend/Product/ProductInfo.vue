@@ -301,7 +301,12 @@ const currentStock = computed(() => {
 });
 
 const hasStock = computed(() => {
-    return currentStock.value > 0;
+    return currentStock.value > 0 || props.product.is_pre_order;
+});
+
+// Helper for button text
+const isPreOrderMode = computed(() => {
+    return currentStock.value <= 0 && props.product.is_pre_order;
 });
 
 const decreaseQuantity = () => {
@@ -601,6 +606,11 @@ watch(
 
         <div class="border-t border-dashed border-gray-300 my-6"></div>
 
+        <!-- Pre-order badge -->
+        <div v-if="isPreOrderMode" class="mb-4 inline-block bg-orange-100 text-orange-800 text-xs px-3 py-1.5 rounded-full font-semibold border border-orange-200">
+            🚚 Pre-order: Optional 50% advance payment available
+        </div>
+
         <!-- Short Description / Summary -->
         <div class="mb-8">
             <h3 class="text-lg font-bold mb-3">Description:</h3>
@@ -682,7 +692,7 @@ watch(
                     class="flex-1 h-[54px] bg-[#121212] text-white text-[15px] font-bold rounded-lg hover:bg-black transition-all disabled:opacity-50"
                 >
                     <span v-if="isAddingToCart" class="loading loading-spinner"></span>
-                    <span v-else>Add To Cart</span>
+                    <span v-else>{{ isPreOrderMode ? 'Pre-Order' : 'Add To Cart' }}</span>
                 </button>
                 <button
                     @click="buyNow"

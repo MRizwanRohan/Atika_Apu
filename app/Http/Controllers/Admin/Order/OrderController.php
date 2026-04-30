@@ -428,6 +428,44 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * Verify Advance Payment from Admin
+     */
+    public function verifyAdvancePayment(Request $request, $orderId)
+    {
+        try {
+            $validated = $request->validate([
+                'action' => 'required|in:approve,reject',
+                'paid_amount' => 'required|numeric|min:0',
+            ]);
+
+            $order = Order::findOrFail($orderId);
+
+            if ($validated['action'] === 'approve') {
+                $order->update([
+                    'paid_amount' => $validated['paid_amount'],
+                    'payment_status' => $validated['paid_amount'] >= $order->total ? 'paid' : 'unpaid',
+                    'payment_verification_status' => 'approved'
+                ]);
+            } else {
+                $order->update([
+                    'payment_verification_status' => 'rejected',
+                    'admin_notes' => $order->admin_notes . "\n[System] Pre-payment verification rejected for TrxID: " . $order->transaction_id
+                ]);
+            }
+
+            Order::incrementCacheVersion();
+
+            return redirect()->back()->with('success', 'Payment status updated successfully');
+        } catch (\Exception $e) {
+            Log::error('Failed to verify advance payment', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'Failed to process payment check: ' . $e->getMessage());
+        }
+    }
+
 
     /**
      * Update courier details for an order

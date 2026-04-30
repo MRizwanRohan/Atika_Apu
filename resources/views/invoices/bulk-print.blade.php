@@ -448,14 +448,14 @@
                             <div class="totals-row">
                                 <div class="label">Paid:</div>
                                 <div class="value">
-                                    {{ $order['payment_status'] == 'paid' ? number_format($order['total'], 0) : '0' }}
-                                    Tk</div>
+                                    {{ number_format($order->paid_amount ?? 0, 0) }} Tk
+                                </div>
                             </div>
                             <div class="totals-row total">
                                 <div class="label">Cash on Delivery:</div>
                                 <div class="value">
-                                    {{ $order['payment_status'] == 'paid' ? '0' : number_format($order['total'], 0) }}
-                                    Tk</div>
+                                    {{ number_format($order->total - ($order->paid_amount ?? 0), 0) }} Tk
+                                </div>
                             </div>
                         </div>
                     </div>

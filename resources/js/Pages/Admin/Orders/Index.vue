@@ -16,6 +16,7 @@ import {
     Truck,
     ChevronDown,
     ChevronUp,
+    CreditCard,
 } from "lucide-vue-next";
 import CourierSelectionModal from "@/Components/Couriers/CourierSelectionModal.vue";
 import DeleteModal from "@/Components/Modal/DeleteModal.vue";
@@ -25,6 +26,7 @@ import StatusDropdown from "@/Components/Order/StatusDropdown.vue";
 import FraudCheckerModal from "@/Components/Couriers/FraudCheckerModal.vue";
 import AdminNotesModal from "@/Components/Order/AdminNotesModal.vue";
 import PartialDeliveryModal from "@/Components/Order/PartialDeliveryModal.vue";
+import PaymentVerifyModal from "@/Components/Order/PaymentVerifyModal.vue";
 
 const props = defineProps({
     orders: Object,
@@ -53,6 +55,14 @@ const selectedOrderForNotes = ref(null);
 
 const showPartialModal = ref(false);
 const selectedOrderForPartial = ref(null);
+
+const showPaymentModal = ref(false);
+const selectedOrderForPayment = ref(null);
+
+const openPaymentModal = (order) => {
+    selectedOrderForPayment.value = order;
+    showPaymentModal.value = true;
+};
 
 // ── Meta Tracking ──────────────────────────────────────────
 const metaFiringOrderId = ref(null);
@@ -1562,6 +1572,33 @@ const getSourceSoftColorClass = (source) => {
                                         </span>
                                     </div>
 
+                                    <!-- Transaction ID -->
+                                    <div v-if="order.transaction_id && order.has_pre_order" class="flex flex-col gap-1 border-t border-gray-100 pt-1.5 mt-1.5">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TrxID</span>
+                                            <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md break-all text-right max-w-[120px]">
+                                                {{ order.transaction_id }}
+                                            </span>
+                                        </div>
+                                        <!-- Already approved -->
+                                        <div v-if="order.paid_amount > 0" class="text-[9px] font-black w-full text-emerald-700 bg-emerald-50 border border-emerald-200 uppercase py-1 rounded-sm flex justify-center items-center gap-1">
+                                            ✓ Approved (৳{{ order.paid_amount }})
+                                        </div>
+                                        <!-- Rejected -->
+                                        <div v-else-if="order.payment_verification_status === 'rejected'" class="text-[9px] font-black w-full text-rose-700 bg-rose-50 border border-rose-200 uppercase py-1 rounded-sm flex justify-center items-center gap-1">
+                                            ✗ Rejected
+                                        </div>
+                                        <!-- Pending verify -->
+                                        <button 
+                                            v-else
+                                            @click.stop="openPaymentModal(order)"
+                                            class="text-[9px] font-black w-full text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors uppercase py-1 rounded-sm shadow-sm flex justify-center items-center gap-1"
+                                        >
+                                            <CreditCard class="w-2.5 h-2.5" />
+                                            Verify Payment
+                                        </button>
+                                    </div>
+
                                     <!-- Due (Optional Visual) -->
                                     <div v-if="order.total > (order.paid_amount || 0)" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
                                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Due</span>
@@ -1679,6 +1716,18 @@ const getSourceSoftColorClass = (source) => {
                                                 <User class="w-4 h-4" />
                                                 Check Fraud
                                             </button>
+
+                                            <!-- <button
+                                                v-if="order.transaction_id"
+                                                @click="
+                                                    openPaymentModal(order);
+                                                    toggleActionMenu(order.id);
+                                                "
+                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 flex items-center gap-2 transition-colors border-t border-gray-100"
+                                            >
+                                                <CreditCard class="w-4 h-4 text-indigo-500" />
+                                                Verify Payment
+                                            </button> -->
 
                                             <!-- <Link
                                                 :href="
@@ -1898,6 +1947,27 @@ const getSourceSoftColorClass = (source) => {
                                     >
                                         {{ order.payment_status }}
                                     </span>
+                                    <!-- TrxID -->
+                                    <template v-if="order.transaction_id && order.has_pre_order">
+                                        <!-- Already approved -->
+                                        <span v-if="order.paid_amount > 0" class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                            ✓ Paid ৳{{ order.paid_amount }}
+                                        </span>
+                                        <!-- Rejected -->
+                                        <span v-else-if="order.payment_verification_status === 'rejected'" class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-rose-50 text-rose-700 border-rose-200">
+                                            ✗ Rejected
+                                        </span>
+                                        <!-- Pending verify button -->
+                                        <button
+                                            v-else
+                                            @click.stop="openPaymentModal(order)"
+                                            class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-indigo-100 text-indigo-700 border-indigo-200 active:scale-95 transition-all max-w-[85px]"
+                                            title="Verify Transaction ID"
+                                        >
+                                            <CreditCard class="w-2 h-2 shrink-0" />
+                                            <span class="truncate">{{ order.transaction_id }}</span>
+                                        </button>
+                                    </template>
                                     <!-- Delivery Status -->
                                     <span 
                                         class="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-blue-50 text-blue-600 border-blue-200"
@@ -2024,6 +2094,9 @@ const getSourceSoftColorClass = (source) => {
                                 <div v-if="activeActionMenu === order.id" class="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 py-1">
                                     <button @click="checkFraud(order?.customer?.phone); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2">
                                         <User class="w-4 h-4 text-orange-500" /> Fraud Check
+                                    </button>
+                                    <button v-if="order.transaction_id" @click="openPaymentModal(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-indigo-50 flex items-center gap-2 border-t border-gray-50">
+                                        <CreditCard class="w-4 h-4 text-indigo-500" /> Verify Payment
                                     </button>
                                     <button @click="sendToPathao(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
                                         <Truck class="w-4 h-4 text-emerald-500" /> Pathao
@@ -2182,6 +2255,13 @@ const getSourceSoftColorClass = (source) => {
             :visible="showPartialModal"
             :order="selectedOrderForPartial"
             @close="showPartialModal = false"
+        />
+
+        <!-- Payment Verify Modal -->
+        <PaymentVerifyModal
+            :visible="showPaymentModal"
+            :order="selectedOrderForPayment"
+            @close="showPaymentModal = false"
         />
     </AdminLayout>
 </template>

@@ -203,6 +203,11 @@ class OrderService implements OrderInterface
             ]);
         }
 
+        $notes = $validatedData['customer_notes'] ?? null;
+        if (!empty($validatedData['payment_phone'])) {
+            $notes = "Payment Phone: " . $validatedData['payment_phone'] . "\n" . ($notes ?? '');
+        }
+
         $order = Order::create([
             'order_number' => $this->generateUniqueOrderNumber(),
             'user_id' => $validatedData['user_id'] ?? null,
@@ -215,7 +220,8 @@ class OrderService implements OrderInterface
             'shipping_district' => $validatedData['shipping_district'] ?? null,
             'shipping_thana' => $validatedData['shipping_thana'] ?? null,
             'area' => $validatedData['area'] ?? null,
-            'customer_notes' => $validatedData['customer_notes'] ?? null,
+            'customer_notes' => $notes,
+            'transaction_id' => $validatedData['transaction_id'] ?? null,
             'shipping_cost' => $validatedData['shipping_cost'] ?? 0,
             'payment_method' => $validatedData['payment_method'],
             'status' => $validatedData['status'] ?? 'pending',
@@ -265,6 +271,8 @@ class OrderService implements OrderInterface
             'customer_notes' => ['nullable', 'string', 'max:1000'],
             'shipping_cost' => ['nullable', 'numeric', 'min:0', 'max:10000'],
             'payment_method' => ['required'],
+            'payment_phone' => ['nullable', 'string', 'max:255'],
+            'transaction_id' => ['nullable', 'string', 'max:255'],
             'payment_status' => ['required', 'in:unpaid,paid,refunded'],
             // POS discount fields
             'pos_discount' => ['nullable', 'numeric', 'min:0'],
@@ -545,14 +553,25 @@ class OrderService implements OrderInterface
 
             $product->increment('sold_stock', $quantity);
             $product->decrement('stock', $quantity);
+
+            // Automatically enable pre-order if variation stock reaches zero
+            if (!$product->is_pre_order && $variation->stock <= 0) {
+                $product->update(['is_pre_order' => true]);
+            }
         } else {
             // Only update product stock if no variation exists
             $product->increment('sold_stock', $quantity);
             $product->decrement('stock', $quantity);
+
+            // Automatically enable pre-order if product stock reaches zero
+            if (!$product->is_pre_order && $product->stock <= 0) {
+                $product->update(['is_pre_order' => true]);
+            }
         }
 
-        // Clear product cache after stock update
+        // Clear caches after stock update
         Order::incrementCacheVersion();
+        Product::incrementCacheVersion();
     }
 
     /**

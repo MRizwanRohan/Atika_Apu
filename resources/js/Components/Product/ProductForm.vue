@@ -1606,6 +1606,20 @@ const submit = () => {
                                         </div>
                                     </div>
 
+                                    <!-- Pre Order Toggle -->
+                                    <div class="mb-6">
+                                        <label class="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-bold text-gray-900">Enable Pre-Order</span>
+                                                <span class="text-xs text-gray-500 mt-1">Allow customers to purchase this item even when stock reaches zero.</span>
+                                            </div>
+                                            <div class="relative">
+                                                <input type="checkbox" v-model="form.is_pre_order" class="sr-only peer">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </div>
+                                        </label>
+                                    </div>
+
                                     <div v-if="form.type === 'simple'">
                                         <label for="stock" class="block text-sm font-semibold text-gray-700 mb-2">Total Stock Quantity</label>
                                         <input

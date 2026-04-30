@@ -31,7 +31,8 @@ class ProductService
     $page = $request->input('page', 1);
 
     // Generate unique cache key based on pagination, search and category
-    $cacheKey = "products.admin.page.{$page}.per_page.{$perPage}.search." . md5($search) . ".category.{$categoryId}";
+    $version = Product::getCacheVersion();
+    $cacheKey = "products.v{$version}.admin.page.{$page}.per_page.{$perPage}.search." . md5($search) . ".category.{$categoryId}";
 
     // Cache for 30 minutes (1800 seconds)
     return Cache::remember($cacheKey, 1800, function () use ($search, $perPage, $categoryId) {
@@ -96,7 +97,8 @@ class ProductService
 
   public function getAllProducts()
   {
-    return Cache::remember('products.all', 1800, function () {
+    $version = Product::getCacheVersion();
+    return Cache::remember("products.v{$version}.all", 1800, function () {
       return Product::with(['category.parentRecursive', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
         ->withAvg('reviews', 'rating')
         ->withCount('reviews')
@@ -107,7 +109,8 @@ class ProductService
 
   public function getSingleProduct($slug)
   {
-    return Cache::remember("product.{$slug}", 3600, function () use ($slug) {
+    $version = Product::getCacheVersion();
+    return Cache::remember("product.v{$version}.{$slug}", 3600, function () use ($slug) {
       return Product::where('slug', $slug)
         ->with(['category.parentRecursive', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
         ->withAvg('reviews', 'rating')
@@ -117,7 +120,8 @@ class ProductService
   }
 
   public function categorywithproducts(){
-    return Cache::remember('products.category_grouped', 1800, function () {
+    $version = Product::getCacheVersion();
+    return Cache::remember("products.v{$version}.category_grouped", 1800, function () {
             // Get root categories that are active, ordered by 'order'
             $rootCategories = Category::whereNull('parent_id')
                 ->where('status', 'active')
@@ -240,7 +244,8 @@ class ProductService
    */
   public function getRelatedProducts($productId, $limit = 10)
   {
-    $cacheKey = "products.related.{$productId}.limit.{$limit}";
+    $version = Product::getCacheVersion();
+    $cacheKey = "products.v{$version}.related.{$productId}.limit.{$limit}";
 
     return Cache::remember($cacheKey, 1800, function () use ($productId, $limit) {
       try {

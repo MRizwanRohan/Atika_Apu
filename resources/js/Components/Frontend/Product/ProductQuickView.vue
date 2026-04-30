@@ -217,7 +217,7 @@ const stockMessage = computed(() => {
 });
 
 const canAddToCart = computed(() => {
-    if (props.product.type !== "variable") return props.product.stock > 0;
+    if (props.product.type !== "variable") return props.product.stock > 0 || props.product.is_pre_order;
 
     const requiredAttrs = availableAttributes.value.map((a) => a.key);
     const selected = Object.keys(selectedAttributes.value);
@@ -226,7 +226,7 @@ const canAddToCart = computed(() => {
     if (!allSelected) return false;
 
     const variation = getMatchingVariation();
-    return variation && variation.stock > 0;
+    return variation && (variation.stock > 0 || props.product.is_pre_order);
 });
 
 const performAddToCart = () => {
@@ -403,7 +403,7 @@ onUnmounted(() => {
                                     />
                                     <!-- Out of Stock Overlay -->
                                     <div
-                                        v-if="currentStock <= 0"
+                                        v-if="currentStock <= 0 && !product.is_pre_order"
                                         class="absolute inset-0 bg-white/60 flex items-center justify-center"
                                     >
                                         <span
@@ -548,7 +548,7 @@ onUnmounted(() => {
                                         <span v-if="isAddingToCart"
                                             >Adding...</span
                                         >
-                                        <span v-else>ADD TO CART</span>
+                                        <span v-else>{{ currentStock <= 0 && product.is_pre_order ? 'PRE-ORDER' : 'ADD TO CART' }}</span>
                                     </button>
 
                                     <button

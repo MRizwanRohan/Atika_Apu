@@ -54,6 +54,8 @@ const form = useForm({
     customer_notes: "",
     payment_method: "cod",
     payment_status: "unpaid",
+    payment_phone: "",
+    transaction_id: "",
     coupon_code: props.cart?.data?.coupon_code || null,
     discount_type: props.cart?.data?.coupon_type || null,
     discount_amount: props.cart?.data?.coupon_value || 0,
@@ -113,11 +115,29 @@ const subtotal = computed(() => {
     }, 0);
 });
 
+// Check if any items are pre-orders
+const hasPreOrderItems = computed(() => {
+    if (!props.cart?.data?.items) return false;
+    return props.cart.data.items.some(item => item.is_pre_order);
+});
+
 // Calculate total
 const total = computed(() => {
     const discount = props.cart?.data?.discount || 0;
     return subtotal.value + form.shipping_cost - parseFloat(discount);
 });
+
+// Calculate suggested advance payment
+const advancePaymentAmount = computed(() => {
+    return total.value * 0.5;
+});
+
+// Setup initial payment method based on pre-order status
+watch(hasPreOrderItems, (isPreOrder) => {
+    if (isPreOrder && form.payment_method === 'cod') {
+        form.payment_method = 'bkash';
+    }
+}, { immediate: true });
 
 // Coupon form
 const couponForm = useForm({
@@ -254,6 +274,16 @@ const submitOrder = () => {
         // Optionally scroll to the phone input
         document.getElementById("customer_phone")?.focus();
         return;
+    }
+
+    if ((form.payment_method === 'bkash' || form.payment_method === 'nagad')) {
+        if (!hasPreOrderItems.value) {
+            // Normal order: Require both Sender Phone Number and Transaction ID
+            if (!form.payment_phone || !form.transaction_id) {
+                toast.warning("Please provide both Sender Phone Number and Transaction ID for manual payments");
+                return;
+            }
+        }
     }
 
     form.post(route("order.store"), {
@@ -615,8 +645,9 @@ onMounted(() => {
                                     Payment Method
                                 </h2>
 
-                                <div class="space-y-3">
+                                <div class="space-y-4">
                                     <label
+                                        v-if="!hasPreOrderItems"
                                         class="relative flex items-center p-4 border rounded-lg cursor-pointer transition-all"
                                         :class="
                                             form.payment_method === 'cod'
@@ -649,17 +680,42 @@ onMounted(() => {
                                                 </svg>
                                             </div>
                                             <div>
-                                                <span
-                                                    class="block font-medium text-gray-900"
-                                                    >Cash on Delivery</span
-                                                >
-                                                <span
-                                                    class="block text-sm text-gray-500"
-                                                    >Pay when you receive</span
-                                                >
+                                                <span class="block font-medium text-gray-900">Cash on Delivery</span>
+                                                <span class="block text-sm text-gray-500">Pay when you receive</span>
                                             </div>
                                         </div>
                                     </label>
+                                    <template v-if="hasPreOrderItems">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Payment Method</label>
+                                            <select
+                                                v-model="form.payment_method"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white font-medium text-gray-900"
+                                            >
+                                                <option value="" disabled>Select Payment Method</option>
+                                                <option value="bkash">bKash (Manual)</option>
+                                                <option value="nagad">Nagad (Manual)</option>
+                                            </select>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div v-if="form.payment_method === 'bkash' || form.payment_method === 'nagad'" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <h3 class="text-sm font-bold text-blue-900 mb-2">Instructions:</h3>
+                                    <p class="text-sm text-blue-800 mb-4">Please send the amount to our official {{ form.payment_method === 'bkash' ? 'bKash' : 'Nagad' }} number: <strong>{{ settings.generalSettings?.site_phone || '01XXXXXXXXX' }}</strong>. Then provide your {{ hasPreOrderItems ? 'Transaction ID below (Optional).' : 'phone number and Transaction ID below.' }}</p>
+                                    
+                                    <div class="space-y-4">
+                                        <div v-if="!hasPreOrderItems">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Sender Phone Number <span class="text-red-500">*</span></label>
+                                            <input type="text" v-model="form.payment_phone" :placeholder="`Your ${form.payment_method === 'bkash' ? 'bKash' : 'Nagad'} Number`" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" :required="!hasPreOrderItems" />
+                                            <p v-if="form.errors.payment_phone" class="mt-1 text-sm text-red-500">{{ form.errors.payment_phone }}</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Transaction ID (TrxID) <span v-if="!hasPreOrderItems" class="text-red-500">*</span></label>
+                                            <input type="text" v-model="form.transaction_id" placeholder="Transaction ID" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" :required="!hasPreOrderItems" />
+                                            <p v-if="form.errors.transaction_id" class="mt-1 text-sm text-red-500">{{ form.errors.transaction_id }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1024,6 +1080,18 @@ onMounted(() => {
                                     <span class="text-primary"
                                         >৳{{ total.toFixed(2) }}</span
                                     >
+                                </div>
+                                <div v-if="hasPreOrderItems" class="bg-indigo-50 border border-indigo-100 p-3 rounded-lg mt-3 space-y-2 animate-in fade-in zoom-in duration-300">
+                                    <p class="text-xs font-bold text-indigo-800 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Pre-Order Notice</p>
+                                    <div class="flex justify-between text-sm text-indigo-700">
+                                        <span>Suggested Advance (50%)</span>
+                                        <span class="font-bold">৳{{ advancePaymentAmount.toFixed(2) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-indigo-700">
+                                        <span>Due on Delivery</span>
+                                        <span class="font-bold">৳{{ (total - advancePaymentAmount).toFixed(2) }}</span>
+                                    </div>
+                                    <p class="text-[10px] text-indigo-600 leading-tight">You can optionally send the suggested advance via bKash/Nagad to confirm your pre-order quickly, or simply place via Cash on Delivery.</p>
                                 </div>
                             </div>
 

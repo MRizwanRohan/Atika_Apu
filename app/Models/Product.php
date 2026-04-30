@@ -146,4 +146,16 @@ class Product extends Model
     {
         return $this->feature_image ? asset($this->feature_image) : null;
     }
+
+    public static function getCacheVersion()
+    {
+        return \Illuminate\Support\Facades\Cache::get('products_cache_version', 1);
+    }
+
+    public static function incrementCacheVersion()
+    {
+        $newVersion = static::getCacheVersion() + 1;
+        \Illuminate\Support\Facades\Cache::forever('products_cache_version', $newVersion);
+        return $newVersion;
+    }
 }
