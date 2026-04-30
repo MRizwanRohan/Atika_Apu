@@ -217,7 +217,9 @@ import {
     Wallet,
     ShieldCheck,
     Globe,
+    MessageSquare,
 } from "lucide-vue-next";
+
 import { Link, usePage } from "@inertiajs/vue3";
 
 const page = usePage();
@@ -276,6 +278,12 @@ const navigationItems = [
         route: "admin.orders.index",
         icon: ShoppingCart,
         permission: "admin.orders.index",
+    },
+    {
+        label: "Customers",
+        route: "admin.customers.index",
+        icon: Users,
+        permission: "admin.customers.index",
     },
     {
         label: "Incomplete Orders",
@@ -541,7 +549,13 @@ const navigationItems = [
                 route: "admin.meta-tracking.settings",
                 permission: "admin.meta-tracking.settings",
             },
+            {
+                label: "SMS Settings",
+                route: "admin.settings.sms.index",
+                permission: "admin.settings.sms.index",
+            },
         ],
+
     },
 ];
 

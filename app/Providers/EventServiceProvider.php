@@ -27,7 +27,9 @@ class EventServiceProvider extends ServiceProvider
             ClearOrderCache::class,
             CreateOrderNotificationRecord::class,
             SendMetaConversionOnOrderCreated::class,
+            \App\Listeners\SendOrderSmsNotification::class,
         ],
+
 
         // Add other events and listeners here
         OrderUpdated::class => [

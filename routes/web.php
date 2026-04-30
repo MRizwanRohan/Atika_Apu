@@ -42,6 +42,8 @@ use App\Http\Controllers\Admin\Banner\BannerController;
 use App\Http\Controllers\Admin\MetaTracking\MetaTrackingController;
 use App\Http\Controllers\Admin\ProductGroup\ProductGroupController;
 use App\Http\Controllers\Admin\InstagramFeed\InstagramFeedController;
+use App\Http\Controllers\Admin\Customer\CustomerController;
+use App\Http\Controllers\Admin\Sms\SmsSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,6 +83,24 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::resource('/orders', OrderController::class);
     Route::get('/incomplete-orders', [OrderController::class, 'incompleteOrders'])->name('orders.incomplete');
     Route::get('/order-map', [OrderController::class, 'districtWiseOrders'])->name('orders.map');
+
+    // customers
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/sms-logs', [CustomerController::class, 'smsLogs'])->name('customers.sms-logs');
+    Route::post('/customers/send-bulk-sms', [CustomerController::class, 'sendBulkSms'])->name('customers.send-bulk-sms');
+
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+
+    // SMS Settings
+    Route::group(['prefix' => 'settings/sms', 'as' => 'settings.sms.'], function () {
+        Route::get('/', [SmsSettingController::class, 'index'])->name('index');
+        Route::post('/update', [SmsSettingController::class, 'updateSettings'])->name('update');
+        Route::post('/templates', [SmsSettingController::class, 'storeTemplate'])->name('templates.store');
+        Route::put('/templates/{template}', [SmsSettingController::class, 'updateTemplate'])->name('templates.update');
+        Route::delete('/templates/{template}', [SmsSettingController::class, 'destroyTemplate'])->name('templates.destroy');
+    });
+
+
 
     Route::get('/invoice/{order}/download', [OrderController::class, 'downloadInvoice'])->name('invoice.download');
     Route::post('/bulk-invoice/download', [OrderController::class, 'bulkDownloadInvoices'])->name('invoice.bulk-download');

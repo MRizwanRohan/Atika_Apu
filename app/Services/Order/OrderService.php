@@ -22,6 +22,8 @@ use App\Services\Cart\CartService;
 use App\Services\Coupon\CouponService;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Notification;
+use App\Models\Customer;
+
 
 class OrderService implements OrderInterface
 {
@@ -119,8 +121,15 @@ class OrderService implements OrderInterface
                     // ]);
                 }
 
+
+                $this->syncCustomer($order);
+
                 return $order;
             });
+
+
+
+
         } catch (InsufficientStockException $e) {
             Log::error('Order creation failed: Insufficient stock', [
                 'message' => $e->getMessage(),
@@ -806,6 +815,7 @@ class OrderService implements OrderInterface
                     'order_number' => $order->order_number
                 ]);
 
+                $this->syncCustomer($order);
                 event(new OrderUpdated($order)); // Dispatch event for cache invalidation
 
                 return $order;
@@ -1395,7 +1405,10 @@ class OrderService implements OrderInterface
         // Dispatch event so Meta CAPI and other listeners can react
         event(new OrderUpdated($order));
 
+        $this->syncCustomer($order);
+
         return $order;
+
     }
 
 
@@ -1784,6 +1797,39 @@ class OrderService implements OrderInterface
         return ['count' => $unreadCount, 'notifications' => $notifications];
     }
 
+    /**
+     * Sync customer data from order
+     *
+     * @param Order $order
+     * @return void
+     */
+    protected function syncCustomer(Order $order): void
+    {
+        if (!$order->customer_phone) {
+            return;
+        }
 
+        $customer = Customer::updateOrCreate(
+            ['phone' => $order->customer_phone],
+            [
+                'name' => $order->customer_name,
+                'email' => $order->customer_email,
+                'address' => $order->shipping_address,
+                'district' => $order->shipping_district,
+                'thana' => $order->shipping_thana,
+                'area' => $order->area,
+                'last_order_at' => $order->created_at,
+            ]
+        );
 
+        // Update aggregate data (excluding incomplete orders)
+        $customerOrders = Order::where('customer_phone', $order->customer_phone)
+            ->where('status', '!=', 'incomplete');
+
+        $customer->update([
+            'orders_count' => $customerOrders->count(),
+            'total_spent' => $customerOrders->sum('total'),
+        ]);
+    }
 }
+
