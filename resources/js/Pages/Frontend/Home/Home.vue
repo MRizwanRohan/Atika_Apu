@@ -51,6 +51,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    sideBanners: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 // Expose settings as a ref so it's accessible in the template and reactive in script
@@ -81,11 +85,10 @@ const pageTitle = computed(
         <meta name="description" :content="settings?.generalSettings?.site_description || 'E-commerce store'">
     </Head>
 
-    <!-- <pre>{{ settings }}</pre> -->
+     <!-- <pre>{{ sideBanners }}</pre> -->
 
-    <!-- <Sliders :sliders="sliders" /> -->
+      <Sliders :sliders="sliders" :sideBanners="sideBanners" />
 
-    <GsapSlider :sliders="sliders" />
 
     <!-- Featured Categories -->
     <FeaturedCategories :categories="categories" />

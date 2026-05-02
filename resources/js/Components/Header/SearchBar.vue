@@ -14,6 +14,10 @@ const props = defineProps({
         type: String,
         default: "light", // 'light' or 'dark'
     },
+    placeholder: {
+        type: String,
+        default: "Search products, models, brands...",
+    },
 });
 
 const emit = defineEmits(["close"]);
@@ -121,85 +125,72 @@ onUnmounted(() => {
 <template>
     <div ref="searchContainerRef" class="relative flex-1 w-full">
         <div class="relative group">
-            <div
-                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
-            >
-                <Search
-                    class="w-5 h-5 transition-colors"
-                    :class="
-                        variant === 'dark' ? 'text-gray-400' : 'text-gray-400'
-                    "
-                />
-            </div>
             <input
                 ref="inputRef"
                 v-model="searchQuery"
                 @keyup.enter="handleSearch"
                 @focus="searchQuery.length >= 2 && (showSuggestions = true)"
                 type="text"
-                placeholder="Search..."
-                class="w-full pl-11 pr-12 py-2.5 transition-all outline-none"
+                :placeholder="placeholder"
+                class="w-full pl-6 pr-12 py-3 transition-all outline-none border text-sm"
                 :class="[
                     variant === 'dark'
-                        ? 'bg-[#2a2a2a] text-white placeholder-gray-500 rounded-full focus:bg-[#333]'
-                        : 'bg-white text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent',
+                        ? 'bg-[#2a2a2a] text-white placeholder-gray-500 rounded-full border-transparent focus:bg-[#333]'
+                        : 'bg-gray-50 text-gray-900 border-gray-100 rounded-full focus:bg-white focus:border-primary/40 focus:ring-0 shadow-inner focus:shadow-sm',
                 ]"
             />
 
-            <!-- Loading indicator -->
-            <div
-                v-if="loading"
-                class="absolute right-4 top-1/2 -translate-y-1/2"
-            >
-                <Loader2 class="w-5 h-5 text-gray-400 animate-spin" />
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <!-- Loading indicator -->
+                <Loader2 v-if="loading" class="w-5 h-5 text-gray-400 animate-spin mr-2" />
+
+                <!-- Clear button -->
+                <button
+                    v-if="searchQuery && !loading"
+                    @click="clearSearch"
+                    class="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <X class="w-4 h-4" />
+                </button>
+
+                <!-- Search Button -->
+                <button
+                    @click="handleSearch"
+                    class="w-10 h-10 flex items-center justify-center bg-primary text-white hover:bg-black rounded-full transition-all shadow-sm active:scale-95"
+                    aria-label="Search"
+                >
+                    <Search class="w-5 h-5 stroke-[2.5]" />
+                </button>
             </div>
-
-            <!-- Clear button -->
-            <button
-                v-if="searchQuery && !loading"
-                @click="clearSearch"
-                class="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
-            >
-                <X class="w-5 h-5" />
-            </button>
-
-            <!-- Search Button -->
-            <button
-                @click="handleSearch"
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-1.5 rounded-full transition-colors flex items-center justify-center"
-                aria-label="Search"
-            >
-                <Search class="w-4 h-4" />
-            </button>
         </div>
 
         <!-- Suggestions dropdown -->
         <div
             v-if="showSuggestions && suggestions.length > 0"
-            class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-[400px] overflow-y-auto"
+            class="absolute z-[60] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-[450px] overflow-y-auto overflow-x-hidden"
         >
             <div
                 v-for="product in suggestions"
                 :key="product.id"
                 @click="goToProduct(product.slug)"
-                class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                class="flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-all"
             >
                 <div
-                    class="w-14 h-14 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden"
+                    class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100"
                 >
                     <img
                         :src="product.feature_image"
                         :alt="product.name"
-                        class="w-full h-full object-contain p-1"
+                        class="w-full h-full object-contain p-2 hover:scale-110 transition-transform duration-300"
                     />
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h4 class="text-sm font-medium text-gray-900 truncate">
+                    <h4 class="text-sm font-semibold text-gray-900 truncate">
                         {{ product.name }}
                     </h4>
                     <p
                         v-if="product.category"
-                        class="text-xs text-gray-500 mt-0.5"
+                        class="text-xs text-gray-500 mt-1"
                     >
                         {{ product.category.name }}
                     </p>
@@ -223,7 +214,7 @@ onUnmounted(() => {
             <!-- View all results link -->
             <div
                 @click="handleSearch"
-                class="p-3 text-center text-primary font-medium hover:bg-primary/5 cursor-pointer transition-colors border-t border-gray-100"
+                class="p-4 text-center text-primary font-semibold hover:bg-primary/5 cursor-pointer transition-colors border-t border-gray-50 text-sm"
             >
                 View all results for "{{ searchQuery }}" →
             </div>
@@ -237,16 +228,16 @@ onUnmounted(() => {
                 searchQuery.length >= 2 &&
                 !loading
             "
-            class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl p-8 text-center"
+            class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl p-10 text-center"
         >
-            <div class="flex flex-col items-center gap-3">
-                <div class="p-3 bg-gray-50 rounded-full">
-                    <Search class="w-8 h-8 text-gray-300" />
+            <div class="flex flex-col items-center gap-4">
+                <div class="p-4 bg-gray-50 rounded-full">
+                    <Search class="w-10 h-10 text-gray-200" />
                 </div>
                 <div>
-                    <p class="text-gray-900 font-medium">No products found</p>
+                    <p class="text-gray-900 font-semibold">No results found</p>
                     <p class="text-gray-500 text-sm mt-1">
-                        We couldn't find anything matching "{{ searchQuery }}"
+                        Try different keywords OR filter by category
                     </p>
                 </div>
             </div>

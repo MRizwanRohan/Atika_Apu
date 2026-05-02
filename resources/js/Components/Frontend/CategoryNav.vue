@@ -42,6 +42,7 @@ const clearActive = () => {
 </script>
 
 <template>
+    <!-- <pre>{{ categories }}</pre> -->
     <nav
         class="hidden lg:block bg-white text-black border-t border-b border-gray-200"
         @mouseleave="clearActive"

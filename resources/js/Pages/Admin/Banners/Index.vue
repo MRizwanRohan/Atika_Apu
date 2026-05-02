@@ -8,7 +8,7 @@
       
       <form @submit.prevent="submitForm" enctype="multipart/form-data">
         <!-- Top Banners Section -->
-        <div class="mb-8">
+        <div class="mb-8 hidden">
           <h2 class="text-xl font-semibold mb-4">Top Banners</h2>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -156,7 +156,7 @@
         </div>
 
         <!-- Random Banners Section -->
-        <div class="mb-8">
+        <div class="mb-8 hidden">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">Random Banners</h2>
             <button 

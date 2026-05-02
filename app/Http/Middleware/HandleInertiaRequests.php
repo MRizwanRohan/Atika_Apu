@@ -99,6 +99,9 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => fn() => $this->cartService->getCart($userId, $sessionId) 
                 ? $this->cartService->getCart($userId, $sessionId)->items->count() 
                 : 0,
+            'cartTotal' => fn() => $this->cartService->getCart($userId, $sessionId) 
+                ? $this->cartService->getCart($userId, $sessionId)->items->sum(fn($i) => (float)$i->price * $i->quantity) 
+                : 0,
             'cartSessionId' => $sessionId,
 
             // Share wishlist and compare counts - lazy loaded

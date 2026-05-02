@@ -111,7 +111,8 @@ const currentStock = computed(() => {
 
 // For variable products, we only allow adding if we have a match OR if no attributes are needed (unlikely for variable)
 const canAddToCart = computed(() => {
-    if (!isVariable.value) return props.product.stock > 0 || props.product.is_pre_order;
+    if (!isVariable.value)
+        return props.product.stock > 0 || props.product.is_pre_order;
 
     // Check if all attributes are selected
     const requiredAttrs = availableAttributes.value.map((a) => a.key);
@@ -282,9 +283,13 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
-const isOutOfStock = computed(() => props.product.stock <= 0 && !props.product.is_pre_order);
+const isOutOfStock = computed(
+    () => props.product.stock <= 0 && !props.product.is_pre_order,
+);
 
-const isPreOrderMode = computed(() => props.product.stock <= 0 && props.product.is_pre_order);
+const isPreOrderMode = computed(
+    () => props.product.stock <= 0 && props.product.is_pre_order,
+);
 
 const discountBadgeText = computed(() => {
     if (!pricing.value.cross) return null;
@@ -380,7 +385,9 @@ onUnmounted(() => {
                     v-if="product.is_pre_order"
                     class="absolute top-3 left-3 z-20"
                 >
-                    <span class="bg-indigo-600 text-white px-2 py-1 text-[10px] font-black uppercase tracking-wider shadow-lg rounded-sm flex items-center gap-1">
+                    <span
+                        class="bg-indigo-600 text-white px-2 py-1 text-[10px] font-black uppercase tracking-wider shadow-lg rounded-sm flex items-center gap-1"
+                    >
                         <Truck :size="12" />
                         Pre-Order
                     </span>
@@ -694,7 +701,11 @@ onUnmounted(() => {
                         ></path>
                     </svg>
                     <span class="hidden md:block">{{
-                        isOutOfStock ? "Sold Out" : (isPreOrderMode ? "Pre-Order" : "Add To Cart")
+                        isOutOfStock
+                            ? "Sold Out"
+                            : isPreOrderMode
+                              ? "Pre-Order"
+                              : "Add To Cart"
                     }}</span>
                 </button>
             </div>

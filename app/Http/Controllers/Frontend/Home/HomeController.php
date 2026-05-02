@@ -11,6 +11,7 @@ use App\Models\Slider;
 use App\Models\ProductVideo;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Product;
+use App\Models\Banner;
 
 use App\Models\InstagramFeed;
 
@@ -41,6 +42,8 @@ class HomeController extends Controller
             return InstagramFeed::active()->orderBy('sort_order', 'asc')->get();
         });
 
+        $newArrivalBanners = $this->getNewArrivalBannersFromDB();
+
         // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [
             'groupedProducts' => $groupedProducts,
@@ -49,6 +52,7 @@ class HomeController extends Controller
             'sliders' => $sliders,
             'productswithVideo' => $productVideos,
             'instagramFeeds' => $instagramFeeds,
+            'sideBanners' => $newArrivalBanners,
         ]);
     }
 
@@ -59,6 +63,16 @@ class HomeController extends Controller
             return Slider::all();
         });
         return $sliders;
+    }
+
+    private function getNewArrivalBannersFromDB()
+    {
+        return Banner::select(
+            'new_arrival_b_banner1',
+            'new_arrival_b_banner1_url',
+            'new_arrival_b_banner2',
+            'new_arrival_b_banner2_url'
+        )->first();
     }
 
     private function productVideos()
