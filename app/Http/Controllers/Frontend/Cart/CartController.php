@@ -101,7 +101,7 @@ class CartController extends Controller
             return redirect()->back()->with('success', 'Cart updated successfully');
         } catch (\Exception $e) {
             Log::error('Frontend updateItemQuantity error: '.$e->getMessage());
-            return redirect()->back()->with('error', 'Unable to update cart');
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
@@ -134,7 +134,7 @@ class CartController extends Controller
             return redirect()->route('cart.index')->with('success', 'Cart cleared');
         } catch (\Exception $e) {
             Log::error('Frontend clearCart error: '.$e->getMessage());
-            return redirect()->back()->with('error', 'Unable to clear cart');
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Repository\Cart\CartRepository;
 use Illuminate\Support\Facades\Log;
 use App\Repository\Product\ProductRepository;
+use Exception;
 use Illuminate\Support\Str;
 use App\Models\Campaign;
 
@@ -45,7 +46,7 @@ class CartService
             if (is_numeric($userOrSession)) {
                 $userId = $userOrSession;
                 $sessionId = null;
-                Log::info(['user_id' => $userId]);
+                Log::info('Identified User ID', ['user_id' => $userId]);
             } else {
                 $sessionId = $userOrSession;
                 $userId = null;
@@ -90,13 +91,15 @@ class CartService
                 throw new ProductNotAvailableException('Selected product variation does not belong to this product');
             }
 
-            if (!$product->is_pre_order && $variation->stock < $totalRequestedQuantity) {
+            $allowInfinite = ($product->is_pre_order && $variation->stock <= 0);
+            if (!$allowInfinite && $variation->stock < $totalRequestedQuantity) {
                 throw new InsufficientStockException("Insufficient stock for selected variation. You already have {$existingQuantity} in cart.");
             }
 
             $itemPrice = $variation->price + $product->price;
         } else {
-            if (!$product->is_pre_order && $product->stock < $totalRequestedQuantity) {
+            $allowInfinite = ($product->is_pre_order && $product->stock <= 0);
+            if (!$allowInfinite && $product->stock < $totalRequestedQuantity) {
                 throw new InsufficientStockException("Insufficient stock for this product. You already have {$existingQuantity} in cart.");
             }
 
@@ -173,7 +176,7 @@ class CartService
      * @param int|null $userId Authenticated user ID
      * @param string|null $sessionId Guest session ID
      * @return Cart
-     * @throws CartNotFoundException, ItemNotFoundException, InsufficientStockException
+     * @throws \Exception
      */
     public function updateItemQuantity(array $data, $userId = null, $sessionId = null)
     {
@@ -185,14 +188,14 @@ class CartService
 
 
             if (!$cart) {
-                throw new CartNotFoundException('Cart not found');
+                throw new Exception('Cart not found');
             }
 
             // Find cart item or throw exception
             $cartItem = $cart->items->where('id', $data['item_id'])->first();
 
             if (!$cartItem) {
-                throw new ItemNotFoundException('Item not found in cart');
+                throw new Exception('Item not found in cart');
             }
 
             // Calculate the new total quantity
@@ -261,15 +264,15 @@ class CartService
         if ($cartItem->product_variation_id) {
             $variation = $this->productRepository->findVariationById($cartItem->product_variation_id);
             if (!$variation) {
-                throw new ProductNotFoundException('Product variation not found');
+                throw new Exception('Product variation not found');
             }
-            return $variation->product->is_pre_order ? PHP_INT_MAX : $variation->stock;
+            return ($variation->product->is_pre_order && $variation->stock <= 0) ? PHP_INT_MAX : $variation->stock;
         } else {
             $product = $this->productRepository->findById($cartItem->product_id);
             if (!$product) {
-                throw new ProductNotFoundException('Product not found');
+                throw new Exception('Product not found');
             }
-            return $product->is_pre_order ? PHP_INT_MAX : $product->stock;
+            return ($product->is_pre_order && $product->stock <= 0) ? PHP_INT_MAX : $product->stock;
         }
     }
 

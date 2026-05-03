@@ -289,6 +289,9 @@ class CourierController extends Controller
     /**
      * View webhook logs
      */
+    /**
+     * View webhook logs
+     */
     public function webhookLogs(Request $request)
     {
         $logs = WebhookLog::orderBy('created_at', 'desc')
@@ -301,4 +304,64 @@ class CourierController extends Controller
         ]);
     }
 
+    /**
+     * View courier dashboard with reports
+     */
+    public function dashboard()
+    {
+        $stats = [
+            'total' => $this->getOrderByStatus(null),
+            'dhaka' => $this->getOrderByStatus('Dhaka'),
+            'outside' => $this->getOrderByStatus('outside'),
+        ];
+
+        return Inertia::render('Admin/Courier/Dashboard', [
+            'stats' => $stats,
+            'locations' => $this->districtWiseOrders()
+        ]);
+    }
+
+    private function districtWiseOrders()
+    {
+        $districtCounts = \Illuminate\Support\Facades\DB::table('orders')
+            ->select('shipping_district', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total_orders'))
+            ->where('is_courier', 1)
+            ->whereNotNull('shipping_district')
+            ->groupBy('shipping_district')
+            ->get();
+
+        // Load district coordinates
+        $geoData = collect(json_decode(file_get_contents(public_path('jsondata/bd_locations.js')), true));
+
+        // Merge coordinates with counts
+        $locations = $districtCounts->map(function ($item) use ($geoData) {
+            $match = $geoData->firstWhere('district', $item->shipping_district);
+
+            return [
+                'district' => $item->shipping_district,
+                'total_orders' => $item->total_orders,
+                'lat' => $match['lat'] ?? null,
+                'lng' => $match['lng'] ?? null,
+            ];
+        });
+
+        return $locations;
+    }
+
+    private function getOrderByStatus($district = null)
+    {
+        $query = Order::where('is_courier', 1);
+
+        if ($district === 'Dhaka') {
+            $query->where('shipping_district', 'Dhaka');
+        } elseif ($district === 'outside') {
+            $query->where('shipping_district', '!=', 'Dhaka');
+        }
+
+        return $query->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->get()
+            ->pluck('count', 'status')
+            ->toArray();
+    }
 }

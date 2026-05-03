@@ -77,7 +77,6 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        $locations = $this->districtWiseOrders();
 
         $data = [
             'summaryCards' => [
@@ -94,7 +93,6 @@ class DashboardController extends Controller
             'paymentStatusData' => $paymentStatusData,
             'deliverySalesData' => $this->getDeliverySalesData(),
             'recentOrders' => $recentOrders,
-            'locations' => $locations,
         ];
 
         //return $data;
@@ -242,32 +240,4 @@ class DashboardController extends Controller
 
 
 
-        private function districtWiseOrders()
-    {
-        $districtCounts = DB::table('orders')
-            ->select('shipping_district', DB::raw('COUNT(*) as total_orders'))
-            ->whereNotNull('shipping_district')
-            ->groupBy('shipping_district')
-            ->get();
-
-        // Load district coordinates
-        $geoData = collect(json_decode(file_get_contents(public_path('jsondata/bd_locations.js')), true));
-
-        // Merge coordinates with counts
-        $locations = $districtCounts->map(function ($item) use ($geoData) {
-            $match = $geoData->firstWhere('district', $item->shipping_district);
-
-            return [
-                'district' => $item->shipping_district,
-                'total_orders' => $item->total_orders,
-                'lat' => $match['lat'] ?? null,
-                'lng' => $match['lng'] ?? null,
-            ];
-        });
-
-        return $locations;
     }
-
-
-
-}

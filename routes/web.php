@@ -115,6 +115,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::post('/couriers/pathao/shipment', [CourierController::class, 'createShipment'])->name('couriers.pathao.shipment');
     Route::post('/couriers/pathao/shipments/bulk', [CourierController::class, 'createBulkShipment']);
     Route::get('/courier/settings', [CourierController::class, 'index'])->name('courier.settings.index');
+    Route::get('/courier/dashboard', [CourierController::class, 'dashboard'])->name('courier.dashboard');
     Route::post('/courier/settings', [CourierController::class, 'storeOrUpdate'])->name('courier.settings.store');
     Route::post('/courier/settings/generate-token/{courier}', [CourierController::class, 'generateWebhookToken'])->name('courier.settings.generate-token');
     Route::post('/courier/settings/status-mapping/{courier}', [CourierController::class, 'saveStatusMapping'])->name('courier.settings.status-mapping');

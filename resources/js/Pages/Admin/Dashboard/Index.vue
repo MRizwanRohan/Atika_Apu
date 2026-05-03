@@ -683,11 +683,6 @@ const activeTab = ref("all");
                     </div>
                 </div>
 
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 md:p-6 p-0"
-                >
-                    <OrderMap :locations="data.locations" />
-                </div>
             </div>
         </div>
     </AdminLayout>

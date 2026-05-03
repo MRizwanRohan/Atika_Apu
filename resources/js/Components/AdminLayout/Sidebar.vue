@@ -491,6 +491,11 @@ const navigationItems = [
         id: 3,
         children: [
             {
+                label: "Courier Dashboard",
+                route: "admin.courier.dashboard",
+                permission: "admin.courier.dashboard",
+            },
+            {
                 label: "Courier API",
                 route: "admin.courier.settings.index",
                 permission: "admin.courier.settings.index",

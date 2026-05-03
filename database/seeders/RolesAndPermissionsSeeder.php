@@ -45,6 +45,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'admin.blogs.index',
             'admin.reviews.index',
             'admin.courier.settings.index',
+            'admin.courier.dashboard',
             'admin.settings.basicInformation',
             'admin.media.index',
             'admin.sliders.index',
