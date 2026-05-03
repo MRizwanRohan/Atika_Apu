@@ -249,7 +249,7 @@ class OrderService implements OrderInterface
     /**
      * Validate order payload
      *
-     * @param array $data
+     * @param array $orderData
      * @return array
      * @throws InvalidOrderDataException
      */
@@ -1017,7 +1017,7 @@ class OrderService implements OrderInterface
                         ProductVariation::find($orderItem->product_variation_id) : null;
 
                     // Reverse stock update (negative quantityDiff means returning stock)
-                    $this->returnProductStock($product, $variation, abs($quantityDiff));
+                    $this->returnProductStock($product, $variation, abs($quantityDiff), $orderItem->is_pre_order);
                 }
 
                 // Update order item quantity and recalculate pricing
@@ -1084,7 +1084,7 @@ class OrderService implements OrderInterface
         $variation = $orderItem->product_variation_id ?
             ProductVariation::find($orderItem->product_variation_id) : null;
 
-        $this->returnProductStock($product, $variation, $orderItem->quantity);
+        $this->returnProductStock($product, $variation, $orderItem->quantity, $orderItem->is_pre_order);
 
         // Delete the order item
         $orderItem->delete();
@@ -1151,7 +1151,6 @@ class OrderService implements OrderInterface
     }
 
 
-    // updateOrderStatus
 
     /**
      * Adjust product inventory based on order status
@@ -1168,13 +1167,14 @@ class OrderService implements OrderInterface
         ?ProductVariation $variation,
         int $quantity,
         string $oldStatus,
-        string $newStatus
+        string $newStatus,
+        bool $isPreOrder = false
     ): void {
         // Only make adjustments when specific status transitions occur
         if ($this->shouldReturnStock($oldStatus, $newStatus)) {
-            $this->returnProductStock($product, $variation, $quantity);
+            $this->returnProductStock($product, $variation, $quantity, $isPreOrder);
         } elseif ($this->shouldReduceStock($oldStatus, $newStatus)) {
-            $this->reduceProductStock($product, $variation, $quantity);
+            $this->reduceProductStock($product, $variation, $quantity, $isPreOrder);
         }
     }
 
@@ -1234,13 +1234,20 @@ class OrderService implements OrderInterface
      * @param Product $product
      * @param ProductVariation|null $variation
      * @param int $quantity
+     * @param bool $wasPreOrder Whether the item was a pre-order item (skips stock adjustment)
      * @return void
      */
     protected function returnProductStock(
         Product $product,
         ?ProductVariation $variation,
-        int $quantity
+        int $quantity,
+        bool $wasPreOrder = false
     ): void {
+        // If it was a pre-order item, it didn't deduct stock, so don't return it
+        if ($wasPreOrder) {
+            return;
+        }
+
         if ($variation) {
             // Return stock to variation - ensure sold_stock doesn't go negative
             $newVariationSoldStock = max(0, $variation->sold_stock - $quantity);
@@ -1260,9 +1267,9 @@ class OrderService implements OrderInterface
                 'product_id' => $product->id,
                 'variation_id' => $variation->id,
                 'quantity' => $quantity,
-                'product_new_stock' => $product->stock + $quantity,
+                'product_new_stock' => $product->stock,
                 'product_new_sold_stock' => $newProductSoldStock,
-                'variation_new_stock' => $variation->stock + $quantity,
+                'variation_new_stock' => $variation->stock,
                 'variation_new_sold_stock' => $newVariationSoldStock
             ]);
         } else {
@@ -1276,9 +1283,32 @@ class OrderService implements OrderInterface
             Log::info('Stock returned for simple product', [
                 'product_id' => $product->id,
                 'quantity' => $quantity,
-                'product_new_stock' => $product->stock + $quantity,
+                'product_new_stock' => $product->stock,
                 'product_new_sold_stock' => $newSoldStock
             ]);
+        }
+
+        // Automatically disable pre-order if stock is back
+        if ($product->is_pre_order) {
+            if ($product->type === 'variable') {
+                // For variable products, only disable if NO variation is out of stock
+                $hasOutOfStockVariation = $product->variations()->where('stock', '<=', 0)->exists();
+                if (!$hasOutOfStockVariation) {
+                    $product->update(['is_pre_order' => false]);
+                    Log::info('Pre-order disabled automatically for variable product as all variations are back in stock', [
+                        'product_id' => $product->id
+                    ]);
+                }
+            } else {
+                // For simple products, disable if stock > 0
+                if ($product->stock > 0) {
+                    $product->update(['is_pre_order' => false]);
+                    Log::info('Pre-order disabled automatically for simple product as stock is back', [
+                        'product_id' => $product->id,
+                        'new_stock' => $product->stock
+                    ]);
+                }
+            }
         }
 
         // Clear product cache after returning stock
@@ -1291,13 +1321,20 @@ class OrderService implements OrderInterface
      * @param Product $product
      * @param ProductVariation|null $variation
      * @param int $quantity
+     * @param bool $wasPreOrder Whether the item is a pre-order item (skips stock adjustment)
      * @return void
      */
     protected function reduceProductStock(
         Product $product,
         ?ProductVariation $variation,
-        int $quantity
+        int $quantity,
+        bool $wasPreOrder = false
     ): void {
+        // If it's a pre-order item, don't reduce stock as it was never taken/should be infinite
+        if ($wasPreOrder) {
+            return;
+        }
+
         if ($variation) {
             // Reduce stock from variation - ensure stock doesn't go negative
             $newVariationStock = max(0, $variation->stock - $quantity);
@@ -1318,9 +1355,9 @@ class OrderService implements OrderInterface
                 'variation_id' => $variation->id,
                 'quantity' => $quantity,
                 'product_new_stock' => $newProductStock,
-                'product_new_sold_stock' => $product->sold_stock + $quantity,
+                'product_new_sold_stock' => $product->sold_stock,
                 'variation_new_stock' => $newVariationStock,
-                'variation_new_sold_stock' => $variation->sold_stock + $quantity
+                'variation_new_sold_stock' => $variation->sold_stock
             ]);
         } else {
             // Reduce stock from simple product - ensure stock doesn't go negative
@@ -1334,8 +1371,28 @@ class OrderService implements OrderInterface
                 'product_id' => $product->id,
                 'quantity' => $quantity,
                 'product_new_stock' => $newStock,
-                'product_new_sold_stock' => $product->sold_stock + $quantity
+                'product_new_sold_stock' => $product->sold_stock
             ]);
+        }
+
+        // Automatically enable pre-order if stock reaches zero
+        if (!$product->is_pre_order) {
+            if ($variation) {
+                if ($variation->stock <= 0) {
+                    $product->update(['is_pre_order' => true]);
+                    Log::info('Pre-order enabled automatically for variable product as variation hit zero stock', [
+                        'product_id' => $product->id,
+                        'variation_id' => $variation->id
+                    ]);
+                }
+            } else {
+                if ($product->stock <= 0) {
+                    $product->update(['is_pre_order' => true]);
+                    Log::info('Pre-order enabled automatically for simple product as stock hit zero', [
+                        'product_id' => $product->id
+                    ]);
+                }
+            }
         }
 
         // Clear product cache after reducing stock
@@ -1414,7 +1471,8 @@ class OrderService implements OrderInterface
                 $item->productVariation,
                 $item->quantity,
                 $oldStatus,
-                $newStatus
+                $newStatus,
+                $item->is_pre_order
             );
         }
 
@@ -1457,7 +1515,8 @@ class OrderService implements OrderInterface
                         $item->productVariation,
                         $item->quantity,
                         $order->status,
-                        'cancelled'
+                        'cancelled',
+                        $item->is_pre_order
                     );
                 }
                 $order->update(['status' => 'cancelled']);
@@ -1525,10 +1584,10 @@ class OrderService implements OrderInterface
                                 $product->variations->where('id', $orderItem->product_variation_id)->first() : null;
                             
                             if ($quantityToReturn > 0) {
-                                $this->returnProductStock($product, $variation, $quantityToReturn);
+                                $this->returnProductStock($product, $variation, $quantityToReturn, $orderItem->is_pre_order);
                             } else {
                                 // If they changed their mind and re-delivered, deduct stock again
-                                $this->reduceProductStock($product, $variation, abs($quantityToReturn));
+                                $this->reduceProductStock($product, $variation, abs($quantityToReturn), $orderItem->is_pre_order);
                             }
                         }
                     }
