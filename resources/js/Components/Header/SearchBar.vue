@@ -124,23 +124,18 @@ onUnmounted(() => {
 
 <template>
     <div ref="searchContainerRef" class="relative flex-1 w-full">
-        <div class="relative group">
+        <div class="relative flex items-stretch">
             <input
                 ref="inputRef"
                 v-model="searchQuery"
                 @keyup.enter="handleSearch"
                 @focus="searchQuery.length >= 2 && (showSuggestions = true)"
                 type="text"
-                :placeholder="placeholder"
-                class="w-full pl-6 pr-12 py-3 transition-all outline-none border text-sm"
-                :class="[
-                    variant === 'dark'
-                        ? 'bg-[#2a2a2a] text-white placeholder-gray-500 rounded-full border-transparent focus:bg-[#333]'
-                        : 'bg-gray-50 text-gray-900 border-gray-100 rounded-full focus:bg-white focus:border-primary/40 focus:ring-0 shadow-inner focus:shadow-sm',
-                ]"
+                placeholder="Search in..."
+                class="w-full pl-6 pr-24 py-3 transition-all outline-none border text-sm bg-gray-50 text-gray-900 border-gray-200 rounded-l-md focus:bg-white focus:border-primary/40 focus:ring-0"
             />
 
-            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <div class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <!-- Loading indicator -->
                 <Loader2 v-if="loading" class="w-5 h-5 text-gray-400 animate-spin mr-2" />
 
@@ -152,16 +147,16 @@ onUnmounted(() => {
                 >
                     <X class="w-4 h-4" />
                 </button>
-
-                <!-- Search Button -->
-                <button
-                    @click="handleSearch"
-                    class="w-10 h-10 flex items-center justify-center bg-primary text-white hover:bg-black rounded-full transition-all shadow-sm active:scale-95"
-                    aria-label="Search"
-                >
-                    <Search class="w-5 h-5 stroke-[2.5]" />
-                </button>
             </div>
+
+            <!-- Search Button -->
+            <button
+                @click="handleSearch"
+                class="px-6 flex items-center justify-center bg-primary text-white hover:bg-black rounded-r-md transition-all active:scale-95 border-y border-r border-primary"
+                aria-label="Search"
+            >
+                <Search class="w-5 h-5 stroke-[2.5]" />
+            </button>
         </div>
 
         <!-- Suggestions dropdown -->

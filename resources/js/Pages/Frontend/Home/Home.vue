@@ -167,7 +167,7 @@ const pageTitle = computed(
 
             <!-- Product Grid -->
             <div
-                class="pt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                class="pt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-6"
             >
                 <ProductCard
                     v-for="product in group.products.slice(0, 8)"

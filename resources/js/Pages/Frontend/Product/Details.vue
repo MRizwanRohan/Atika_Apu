@@ -246,78 +246,7 @@ onBeforeUnmount(() => {
         <Head :title="pageTitle" />
         <div class="min-h-screen bg-white font-sans pb-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
-                <!-- Breadcrumb -->
-                <nav
-                    class="md:flex hidden items-center text-sm text-gray-500 overflow-x-auto whitespace-nowrap mb-12"
-                    aria-label="Breadcrumb"
-                >
-                    <ol class="flex items-center gap-3">
-                        <li>
-                            <Link
-                                href="/"
-                                class="hover:text-black transition-colors"
-                            >
-                                Homepage
-                            </Link>
-                        </li>
 
-                        <li class="text-gray-300 pointer-events-none">></li>
-
-                        <!-- Parent category (if any) -->
-                        <li v-if="props.product?.category?.parent_recursive">
-                            <Link
-                                :href="
-                                    route
-                                        ? route(
-                                              'category.show',
-                                              props.product.category
-                                                  .parent_recursive.slug,
-                                          )
-                                        : `/category/${props.product.category.parent_recursive.slug}`
-                                "
-                                class="hover:text-black transition-colors"
-                            >
-                                {{
-                                    props.product.category.parent_recursive.name
-                                }}
-                            </Link>
-                        </li>
-
-                        <li
-                            v-if="props.product?.category?.parent_recursive"
-                            class="text-gray-300 pointer-events-none"
-                        >
-                            >
-                        </li>
-
-                        <!-- Category -->
-                        <li v-if="props.product?.category">
-                            <Link
-                                :href="
-                                    route
-                                        ? route(
-                                              'category.show',
-                                              props.product.category.slug,
-                                          )
-                                        : `/category/${props.product.category.slug}`
-                                "
-                                class="hover:text-black transition-colors"
-                            >
-                                {{ props.product.category.name }}
-                            </Link>
-                        </li>
-
-                        <li class="text-gray-300 pointer-events-none">></li>
-
-                        <!-- Current product -->
-                        <li
-                            aria-current="page"
-                            class="text-gray-900 font-semibold truncate max-w-[200px] md:max-w-xs"
-                        >
-                            {{ props.product.name }}
-                        </li>
-                    </ol>
-                </nav>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                     <!-- Left Column: Image Gallery -->
@@ -345,7 +274,7 @@ onBeforeUnmount(() => {
 
                 <div class="flex flex-col lg:flex-row gap-8 mt-16 md:mt-24">
                     <!-- Tabbed product details (specification / description / warranty / reviews) -->
-                    <div class="w-full lg:w-3/4 mx-auto">
+                    <div class="w-full mx-auto">
                         <div
                             class="border-b border-gray-200 mb-8 sticky top-[70px] z-20 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 md:mx-0 md:px-0"
                         >
@@ -465,44 +394,7 @@ onBeforeUnmount(() => {
                         </section>
                     </div>
 
-                    <!-- side Column: Recently Viewed -->
-                    <div
-                        v-if="recentProducts && recentProducts.length"
-                        class="w-full lg:w-1/4"
-                    >
-                        <div class="sticky top-24">
-                            <h3 class="text-lg font-bold text-gray-900 mb-6 uppercase tracking-wider">
-                                Recently Viewed
-                            </h3>
-                            <div class="space-y-6">
-                                <div 
-                                    v-for="recent in recentProducts" 
-                                    :key="recent.id"
-                                    class="flex gap-4 group cursor-pointer bg-white p-3 rounded-2xl border border-gray-100 hover:shadow-md transition-all"
-                                >
-                                    <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
-                                        <img 
-                                            :src="recent.feature_image" 
-                                            :alt="recent.name"
-                                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                    </div>
-                                    <div class="flex flex-col justify-center min-w-0">
-                                        <Link 
-                                            :href="route('product.details', recent.slug)"
-                                            class="text-sm font-bold text-gray-900 hover:text-black line-clamp-2 mb-1"
-                                        >
-                                            {{ recent.name }}
-                                        </Link>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-bold">৳{{ parseFloat(recent.price).toFixed(0) }}</span>
-                                            <span v-if="recent.previous_price" class="text-xs text-gray-400 line-through">৳{{ parseFloat(recent.previous_price).toFixed(0) }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
                 <RelatedProducts :products="relatedProducts" />
             </div>

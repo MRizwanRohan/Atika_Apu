@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { Home, Search, Heart, GitCompare, MapPin, User } from "lucide-vue-next";
+import { Home, Gift, Heart, GitCompare, MapPin, User } from "lucide-vue-next";
 
 defineProps({
     wishlistCount: {
@@ -13,7 +13,7 @@ defineProps({
     },
 });
 
-const emit = defineEmits(["open-search"]);
+
 </script>
 
 <template>
@@ -30,13 +30,14 @@ const emit = defineEmits(["open-search"]);
                 <span class="text-[10px] font-medium">Home</span>
             </Link>
 
-            <button
-                @click="emit('open-search')"
+            <Link
+                href="/offers"
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
+                :class="{ 'text-primary': $page.url === '/offers' }"
             >
-                <Search class="w-5 h-5" />
-                <span class="text-[10px] font-medium">Search</span>
-            </button>
+                <Gift class="w-5 h-5" />
+                <span class="text-[10px] font-medium">Offers</span>
+            </Link>
 
             <Link
                 href="/order/track"

@@ -65,7 +65,7 @@ class StoreProductRequest extends FormRequest
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'slug' => 'nullable|string|max:255|unique:products,slug',
-            'short_description' => 'nullable|string|max:1000',
+            'short_description' => 'nullable|string',
             'description' => 'nullable|string',
             'status' => 'nullable|in:Published,Unpublished',
             'is_daily_product' => 'nullable|boolean',

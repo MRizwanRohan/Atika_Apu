@@ -15,6 +15,7 @@ import {
     Menu,
     X,
     Heart,
+    Gift,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -87,35 +88,29 @@ const cleantopnotice = (html) => {
         <!-- Top Notice -->
         <div
             v-if="cleantopnotice(settings?.generalSettings?.top_notice)"
-            class="hidden lg:block bg-[#0e1422] text-white py-2 overflow-hidden border-b border-white/5"
+            class="hidden lg:block bg-primary text-white py-1.5 overflow-hidden"
         >
             <div class="container mx-auto px-4 flex items-center justify-between">
                 <div
-                    class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-200"
+                    class="text-[10px] sm:text-xs tracking-widest text-white"
                     v-html="settings?.generalSettings?.top_notice"
                 ></div>
                 
                 <div class="flex items-center gap-6">
                     <Link
-                        href="/wishlist"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-gray-300 hover:text-white transition-colors group relative"
-                    >
-                        <Heart class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                        <span>Wishlist</span>
-                        <span
-                            v-if="wishlistCount > 0"
-                            class="absolute -top-2 -right-2 w-3.5 h-3.5 bg-primary text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-sm"
-                        >
-                            {{ wishlistCount }}
-                        </span>
-                    </Link>
-
-                    <Link
                         href="/order/track"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-gray-300 hover:text-white transition-colors group"
+                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-white/90 hover:text-white transition-colors group"
                     >
                         <MapPin class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
                         <span>Track Order</span>
+                    </Link>
+
+                    <Link
+                        href="/offers"
+                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-white/90 hover:text-white transition-colors group"
+                    >
+                        <Gift class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                        <span>Offers</span>
                     </Link>
                 </div>
             </div>
@@ -124,7 +119,7 @@ const cleantopnotice = (html) => {
         <!-- <pre>{{ settings }}</pre> -->
 
         <!-- Main Header -->
-        <div class="bg-white border-b border-gray-50">
+        <div class="bg-white border-b border-gray-100">
             <div class="container mx-auto px-4">
                 <!-- Desktop Layout -->
                 <div
@@ -133,19 +128,17 @@ const cleantopnotice = (html) => {
                     <!-- Logo -->
                     <Link
                         href="/"
-                        class="flex-shrink-0 flex items-center"
+                        class="flex-shrink-0 flex items-center group"
                     >
                         <img
                             v-if="logoUrl"
                             :src="logoUrl"
                             :alt="siteName"
-                            class="h-10 w-auto object-contain"
+                            class="w-[160px] object-contain"
                         />
-                        <span
-                            v-else
-                            class="text-2xl font-bold tracking-tight text-gray-900"
-                            >{{ siteName }}</span
-                        >
+                        <div v-else class="text-3xl font-black tracking-tighter">
+                            <span class="text-gray-900">Smart</span><span class="text-primary">Gear</span>
+                        </div>
                     </Link>
 
                     <!-- Search Bar (Centered) -->
@@ -154,20 +147,22 @@ const cleantopnotice = (html) => {
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-6">
-                        <!-- Profile -->
+                    <div class="flex items-center gap-8">
+                        <!-- Account -->
                         <div class="relative group">
                             <Link
                                 :href="route('user.dashboard')"
-                                class="w-10 h-10 flex items-center justify-center text-gray-700 hover:text-primary transition-all rounded-full border border-gray-100 hover:bg-gray-50 bg-white shadow-sm"
-                                title="Account"
+                                class="flex flex-col items-center gap-1 text-gray-700 hover:text-primary transition-colors group"
                             >
-                                <UserIcon class="w-5 h-5 stroke-[1.5]" />
+                                <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 group-hover:bg-primary/5 transition-all">
+                                    <UserIcon class="w-6 h-6 stroke-[1.5]" />
+                                </div>
+                                <span class="text-[11px] font-bold uppercase tracking-tight">Login/Register</span>
                             </Link>
 
                             <!-- Dropdown -->
                             <div
-                                class="absolute right-0 top-full mt-1 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden py-2"
+                                class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden py-2"
                             >
                                 <template v-if="user">
                                     <div
@@ -227,28 +222,38 @@ const cleantopnotice = (html) => {
                             </div>
                         </div>
 
-                        <!-- Cart Button -->
-                        <div class="relative">
-                            <button
-                                @click="toggleCartSidebar"
-                                class="flex items-center gap-2.5 px-4 py-2.5 bg-[#0e1422] text-white rounded-full hover:bg-black transition-all shadow-md active:scale-95 group"
-                            >
-                                <div class="relative">
-                                    <ShoppingBag class="w-5 h-5 stroke-[2]" />
-                                    <span
-                                        v-if="cartCount > 0"
-                                        class="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#0e1422]"
-                                    >
-                                        {{ cartCount }}
-                                    </span>
-                                </div>
-                                <span class="text-sm font-bold"
-                                    >৳{{
-                                        formatPrice(page.props.cartTotal || 0)
-                                    }}</span
+                        <!-- Wishlist -->
+                        <!-- <Link
+                            href="/wishlist"
+                            class="flex flex-col items-center gap-1 text-gray-700 hover:text-primary transition-colors group"
+                        >
+                            <div class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 group-hover:bg-primary/5 transition-all">
+                                <Heart class="w-6 h-6 stroke-[1.5]" />
+                                <span
+                                    v-if="wishlistCount > 0"
+                                    class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
                                 >
-                            </button>
-                        </div>
+                                    {{ wishlistCount }}
+                                </span>
+                            </div>
+                            <span class="text-[11px] font-bold uppercase tracking-tight">Wishlist</span>
+                        </Link> -->
+
+                        <!-- Cart Button -->
+                        <button
+                            @click="toggleCartSidebar"
+                            class="flex flex-col items-center gap-1 text-gray-700 hover:text-primary transition-colors group"
+                        >
+                            <div class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 group-hover:bg-primary/5 transition-all">
+                                <ShoppingBag class="w-6 h-6 stroke-[1.5]" />
+                                <span
+                                    class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
+                                >
+                                    {{ cartCount }}
+                                </span>
+                            </div>
+                            <span class="text-[11px] font-bold uppercase tracking-tight">Cart</span>
+                        </button>
                     </div>
                 </div>
 
@@ -349,7 +354,6 @@ const cleantopnotice = (html) => {
         <CartSidebar :is-open="isCartSidebarOpen" @close="closeCartSidebar" />
         <MobileBottomNav
             :wishlist-count="wishlistCount"
-            @open-search="isSearchOpen = true"
         />
     </header>
 </template>

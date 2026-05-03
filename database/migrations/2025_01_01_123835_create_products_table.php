@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('product_code')->unique();
             $table->foreignId('category_id')->constrained('categories')->onDelete('restrict');
             $table->foreignId('brand_id')->nullable();
-            $table->text('short_description')->nullable();
+            $table->longText('short_description')->nullable();
             $table->longText('description')->nullable();
             $table->boolean('is_daily_product')->default(0);
             $table->enum('status', ['Published', 'Unpublished'])->default('Published');
