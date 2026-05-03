@@ -181,6 +181,14 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::post('/settings-create', [GeneralSettingController::class, 'store'])->name('settings.store');
     Route::post('/clear-cache', [GeneralSettingController::class, 'clearCache'])->name('settings.clearCache');
 
+    // Delivery Charges
+    Route::group(['prefix' => 'settings/delivery-charges', 'as' => 'settings.delivery-charges.'], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\GeneralSetting\DeliveryChargeController::class, 'index'])->name('index');
+        Route::get('/{district}/thanas', [\App\Http\Controllers\Admin\GeneralSetting\DeliveryChargeController::class, 'getThanas'])->name('thanas');
+        Route::post('/update', [\App\Http\Controllers\Admin\GeneralSetting\DeliveryChargeController::class, 'update'])->name('update');
+        Route::post('/update-settings', [\App\Http\Controllers\Admin\GeneralSetting\DeliveryChargeController::class, 'updateSettings'])->name('update-settings');
+        Route::post('/bulk-update', [\App\Http\Controllers\Admin\GeneralSetting\DeliveryChargeController::class, 'bulkUpdateThanas'])->name('bulk-update');
+    });
 
     Route::post('/upload', [ProductController::class, 'productDescriptionImageUpload'])->name('upload');
 

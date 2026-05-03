@@ -80,6 +80,7 @@ Route::prefix('order')->name('order.')->group(function () {
     Route::post('/', [OrderController::class, 'store'])->name('store')->middleware('throttle:5,1');
     Route::get('/success/{order}', [OrderController::class, 'success'])->name('success');
     Route::get('/track', [OrderController::class, 'trackOrder'])->name('track');
+    Route::get('/delivery-charge', [OrderController::class, 'getDeliveryCharge'])->name('delivery-charge.get');
 });
 
 // Review routes (supports both authenticated users and guests)

@@ -559,6 +559,11 @@ const navigationItems = [
                 route: "admin.settings.sms.index",
                 permission: "admin.settings.sms.index",
             },
+            {
+                label: "Delivery Charges",
+                route: "admin.settings.delivery-charges.index",
+                permission: "admin.settings.basicInformation",
+            },
         ],
 
     },

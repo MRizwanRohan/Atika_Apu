@@ -167,4 +167,45 @@ class OrderController extends Controller
             'searched' => $searched
         ]);
     }
+    public function getDeliveryCharge(Request $request)
+    {
+        $district = $request->query('district');
+        $thana = $request->query('thana');
+
+        if (!$district) {
+            return response()->json(['charge' => 0]);
+        }
+
+        // Logic:
+        // 1. Check if Thana has a specific charge
+        $thanaZone = \App\Models\DeliveryZone::where('type', 'upazila')
+            ->where('name', $thana)
+            ->whereHas('parent', function ($q) use ($district) {
+                $q->where('name', $district);
+            })
+            ->first();
+
+        if ($thanaZone && $thanaZone->charge !== null) {
+            return response()->json(['charge' => (float)$thanaZone->charge]);
+        }
+
+        // 2. Check if District has a specific charge
+        $districtZone = \App\Models\DeliveryZone::where('type', 'district')
+            ->where('name', $district)
+            ->first();
+
+        if ($districtZone && $districtZone->charge !== null) {
+            return response()->json(['charge' => (float)$districtZone->charge]);
+        }
+
+        // 3. Fallback to settings global default
+        $settings = \App\Models\GeneralSetting::first();
+        if ($district === 'Dhaka') {
+            $charge = $settings->shipping_charge_inside_dhaka ?? 60;
+        } else {
+            $charge = $settings->shipping_charge_outside_dhaka ?? 120;
+        }
+
+        return response()->json(['charge' => (float)$charge]);
+    }
 }

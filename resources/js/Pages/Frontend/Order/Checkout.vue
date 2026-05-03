@@ -79,7 +79,7 @@ onMounted(() => {
     }
 
     // Set initial shipping cost
-    updateShippingCost(form.area);
+    fetchShippingCost();
 });
 
 // Watch cart items for changes to keep form.items in sync
@@ -102,7 +102,7 @@ watch(
         form.discount_amount = props.cart?.data?.coupon_value || 0;
 
         // Recompute shipping cost when cart items change (handles items with free delivery)
-        updateShippingCost(form.area);
+        fetchShippingCost();
     },
     { deep: true }
 );
@@ -191,34 +191,39 @@ const applyCoupon = () => {
     });
 };
 
-// Update shipping cost based on area and item-level free-delivery flag
-const updateShippingCost = (area) => {
-    // If every item in the cart has is_free_delivery === true, shipping is waived
+// Fetch dynamic shipping cost from API
+const fetchShippingCost = async () => {
+    // If every item in the cart has is_free_delivery === true, shipping is 0
     const items = props.cart?.data?.items || [];
     const allFree = items.length > 0 && items.every((it) => !!it.is_free_delivery);
-
     if (allFree) {
         form.shipping_cost = 0;
         return;
     }
 
-    if (area === "inside_dhaka") {
-        form.shipping_cost = parseFloat(
-            settings.value?.generalSettings?.shipping_charge_inside_dhaka || 0
-        );
-    } else {
-        form.shipping_cost = parseFloat(
-            settings.value?.generalSettings?.shipping_charge_outside_dhaka ||
-                0
-        );
+    if (!form.shipping_district) {
+        form.shipping_cost = 0;
+        return;
+    }
+
+    try {
+        const response = await axios.get(route('order.delivery-charge.get'), {
+            params: {
+                district: form.shipping_district,
+                thana: form.shipping_thana
+            }
+        });
+        form.shipping_cost = response.data.charge;
+    } catch (error) {
+        console.error("Failed to fetch shipping cost", error);
     }
 };
 
-// Watch area changes for dynamic shipping
+// Watch location changes for dynamic shipping cost
 watch(
-    () => form.area,
-    (newArea) => {
-        updateShippingCost(newArea);
+    [() => form.shipping_district, () => form.shipping_thana],
+    () => {
+        fetchShippingCost();
     }
 );
 
@@ -334,7 +339,7 @@ watch(() => form.shipping_district, (newDistrictName) => {
         form.shipping_thana = "";
     }
 
-    // Auto-update area based on district
+    // Auto-update area based on district (needed for courier integration)
     if (newDistrictName === 'Dhaka') {
         form.area = 'inside_dhaka';
     } else if (newDistrictName) {
@@ -1006,37 +1011,7 @@ onMounted(() => {
                                 </div>
                             </div>
 
-                            <!-- Delivery Area Selection (Compact Radio Buttons) -->
-                            <div class="mt-4 pb-4 border-b border-gray-100">
-                                <label
-                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2"
-                                    >Delivery Area</label
-                                >
-                                <div class="flex gap-4">
-                                    <label class="flex items-center cursor-pointer group">
-                                        <input
-                                            type="radio"
-                                            v-model="form.area"
-                                            value="inside_dhaka"
-                                            class="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
-                                        />
-                                        <span class="ml-2 text-sm text-gray-700 group-hover:text-primary transition-colors">
-                                            Inside Dhaka (৳{{ settings?.generalSettings?.shipping_charge_inside_dhaka || 60 }})
-                                        </span>
-                                    </label>
-                                    <label class="flex items-center cursor-pointer group">
-                                        <input
-                                            type="radio"
-                                            v-model="form.area"
-                                            value="outside_dhaka"
-                                            class="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
-                                        />
-                                        <span class="ml-2 text-sm text-gray-700 group-hover:text-primary transition-colors">
-                                            Outside Dhaka (৳{{ settings?.generalSettings?.shipping_charge_outside_dhaka || 120 }})
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
+
 
                             <!-- Totals -->
                             <div
