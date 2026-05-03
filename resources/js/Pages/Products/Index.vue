@@ -743,7 +743,7 @@ const formatPrice = (price) => {
                         <!-- Products -->
                         <div
                             v-if="products.data.length > 0"
-                            class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                            class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-6"
                         >
                             <ProductCard
                                 v-for="product in products.data"

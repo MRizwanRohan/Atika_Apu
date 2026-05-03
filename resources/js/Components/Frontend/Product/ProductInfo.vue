@@ -294,7 +294,7 @@ watch(() => props.product, (newVal) => {
         <!-- Attributes Selector -->
         <div v-if="availableAttributes.length > 0" class="flex flex-col gap-6 pt-2">
             <div v-for="attribute in availableAttributes" :key="attribute.key" class="space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
                     <span class="text-sm font-semibold text-gray-500 uppercase tracking-widest">{{ attribute.name }}</span>
                     <span class="text-sm font-bold text-gray-900" v-if="selectedAttributes[attribute.key]">
                         {{ selectedAttributes[attribute.key].value }}
