@@ -44,6 +44,8 @@ use App\Http\Controllers\Admin\ProductGroup\ProductGroupController;
 use App\Http\Controllers\Admin\InstagramFeed\InstagramFeedController;
 use App\Http\Controllers\Admin\Customer\CustomerController;
 use App\Http\Controllers\Admin\Sms\SmsSettingController;
+use App\Http\Controllers\Webhook\PathaoWebhookController;
+use App\Http\Controllers\Webhook\SteadfastWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,6 +116,9 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::post('/couriers/pathao/shipments/bulk', [CourierController::class, 'createBulkShipment']);
     Route::get('/courier/settings', [CourierController::class, 'index'])->name('courier.settings.index');
     Route::post('/courier/settings', [CourierController::class, 'storeOrUpdate'])->name('courier.settings.store');
+    Route::post('/courier/settings/generate-token/{courier}', [CourierController::class, 'generateWebhookToken'])->name('courier.settings.generate-token');
+    Route::post('/courier/settings/status-mapping/{courier}', [CourierController::class, 'saveStatusMapping'])->name('courier.settings.status-mapping');
+    Route::get('/courier/webhook-logs', [CourierController::class, 'webhookLogs'])->name('courier.webhook-logs');
 
     //getAllProductsStock
     Route::get('/getAllProductsStock', [InventoryManagementController::class, 'getAllProductsStock'])->name('inventory.getAllProductsStock');
@@ -297,5 +302,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Admin notifications listing
     Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
 });
+
+// ── Courier Webhook Callbacks (public, no auth, CSRF excluded in bootstrap/app.php) ──
+Route::post('/webhook/pathao', [PathaoWebhookController::class, 'handle'])->name('webhook.pathao');
+Route::post('/webhook/steadfast', [SteadfastWebhookController::class, 'handle'])->name('webhook.steadfast');
 
 require __DIR__ . '/auth.php';

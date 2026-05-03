@@ -4,19 +4,26 @@ namespace App\Http\Controllers\Admin\Courier;
 
 use Inertia\Inertia;
 use App\Models\Order;
+use App\Models\WebhookLog;
 use Illuminate\Http\Request;
 use App\Models\CourierSetting;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Services\Couriers\Pathao\PathaoService;
+use App\Services\Webhook\WebhookTokenService;
+use App\Services\Webhook\WebhookStatusService;
 
 class CourierController extends Controller
 {
     protected $pathaoService;
+    protected $tokenService;
+    protected $webhookStatusService;
 
-    public function __construct(PathaoService $pathaoService)
+    public function __construct(PathaoService $pathaoService, WebhookTokenService $tokenService, WebhookStatusService $webhookStatusService)
     {
         $this->pathaoService = $pathaoService;
+        $this->tokenService = $tokenService;
+        $this->webhookStatusService = $webhookStatusService;
     }
 
     public function index()
@@ -36,7 +43,16 @@ class CourierController extends Controller
                 'steadfast_api_key' => $settings->steadfast_api_key,
                 'steadfast_secret_key' => $settings->steadfast_secret_key,
                 'steadfast_is_enabled' => $settings->steadfast_is_enabled,
+                // Webhook fields
+                'pathao_webhook_enabled' => $settings->pathao_webhook_enabled ?? 'no',
+                'pathao_webhook_token' => $settings->pathao_webhook_token,
+                'pathao_status_mapping' => $settings->pathao_status_mapping ?? $this->webhookStatusService->getDefaultPathaoMapping(),
+                'steadfast_webhook_enabled' => $settings->steadfast_webhook_enabled ?? 'no',
+                'steadfast_webhook_token' => $settings->steadfast_webhook_token,
+                'steadfast_status_mapping' => $settings->steadfast_status_mapping ?? $this->webhookStatusService->getDefaultSteadfastMapping(),
             ] : null,
+            'pathaoWebhookUrl' => url('/webhook/pathao'),
+            'steadfastWebhookUrl' => url('/webhook/steadfast'),
         ]);
     }
 
@@ -46,23 +62,25 @@ class CourierController extends Controller
             $rules = [];
             
             // Pathao validation rules
-            if ($request->hasAny(['client_id', 'client_secret', 'username', 'password', 'is_enabled', 'StoreId'])) {
+            if ($request->hasAny(['client_id', 'client_secret', 'username', 'password', 'is_enabled', 'StoreId', 'pathao_webhook_enabled'])) {
                 $rules = array_merge($rules, [
-                    'client_id' => 'required|string',
-                    'client_secret' => 'required|string',
-                    'username' => 'required|string',
-                    'password' => 'required|string',
-                    'is_enabled' => 'required|in:yes,no',
-                    'StoreId' => 'required|integer',
+                    'client_id' => 'nullable|string',
+                    'client_secret' => 'nullable|string',
+                    'username' => 'nullable|string',
+                    'password' => 'nullable|string',
+                    'is_enabled' => 'nullable|in:yes,no',
+                    'StoreId' => 'nullable|integer',
+                    'pathao_webhook_enabled' => 'nullable|in:yes,no',
                 ]);
             }
 
             // Steadfast validation rules
-            if ($request->hasAny(['steadfast_api_key', 'steadfast_secret_key', 'steadfast_is_enabled'])) {
+            if ($request->hasAny(['steadfast_api_key', 'steadfast_secret_key', 'steadfast_is_enabled', 'steadfast_webhook_enabled'])) {
                 $rules = array_merge($rules, [
-                    'steadfast_api_key' => 'required|string',
-                    'steadfast_secret_key' => 'required|string',
-                    'steadfast_is_enabled' => 'required|in:yes,no',
+                    'steadfast_api_key' => 'nullable|string',
+                    'steadfast_secret_key' => 'nullable|string',
+                    'steadfast_is_enabled' => 'nullable|in:yes,no',
+                    'steadfast_webhook_enabled' => 'nullable|in:yes,no',
                 ]);
             }
 
@@ -213,5 +231,74 @@ class CourierController extends Controller
         }
     }
 
+
+    /**
+     * Generate or regenerate webhook token for a courier
+     */
+    public function generateWebhookToken(Request $request, string $courier)
+    {
+        try {
+            if (!in_array($courier, ['pathao', 'steadfast'])) {
+                return redirect()->back()->with('error', 'Invalid courier type');
+            }
+
+            $token = $this->tokenService->generateToken($courier);
+
+            return redirect()->back()->with([
+                'success' => true,
+                'message' => ucfirst($courier) . ' webhook token generated successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Token Generation Error:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Save status mapping for a courier
+     */
+    public function saveStatusMapping(Request $request, string $courier)
+    {
+        try {
+            if (!in_array($courier, ['pathao', 'steadfast'])) {
+                return redirect()->back()->with('error', 'Invalid courier type');
+            }
+
+            $validated = $request->validate([
+                'mapping' => 'required|array',
+            ]);
+
+            $settings = CourierSetting::first();
+            if (!$settings) {
+                $settings = CourierSetting::create([]);
+            }
+
+            $field = $courier === 'pathao' ? 'pathao_status_mapping' : 'steadfast_status_mapping';
+            $settings->update([$field => $validated['mapping']]);
+
+            return redirect()->back()->with([
+                'success' => true,
+                'message' => ucfirst($courier) . ' status mapping saved successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Status Mapping Error:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * View webhook logs
+     */
+    public function webhookLogs(Request $request)
+    {
+        $logs = WebhookLog::orderBy('created_at', 'desc')
+            ->when($request->input('courier'), fn($q, $v) => $q->where('courier', $v))
+            ->when($request->input('status'), fn($q, $v) => $q->where('status', $v))
+            ->paginate(20);
+
+        return Inertia::render('Admin/Courier/WebhookLogs', [
+            'logs' => $logs,
+        ]);
+    }
 
 }
