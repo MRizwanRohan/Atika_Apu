@@ -343,6 +343,26 @@
                             {{ form.errors.attention_notice }}
                         </span>
                     </div>
+
+                    <div class="mb-4 md:col-span-2">
+                        <label class="block text-gray-700">bKash Payment Instructions</label>
+                        <textarea
+                            v-model="form.bkash_instructions"
+                            class="w-full p-2 border rounded"
+                            rows="3"
+                            placeholder="Enter instructions for bKash payment..."
+                        ></textarea>
+                    </div>
+
+                    <div class="mb-4 md:col-span-2">
+                        <label class="block text-gray-700">Nagad Payment Instructions</label>
+                        <textarea
+                            v-model="form.nagad_instructions"
+                            class="w-full p-2 border rounded"
+                            rows="3"
+                            placeholder="Enter instructions for Nagad payment..."
+                        ></textarea>
+                    </div>
                 </div>
 
                 <button
@@ -410,6 +430,8 @@ const form = useForm({
     facebook_page_id: props.settings?.facebook_page_id || "",
     attention_notice: props.settings?.attention_notice || "",
     footer_text: props.settings?.footer_text || "",
+    bkash_instructions: props.settings?.bkash_instructions || "",
+    nagad_instructions: props.settings?.nagad_instructions || "",
 });
 
 // Form submission function

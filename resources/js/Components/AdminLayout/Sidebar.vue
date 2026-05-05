@@ -292,7 +292,7 @@ const navigationItems = [
         permission: "admin.orders.index",
     },
     {
-        label: "Pre-Order Leads",
+        label: "Request Products",
         route: "admin.leads.index",
         icon: UserRoundPlus,
         permission: "admin.leads.index",

@@ -1,8 +1,9 @@
 <script setup>
-import { Link } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
-import { Truck } from "lucide-vue-next";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
+import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
+import { useCart } from "@/Composables/useCart";
 
 const props = defineProps({
     product: {
@@ -11,7 +12,19 @@ const props = defineProps({
     },
 });
 
+const { addToCart, isInCart, cartItems } = useCart();
 const imageLoaded = ref(false);
+const showQuickView = ref(false);
+const isAddingToCart = ref(false);
+
+const productInCart = computed(() => {
+    if (props.product.type === "variable") {
+        return cartItems.value.some(
+            (item) => item.product_id === props.product.id,
+        );
+    }
+    return isInCart(props.product.id);
+});
 
 const activeCampaign = computed(() => {
     if (!props.product.campaigns || props.product.campaigns.length === 0)
@@ -106,144 +119,203 @@ const isOutOfStock = computed(
 const isPreOrderMode = computed(
     () => props.product.stock <= 0 && props.product.is_pre_order,
 );
+
+const goToDetails = () => {
+    router.visit(route("product.details", props.product.slug));
+};
+
+const handleCartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (props.product.type === "variable") {
+        showQuickView.value = true;
+    } else {
+        isAddingToCart.value = true;
+        addToCart({
+            productId: props.product.id,
+            quantity: 1,
+            onSuccess: () => {
+                isAddingToCart.value = false;
+            },
+            onError: () => {
+                isAddingToCart.value = false;
+            },
+        });
+    }
+};
 </script>
 
 <template>
     <div
-        class="group relative flex flex-col h-full bg-white rounded-xl border border-gray-100 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 overflow-hidden"
+        @click="goToDetails"
+        class="group relative flex flex-col h-full bg-white rounded-md border border-gray-100 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow"
         :class="{ 'opacity-80 grayscale-[0.5]': isOutOfStock }"
     >
         <!-- Product Image Section -->
-        <div
-            class="relative block aspect-[1/1] overflow-hidden bg-gray-50/50"
-        >
-            <Link :href="route('product.details', product.slug)" class="block w-full h-full">
-                <!-- Badges -->
-                <div class="absolute top-3 left-3 z-20 flex flex-col gap-2">
-                    <!-- Discount Badge (Only for normal products) -->
-                    <div
-                        v-if="pricing.discountValue > 0 && !isOutOfStock && !isPreOrderMode"
-                        class="bg-rose-500 text-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm w-fit"
-                    >
-                        <span v-if="pricing.discountType === 'percentage'">
-                            {{ Math.round(pricing.discountValue) }}% OFF
-                        </span>
-                        <span v-else>
-                            -৳{{ formatPrice(pricing.discountValue) }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Red Ribbon for Pre-Order -->
-                <div v-if="isPreOrderMode" class="absolute top-0 right-0 z-30 overflow-hidden w-24 h-24 pointer-events-none">
-                    <div class="absolute top-[18px] right-[-32px] w-[120px] bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest py-1 rotate-45 text-center shadow-lg border-y border-white/20">
-                        Pre-Order
-                    </div>
-                </div>
-
-                <img
-                    :src="product.feature_image"
-                    :alt="product.name"
-                    loading="lazy"
-                    class="w-full h-full object-contain transition-transform duration-500 ease-out"
-                    :class="{ 'group-hover:scale-110': !isPreOrderMode }"
-                    @load="imageLoaded = true"
-                />
-
-                <!-- Out of Stock Overlay -->
+        <div class="relative block aspect-square overflow-hidden">
+            <!-- Badges -->
+            <div class="absolute top-2 right-2 z-20">
+                <!-- Discount Badge -->
                 <div
-                    v-if="isOutOfStock"
-                    class="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]"
+                    v-if="
+                        pricing.discountValue > 0 &&
+                        !isOutOfStock &&
+                        !isPreOrderMode
+                    "
+                    class="bg-[#3b82f6] text-white px-2 py-0.5 text-[11px] font-bold rounded-full shadow-sm"
                 >
-                    <span
-                        class="bg-gray-900/90 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-xl"
-                    >
-                        Out of Stock
+                    <span v-if="pricing.discountType === 'percentage'">
+                        {{ Math.round(pricing.discountValue) }}%
+                    </span>
+                    <span v-else>
+                        -৳{{ formatPrice(pricing.discountValue) }}
                     </span>
                 </div>
-            </Link>
+            </div>
+
+            <!-- Pre-Order Ribbon -->
+            <div
+                v-if="isPreOrderMode"
+                class="absolute top-0 right-0 z-30 overflow-hidden w-20 h-20 pointer-events-none"
+            >
+                <div
+                    class="absolute top-[15px] right-[-35px] w-[110px] bg-red-600 text-white text-[9px] font-bold uppercase tracking-widest py-1 rotate-45 text-center shadow-lg"
+                >
+                    Pre-Order
+                </div>
+            </div>
+
+            <img
+                :src="product.feature_image"
+                :alt="product.name"
+                loading="lazy"
+                class="w-full h-full object-contain p-4"
+                @load="imageLoaded = true"
+            />
+
+            <!-- Out of Stock Overlay -->
+            <div
+                v-if="isOutOfStock"
+                class="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]"
+            >
+                <span
+                    class="bg-gray-900/90 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
+                >
+                    Out of Stock
+                </span>
+            </div>
         </div>
 
         <!-- Content Section -->
-        <div class="flex flex-col flex-1 p-4">
-            <!-- Brand/Category/Rating -->
-            <div class="flex items-center gap-2 mb-2">
-                <div class="flex items-center gap-0.5">
-                    <StarRating
-                        :rating="Number(product.avg_rating || 0)"
-                        size="xs"
-                        :show-count="false"
-                    />
-                </div>
-                <span v-if="product.reviews_count > 0" class="text-[10px] font-medium text-gray-400">
-                    ({{ product.reviews_count }} reviews)
-                </span>
-            </div>
-
+        <div class="flex flex-col flex-1 p-2 gap-1.5">
             <!-- Title -->
-            <Link
-                :href="route('product.details', product.slug)"
-                class="group-hover:text-primary transition-colors block mb-2"
+            <h3
+                class="text-[15px] font-bold text-[#1e293b] leading-tight line-clamp-1"
+                :title="product.name"
             >
-                <h3
-                    class="text-base font-medium text-gray-800 leading-tight line-clamp-1"
-                    :title="product.name"
-                >
-                    {{ product.name }}
-                </h3>
-            </Link>
+                {{ product.name }}
+            </h3>
 
-            <!-- Pre-Order Info Text -->
-            <div v-if="isPreOrderMode" class="mb-3 space-y-0.5">
-                <p class="text-[11px] font-semibold text-gray-600">20-30 Days Delivery</p>
-                <p class="text-[11px] font-semibold text-gray-600">Full Price: ৳{{ formatPrice(pricing.main) }}</p>
-                <p class="text-[11px] font-bold text-gray-800 uppercase tracking-tight">
-                    Pre-order Price: ৳{{ formatPrice(pricing.main * 0.5) }} <span class="text-primary">(50% Advance)</span>
+            <!-- Pre-Order Info -->
+            <div v-if="isPreOrderMode" class="mb-2 space-y-0.5">
+                <p class="text-[10px] font-semibold text-gray-500">
+                    20-30 Days Delivery
+                </p>
+                <p class="text-[10px] font-bold text-[#9333ea] uppercase">
+                    ৳{{ formatPrice(pricing.main * 0.5) }} ADV
                 </p>
             </div>
 
-            <!-- Price Section (Only for normal products) -->
-            <div v-if="!isPreOrderMode" class="mt-auto pt-2 mb-4 border-t border-gray-50">
-                <div class="flex flex-wrap items-baseline gap-2">
-                    <span class="text-lg font-extrabold text-primary">
-                        ৳{{ formatPrice(pricing.main) }}
-                    </span>
-                    <span
-                        v-if="pricing.cross"
-                        class="text-xs font-medium text-gray-400 line-through"
-                    >
-                        ৳{{ formatPrice(pricing.cross) }}
-                    </span>
-                </div>
+            <!-- Price Section -->
+            <div class="flex items-baseline gap-2">
+                <span class="text-[18px] font-bold text-[#a855f7]">
+                    ৳{{ formatPrice(pricing.main) }}
+                </span>
+                <span
+                    v-if="pricing.cross"
+                    class="text-[13px] font-medium text-gray-400 line-through opacity-70"
+                >
+                    ৳{{ formatPrice(pricing.cross) }}
+                </span>
             </div>
 
-            <!-- Order Now / Pre-Order Button -->
-            <div class="mt-auto pt-3" :class="{ 'border-t border-gray-50': isPreOrderMode }">
-                <Link
-                    :href="route('product.details', product.slug)"
-                    class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300"
-                    :class="[
-                        isOutOfStock 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none' 
-                        : isPreOrderMode 
-                          ? 'bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-500/20 active:scale-[0.98]'
-                          : 'bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-xl hover:shadow-primary/20 active:scale-[0.98]'
-                    ]"
+            <!-- Footer Row: Rating & Cart -->
+            <div class="mt-auto flex items-center justify-between">
+                <div class="flex items-center gap-1">
+                    <StarRating
+                        :rating="Number(product.avg_rating || 0)"
+                        size="sm"
+                        :show-count="false"
+                    />
+                </div>
+
+                <button
+                    @click="handleCartClick"
+                    :disabled="isAddingToCart"
+                    class="p-1.5 text-[#a855f7] transition-colors group/cart disabled:opacity-50 relative z-40"
+                    :title="
+                        product.type === 'variable'
+                            ? 'Select Options'
+                            : 'Add to Cart'
+                    "
                 >
-                    {{ isPreOrderMode ? 'Pre-Order Now' : 'Order Now' }}
-                </Link>
+                    <!-- In Cart Icon (with plus) -->
+                    <svg
+                        v-if="productInCart"
+                        class="w-5 h-5 transition-transform group-hover/cart:scale-110"
+                        :class="{ 'animate-pulse': isAddingToCart }"
+                        stroke="currentColor"
+                        fill="currentColor"
+                        stroke-width="0"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <circle cx="10.5" cy="19.5" r="1.5"></circle>
+                        <circle cx="17.5" cy="19.5" r="1.5"></circle>
+                        <path
+                            d="M21 7H7.334L6.18 4.23A1.995 1.995 0 0 0 4.333 3H2v2h2.334l4.743 11.385c.155.372.52.615.923.615h8c.417 0 .79-.259.937-.648l3-8A1.003 1.003 0 0 0 21 7zm-4 6h-2v2h-2v-2h-2v-2h2V9h2v2h2v2z"
+                        ></path>
+                    </svg>
+
+                    <!-- Default Cart Icon -->
+                    <svg
+                        v-else
+                        class="w-5 h-5 transition-transform group-hover/cart:scale-110"
+                        :class="{ 'animate-pulse': isAddingToCart }"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <circle cx="8" cy="21" r="1"></circle>
+                        <circle cx="19" cy="21" r="1"></circle>
+                        <path
+                            d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"
+                        ></path>
+                    </svg>
+                </button>
             </div>
         </div>
+
+        <!-- Quick View Component -->
+        <ProductQuickView
+            :product="product"
+            :show="showQuickView"
+            @close="showQuickView = false"
+        />
     </div>
 </template>
 
 <style scoped>
-.line-clamp-2 {
+.line-clamp-1 {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-clamp: 2;
+    line-clamp: 1;
 }
 </style>
-

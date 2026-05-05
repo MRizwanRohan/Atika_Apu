@@ -16,6 +16,7 @@ import {
     X,
     Heart,
     Gift,
+    Zap,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -103,6 +104,14 @@ const cleantopnotice = (html) => {
                     >
                         <MapPin class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
                         <span>Track Order</span>
+                    </Link>
+
+                    <Link
+                        :href="route('pre-order-lead.form')"
+                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-white/90 hover:text-white transition-colors group"
+                    >
+                        <Zap class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                        <span>Request Product</span>
                     </Link>
 
                     <Link

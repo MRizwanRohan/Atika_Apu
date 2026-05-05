@@ -132,10 +132,19 @@ const advancePaymentAmount = computed(() => {
     return total.value * 0.5;
 });
 
+// Highlight numbers in instructions
+const highlightNumbers = (text) => {
+    if (!text) return "";
+    // Regex to match BD phone numbers (01xxxxxxxxx)
+    return text.replace(/(01[3-9]\d{8})/g, '<strong class="text-[#f0512e] font-bold bg-white px-1.5 py-0.5 rounded shadow-sm border border-[#f0512e]/10">$1</strong>');
+};
+
 // Setup initial payment method based on pre-order status
 watch(hasPreOrderItems, (isPreOrder) => {
     if (isPreOrder && form.payment_method === 'cod') {
         form.payment_method = 'bkash';
+    } else if (!isPreOrder && (form.payment_method === 'bkash' || form.payment_method === 'nagad' || form.payment_method === 'online')) {
+        form.payment_method = 'cod';
     }
 }, { immediate: true });
 
@@ -282,12 +291,9 @@ const submitOrder = () => {
     }
 
     if ((form.payment_method === 'bkash' || form.payment_method === 'nagad')) {
-        if (!hasPreOrderItems.value) {
-            // Normal order: Require both Sender Phone Number and Transaction ID
-            if (!form.payment_phone || !form.transaction_id) {
-                toast.warning("Please provide both Sender Phone Number and Transaction ID for manual payments");
-                return;
-            }
+        if (!form.transaction_id) {
+            toast.warning(`Please provide your Transaction ID for ${form.payment_method} payment`);
+            return;
         }
     }
 
@@ -364,11 +370,17 @@ onMounted(() => {
 <template>
     <Head title="Checkout" />
     <FrontendLayout>
-        <div class="min-h-screen bg-gray-50 py-8 overflow-x-hidden">
-            <!-- <pre>{{ settings }}</pre> -->
-             <!-- <pre>{{ cart }}</pre> -->
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="min-h-screen bg-[#f2f4f7] py-8">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Page Header -->
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-semibold text-gray-900 mb-1 font-outfit uppercase tracking-tight">Checkout</h1>
+                    <nav class="flex justify-center items-center space-x-2 text-xs text-gray-500 font-normal">
+                        <Link href="/" class="hover:text-orange-500 transition-colors">Home</Link>
+                        <span class="text-gray-400">&gt;</span>
+                        <span class="text-orange-500">Checkout</span>
+                    </nav>
+                </div>
 
                 <!-- Empty Cart Message -->
                 <div
@@ -400,7 +412,7 @@ onMounted(() => {
                         </p>
                         <Link
                             href="/"
-                            class="inline-flex items-center px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                            class="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors"
                         >
                             <svg
                                 class="w-5 h-5 mr-2"
@@ -420,721 +432,243 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Left Column: Customer Details Form -->
-                    <div class="lg:col-span-2">
-                        <form @submit.prevent="submitOrder" class="space-y-6">
-                            <!-- Customer Information Card -->
-                            <div
-                                class="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-                            >
-                                <h2
-                                    class="text-lg font-semibold text-gray-900 mb-4 flex items-center"
-                                >
-                                    <svg
-                                        class="w-5 h-5 mr-2 text-primary"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                        />
-                                    </svg>
-                                    Customer Information
-                                </h2>
-
-                                <div
-                                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
-                                >
-                                    <!-- Customer Name -->
-                                    <div>
-                                        <label
-                                            for="customer_name"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Full Name
-                                            <span class="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            id="customer_name"
-                                            v-model="form.customer_name"
-                                            type="text"
-                                            placeholder="Enter your full name"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                            :class="{
-                                                'border-red-500':
-                                                    form.errors.customer_name,
-                                            }"
-                                            required
-                                        />
-                                        <p
-                                            v-if="form.errors.customer_name"
-                                            class="mt-1 text-sm text-red-500"
-                                        >
-                                            {{ form.errors.customer_name }}
-                                        </p>
-                                    </div>
-
-                                    <!-- Customer Phone -->
-                                    <div>
-                                        <label
-                                            for="customer_phone"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Phone Number
-                                            <span class="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            id="customer_phone"
-                                            v-model="form.customer_phone"
-                                            @blur="phoneTouched = true"
-                                            type="tel"
-                                            inputmode="numeric"
-                                            pattern="[0-9]*"
-                                            placeholder="01XXXXXXXXX"
-                                            maxlength="11"
-                                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                            :class="{
-                                                'border-red-500':
-                                                    (phoneTouched &&
-                                                        !isPhoneValid) ||
-                                                    form.errors.customer_phone,
-                                                'border-green-500':
-                                                    phoneTouched &&
-                                                    isPhoneValid,
-                                            }"
-                                            required
-                                        />
-                                        <p
-                                            v-if="form.errors.customer_phone"
-                                            class="mt-1 text-sm text-red-500"
-                                        >
-                                            {{ form.errors.customer_phone }}
-                                        </p>
-                                        <p
-                                            v-else-if="
-                                                phoneTouched && !isPhoneValid
-                                            "
-                                            class="mt-1 text-sm text-red-500"
-                                        >
-                                            Please enter a valid Bangladeshi
-                                            phone number (11 digits, starting
-                                            with 01).
-                                        </p>
-                                        <p
-                                            v-else
-                                            class="mt-1 text-xs text-gray-500"
-                                        >
-                                            Bangladesh format: 01XXXXXXXXX
-                                        </p>
-                                    </div>
-
-                                    <!-- District and Thana -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
-                                        <div>
-                                            <label for="shipping_district" class="block text-sm font-medium text-gray-700 mb-1">
-                                                District <span class="text-red-500">*</span>
-                                            </label>
-                                            <select
-                                                id="shipping_district"
-                                                v-model="form.shipping_district"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                                :class="{ 'border-red-500': form.errors.shipping_district }"
-                                                required
-                                            >
-                                                <option value="" disabled>Select District</option>
-                                                <option v-for="district in districts" :key="district.id" :value="district.name">
-                                                    {{ district.name }}
-                                                </option>
-                                            </select>
-                                            <p v-if="form.errors.shipping_district" class="mt-1 text-sm text-red-500">
-                                                {{ form.errors.shipping_district }}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label for="shipping_thana" class="block text-sm font-medium text-gray-700 mb-1">
-                                                Thana/Upazila <span class="text-red-500">*</span>
-                                            </label>
-                                            <select
-                                                id="shipping_thana"
-                                                v-model="form.shipping_thana"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                                :class="{ 'border-red-500': form.errors.shipping_thana }"
-                                                :disabled="!form.shipping_district"
-                                                required
-                                            >
-                                                <option value="" disabled>Select Thana</option>
-                                                <option v-for="thana in thanas" :key="thana.id" :value="thana.name">
-                                                    {{ thana.name }}
-                                                </option>
-                                            </select>
-                                            <p v-if="form.errors.shipping_thana" class="mt-1 text-sm text-red-500">
-                                                {{ form.errors.shipping_thana }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Full Address (Moved here) -->
-                                    <div class="md:col-span-2">
-                                        <label
-                                            for="shipping_address"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Full Address (House/Road/Village)
-                                            <span class="text-red-500">*</span>
-                                        </label>
-                                        <textarea
-                                            id="shipping_address"
-                                            v-model="form.shipping_address"
-                                            rows="2"
-                                            placeholder="House no, Road, Area"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
-                                            :class="{
-                                                'border-red-500':
-                                                    form.errors.shipping_address,
-                                            }"
-                                            required
-                                        ></textarea>
-                                        <p
-                                            v-if="form.errors.shipping_address"
-                                            class="mt-1 text-sm text-red-500"
-                                        >
-                                            {{ form.errors.shipping_address }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                                                <!-- Customer Notes -->
-                                <div>
-                                    <label
-                                        for="customer_notes"
-                                        class="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        Order Notes (Optional)
-                                    </label>
-                                    <textarea
-                                        id="customer_notes"
-                                        v-model="form.customer_notes"
-                                        rows="2"
-                                        placeholder="Any special instructions for delivery..."
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
-                                    ></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Payment Method Card -->
-                            <div
-                                class="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-                            >
-                                <h2
-                                    class="text-lg font-semibold text-gray-900 mb-4 flex items-center"
-                                >
-                                    <svg
-                                        class="w-5 h-5 mr-2 text-primary"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                                        />
-                                    </svg>
-                                    Payment Method
-                                </h2>
-
-                                <div class="space-y-4">
-                                    <label
-                                        v-if="!hasPreOrderItems"
-                                        class="relative flex items-center p-4 border rounded-lg cursor-pointer transition-all"
-                                        :class="
-                                            form.payment_method === 'cod'
-                                                ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                        "
-                                    >
-                                        <input
-                                            type="radio"
-                                            v-model="form.payment_method"
-                                            value="cod"
-                                            class="sr-only"
-                                        />
-                                        <div class="flex items-center">
-                                            <div
-                                                class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-green-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <span class="block font-medium text-gray-900">Cash on Delivery</span>
-                                                <span class="block text-sm text-gray-500">Pay when you receive</span>
-                                            </div>
-                                        </div>
-                                    </label>
-                                    <template v-if="hasPreOrderItems">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Payment Method</label>
-                                            <select
-                                                v-model="form.payment_method"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white font-medium text-gray-900"
-                                            >
-                                                <option value="" disabled>Select Payment Method</option>
-                                                <option value="bkash">bKash (Manual)</option>
-                                                <option value="nagad">Nagad (Manual)</option>
-                                            </select>
-                                        </div>
-                                    </template>
-                                </div>
-
-                                <div v-if="form.payment_method === 'bkash' || form.payment_method === 'nagad'" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <h3 class="text-sm font-bold text-blue-900 mb-2">Instructions:</h3>
-                                    <p class="text-sm text-blue-800 mb-4">Please send the amount to our official {{ form.payment_method === 'bkash' ? 'bKash' : 'Nagad' }} number: <strong>{{ settings.generalSettings?.site_phone || '01XXXXXXXXX' }}</strong>. Then provide your {{ hasPreOrderItems ? 'Transaction ID below (Optional).' : 'phone number and Transaction ID below.' }}</p>
-                                    
-                                    <div class="space-y-4">
-                                        <div v-if="!hasPreOrderItems">
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Sender Phone Number <span class="text-red-500">*</span></label>
-                                            <input type="text" v-model="form.payment_phone" :placeholder="`Your ${form.payment_method === 'bkash' ? 'bKash' : 'Nagad'} Number`" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" :required="!hasPreOrderItems" />
-                                            <p v-if="form.errors.payment_phone" class="mt-1 text-sm text-red-500">{{ form.errors.payment_phone }}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Transaction ID (TrxID) <span v-if="!hasPreOrderItems" class="text-red-500">*</span></label>
-                                            <input type="text" v-model="form.transaction_id" placeholder="Transaction ID" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" :required="!hasPreOrderItems" />
-                                            <p v-if="form.errors.transaction_id" class="mt-1 text-sm text-red-500">{{ form.errors.transaction_id }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Submit Button (Mobile) -->
-                            <div class="lg:hidden">
-                                <button
-                                    type="submit"
-                                    :disabled="form.processing || !isPhoneValid"
-                                    class="w-full py-4 px-6 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white font-semibold rounded-xl shadow-lg transition-colors flex items-center justify-center"
-                                >
-                                    <svg
-                                        v-if="form.processing"
-                                        class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            class="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            stroke-width="4"
-                                        ></circle>
-                                        <path
-                                            class="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                    {{
-                                        form.processing
-                                            ? "Processing..."
-                                            : "Place Order"
-                                    }}
-                                </button>
-                            </div>
-                        </form>
+                <div v-else>
+                    <!-- Login/Register Alert -->
+                    <div v-if="!user" class="bg-gray-100/80 border border-gray-200 rounded-lg p-5 flex flex-wrap items-center justify-between gap-4 mb-8">
+                        <span class="text-gray-700 font-normal tracking-tight">Have any account? please login or register</span>
+                        <div class="flex gap-2">
+                            <Link :href="route('login')" class="px-7 py-2 bg-white border border-gray-300 rounded text-sm font-medium hover:bg-gray-50 transition-all">Login</Link>
+                            <Link :href="route('register')" class="px-7 py-2 bg-orange-500 text-white rounded text-sm font-medium hover:bg-orange-600 transition-all shadow-sm">Register</Link>
+                        </div>
                     </div>
 
-                    <!-- Right Column: Order Summary -->
-                    <div class="lg:col-span-1">
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-4 overflow-hidden w-full"
-                        >
-                            <h2
-                                class="text-lg font-semibold text-gray-900 mb-4"
-                            >
-                                Order Summary
-                            </h2>
-
-                            <!-- Cart Items -->
-                            <div
-                                class="space-y-4 max-h-80 overflow-y-auto mb-4"
-                            >
-                                <div
-                                    v-for="item in cart?.data?.items"
-                                    :key="item.id"
-                                    class="pb-4 border-b border-gray-100 last:border-0"
-                                >
-                                    <div class="flex items-start space-x-3">
-                                        <!-- Product Image -->
-                                        <div
-                                            class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0"
-                                        >
-                                            <img
-                                                v-if="item.product_image"
-                                                :src="item.product_image"
-                                                :alt="item.product_name"
-                                                class="w-full h-full object-cover"
-                                            />
-                                            <div
-                                                v-else
-                                                class="w-full h-full flex items-center justify-center text-gray-400"
-                                            >
-                                                <svg
-                                                    class="w-8 h-8"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                                    />
-                                                </svg>
-                                            </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- Left Column -->
+                        <div class="lg:col-span-7 space-y-6">
+                            <!-- Order review section -->
+                            <section>
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
+                                    <h2 class="text-lg font-medium text-gray-900 tracking-tight">Order review</h2>
+                                </div>
+                                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                                    <div v-for="(item, index) in cart?.data?.items" :key="item.id" 
+                                         class="p-4 flex items-center gap-4 relative"
+                                         :class="{'border-b border-gray-100': index !== cart.data.items.length - 1}">
+                                        <div class="w-16 h-16 border border-gray-200 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 p-1">
+                                            <img v-if="item.product_image" :src="item.product_image" :alt="item.product_name" class="w-full h-full object-contain" />
+                                            <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-[10px]">No Image</div>
                                         </div>
-
-                                        <!-- Product Details -->
-                                        <div class="flex-1 min-w-0 w-full">
-                                            <div
-                                                class="flex items-start justify-between"
-                                            >
-                                                <div class="flex-1">
-                                                    <h4
-                                                        class="text-sm font-medium text-gray-900 break-words"
-                                                    >
-                                                        {{ item.product_name }}
-                                                    </h4>
-                                                    <!-- Variation Attributes -->
-                                                    <p
-                                                        v-if="
-                                                            item
-                                                                .variation_attributes
-                                                                ?.length
-                                                        "
-                                                        class="text-xs text-gray-500 mt-1"
-                                                    >
-                                                        <span
-                                                            v-for="(
-                                                                attr, index
-                                                            ) in item.variation_attributes"
-                                                            :key="index"
-                                                        >
-                                                            {{ attr.name }}:
-                                                            {{ attr.value }}
-                                                            <span
-                                                                v-if="
-                                                                    index <
-                                                                    item
-                                                                        .variation_attributes
-                                                                        .length -
-                                                                        1
-                                                                "
-                                                                >,
-                                                            </span>
-                                                        </span>
-                                                    </p>
-                                                    <p
-                                                        class="text-sm font-medium text-gray-900 mt-1"
-                                                    >
-                                                        ৳{{
-                                                            parseFloat(
-                                                                item.price || 0
-                                                            ).toFixed(2)
-                                                        }}
-                                                    </p>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-[14px] font-medium text-gray-900 mb-2">{{ item.product_name }}</h4>
+                                            <div class="flex items-center gap-4">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-sm font-normal text-gray-600">Qty:</span>
+                                                    <div class="flex items-center bg-[#f2f4f7] rounded-full p-0.5 select-none">
+                                                        <button @click="decrementQuantity(item.id, item.quantity)" class="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-500 transition-colors text-lg font-medium">−</button>
+                                                        <div class="bg-white w-8 h-7 flex items-center justify-center text-gray-900 font-semibold text-xs">
+                                                            {{ item.quantity }}
+                                                        </div>
+                                                        <button @click="incrementQuantity(item.id)" class="w-7 h-7 flex items-center justify-center text-orange-500 hover:text-orange-600 transition-colors text-lg font-medium">+</button>
+                                                    </div>
                                                 </div>
-                                                <!-- Delete Button -->
-                                                <button
-                                                    @click="removeItem(item.id)"
-                                                    class="text-red-500 hover:text-red-700 p-1"
-                                                    type="button"
-                                                >
-                                                    <svg
-                                                        class="w-5 h-5"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                        />
-                                                    </svg>
-                                                </button>
+                                                <span class="text-[14px] font-medium text-gray-900">৳{{ (parseFloat(item.price) * item.quantity).toLocaleString() }}.00</span>
                                             </div>
+                                        </div>
+                                        <button @click="removeItem(item.id)" class="bg-red-500/90 text-white p-1 rounded-md hover:bg-red-600 transition-all shadow-sm ml-auto flex-shrink-0">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </section>
 
-                                            <!-- Quantity Controls -->
-                                            <div
-                                                class="flex items-center gap-2 mt-2"
-                                            >
-                                                <button
-                                                    @click="
-                                                        decrementQuantity(
-                                                            item.id,
-                                                            item.quantity
-                                                        )
-                                                    "
-                                                    type="button"
-                                                    class="w-7 h-7 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    <svg
-                                                        class="w-4 h-4"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M20 12H4"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                                <span
-                                                    class="text-sm font-medium w-8 text-center"
-                                                    >{{ item.quantity }}</span
-                                                >
-                                                <button
-                                                    @click="
-                                                        incrementQuantity(
-                                                            item.id
-                                                        )
-                                                    "
-                                                    type="button"
-                                                    class="w-7 h-7 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100"
-                                                >
-                                                    <svg
-                                                        class="w-4 h-4"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                                <span
-                                                    class="text-xs text-gray-500 ml-2"
-                                                >
-                                                    ৳{{
-                                                        (
-                                                            parseFloat(
-                                                                item.price || 0
-                                                            ) * item.quantity
-                                                        ).toFixed(2)
-                                                    }}
-                                                </span>
+                            <!-- Shipping Address section -->
+                            <section>
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
+                                    <h2 class="text-lg font-medium text-gray-900 tracking-tight">Shipping Address</h2>
+                                </div>
+                                <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="relative">
+                                            <input v-model="form.customer_name" type="text" placeholder="Your Full Name *" 
+                                                   class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all placeholder:text-gray-400 font-normal text-gray-800 text-sm" />
+                                        </div>
+                                        <div class="flex items-center border border-gray-200 rounded-lg px-4 py-2.5 focus-within:ring-1 focus-within:ring-orange-500 focus-within:border-orange-500 bg-white transition-all">
+                                            <span class="mr-2 text-gray-500 font-normal border-r pr-2 border-gray-200 text-sm">88</span>
+                                            <input v-model="form.customer_phone" type="tel" placeholder="01*********" 
+                                                   class="flex-1 bg-transparent border-none outline-none p-0 focus:ring-0 placeholder:text-gray-400 font-normal text-gray-800 text-sm" />
+                                        </div>
+                                        
+                                        <div class="relative">
+                                            <select v-model="form.shipping_district" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-sm cursor-pointer" style="appearance: none; -webkit-appearance: none;">
+                                                <option value="" disabled>Select District</option>
+                                                <option v-for="d in districts" :key="d.id" :value="d.name">{{ d.name }}</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="relative">
+                                            <select v-model="form.shipping_thana" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-sm cursor-pointer" :disabled="!form.shipping_district" style="appearance: none; -webkit-appearance: none;">
+                                                <option value="" disabled>Select Thana (Optional)</option>
+                                                <option v-for="t in thanas" :key="t.id" :value="t.name">{{ t.name }}</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <textarea v-model="form.shipping_address" rows="2" placeholder="ex: House no. / building / street / area" 
+                                                      class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all placeholder:text-gray-400 font-medium text-gray-800 resize-none text-sm"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="lg:col-span-5 space-y-6">
+                            <!-- Payment method section -->
+                            <section>
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
+                                    <h2 class="text-lg font-medium text-gray-900 tracking-tight">Payment method</h2>
+                                </div>
+                                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                                    <div class="grid gap-3 mb-3" :class="hasPreOrderItems ? 'grid-cols-2' : 'grid-cols-1'">
+                                        <button type="button" @click="form.payment_method = 'cod'" 
+                                                class="flex items-center gap-3 p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
+                                                :class="form.payment_method === 'cod' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
+                                            <div class="w-8 h-8 flex items-center justify-center text-xl">💵</div>
+                                            <span class="text-sm font-medium text-gray-800">Cash On Delivery</span>
+                                            <div v-if="form.payment_method === 'cod'" class="absolute -top-1 -right-1 flex items-center justify-center w-8 h-8">
+                                                <div class="bg-orange-500 w-full h-full rotate-45 translate-x-4 -translate-y-4"></div>
+                                                <svg class="w-3 h-3 text-white absolute top-1.5 right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                                            </div>
+                                        </button>
+                                        <button v-if="hasPreOrderItems" type="button" @click="form.payment_method = 'nagad'" 
+                                                class="flex items-center gap-3 p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
+                                                :class="form.payment_method === 'nagad' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
+                                            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                                                <img src="/assets/img/logo/nogod.png" class="w-full h-full object-contain p-0.5" alt="nagad" />
+                                            </div>
+                                            <span class="text-sm font-medium text-gray-800">Nagad</span>
+                                            <div v-if="form.payment_method === 'nagad'" class="absolute -top-1 -right-1 flex items-center justify-center w-8 h-8">
+                                                <div class="bg-orange-500 w-full h-full rotate-45 translate-x-4 -translate-y-4"></div>
+                                                <svg class="w-3 h-3 text-white absolute top-1.5 right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <button v-if="hasPreOrderItems" type="button" @click="form.payment_method = 'bkash'" 
+                                            class="w-full flex items-center gap-4 p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
+                                            :class="form.payment_method === 'bkash' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
+                                        <div class="w-10 h-10 rounded-lg p-1 bg-white flex items-center justify-center overflow-hidden">
+                                            <img src="/assets/img/logo/BKash-Icon-Logo.wine.svg" class="w-full h-full object-contain" alt="bkash" />
+                                        </div>
+                                        <span class="text-base font-medium text-gray-800">Bkash</span>
+                                        <div v-if="form.payment_method === 'bkash'" class="absolute -top-1 -right-1 flex items-center justify-center w-8 h-8">
+                                            <div class="bg-orange-500 w-full h-full rotate-45 translate-x-4 -translate-y-4"></div>
+                                            <svg class="w-3 h-3 text-white absolute top-1.5 right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                                        </div>
+                                    </button>
+
+                                    <!-- Manual Payment Instructions -->
+                                    <div v-if="form.payment_method === 'bkash' || form.payment_method === 'nagad'" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <h3 class="text-sm font-bold text-blue-900 mb-2 uppercase tracking-tight">Instructions:</h3>
+                                        <p class="text-[13px] text-blue-800 mb-4 whitespace-pre-line leading-relaxed" v-html="highlightNumbers(form.payment_method === 'bkash' ? (settings.generalSettings?.bkash_instructions || 'Please send the amount to our official bKash number. Then provide your Transaction ID below.') : (settings.generalSettings?.nagad_instructions || 'Please send the amount to our official Nagad number. Then provide your Transaction ID below.'))"></p>
+                                        
+                                        <div class="space-y-3 pt-3 border-t border-blue-200/50">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-blue-900 uppercase tracking-wider mb-1">Transaction ID (TrxID) <span class="text-red-500">*</span></label>
+                                                <input type="text" v-model="form.transaction_id" placeholder="Ex: 8NH7YH9L" class="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-sm font-medium" required />
+                                                <p v-if="form.errors.transaction_id" class="mt-1 text-[10px] text-red-500 font-bold tracking-tight">{{ form.errors.transaction_id }}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
 
-                            <!-- Coupon Section -->
-                            <div class="mt-4 pb-4 border-b border-gray-100">
-                                <label
-                                    for="coupon_code"
-                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2"
-                                    >Have a coupon?</label
-                                >
-                                <div class="flex flex-col sm:flex-row gap-2 items-stretch">
-                                    <input
-                                        id="coupon_code"
-                                        v-model="couponForm.code"
-                                        @keydown.enter.prevent="applyCoupon"
-                                        type="text"
-                                        placeholder="Enter code"
-                                        class="min-w-0 w-full sm:flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                                        :disabled="couponForm.processing"
-                                    />
-                                    <button
-                                        type="button"
-                                        @click="applyCoupon"
-                                        :disabled="couponForm.processing"
-                                        class="w-full sm:w-auto px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                                    >
-                                        <span v-if="couponForm.processing"
-                                            >...</span
-                                        >
-                                        <span v-else>Apply</span>
+                            <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
+                                <!-- Coupon Accordion -->
+                                <div>
+                                    <button @click="showCoupon = !showCoupon" class="w-full flex items-center justify-between text-sm font-medium text-gray-800 group py-1">
+                                        <span>Have any coupon or gift voucher?</span>
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{'rotate-180': showCoupon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
                                     </button>
+                                    <div v-show="showCoupon" class="mt-3 flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <input v-model="couponForm.code" type="text" placeholder="Enter code" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 outline-none font-normal text-sm" />
+                                        <button @click="applyCoupon" class="px-5 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-black transition-all text-sm">Apply</button>
+                                    </div>
                                 </div>
-                                <div
-                                    v-if="cart?.data?.coupon_code"
-                                    class="mt-2 flex items-center justify-between"
-                                >
-                                    <span
-                                        class="text-xs text-green-600 flex items-center"
-                                    >
-                                        <svg
-                                            class="w-3 h-3 mr-1"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path
-                                                fill-rule="evenodd"
-                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                clip-rule="evenodd"
-                                            ></path>
-                                        </svg>
-                                        Applied:
-                                        <strong>{{
-                                            cart.data.coupon_code
-                                        }}</strong>
+
+                                <!-- Summary -->
+                                <div class="space-y-3 pt-4 border-t border-gray-100">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm font-normal text-gray-600">Sub total</span>
+                                        <span class="text-sm font-normal text-gray-900">{{ subtotal.toLocaleString() }}.00 BDT</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm font-normal text-gray-600">Delivery cost</span>
+                                        <span class="text-sm font-normal text-gray-900">{{ form.shipping_cost }}.00 BDT</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                                        <span class="text-base font-semibold text-gray-900">Total</span>
+                                        <span class="text-base font-semibold text-gray-900">{{ total.toLocaleString() }}.00BDT</span>
+                                    </div>
+
+                                    <!-- Pre-Order Notice -->
+                                    <div v-if="hasPreOrderItems" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div class="flex items-center gap-2 text-blue-900">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <span class="text-sm font-bold uppercase tracking-tight">Pre-Order Notice</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between items-center text-[13px] font-medium text-blue-800">
+                                                <span>Suggested Advance (50%)</span>
+                                                <span class="font-bold">৳{{ (total / 2).toLocaleString() }}.00</span>
+                                            </div>
+                                            <div class="flex justify-between items-center text-[13px] font-medium text-blue-800">
+                                                <span>Due on Delivery</span>
+                                                <span class="font-bold">৳{{ (total / 2).toLocaleString() }}.00</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-[11px] leading-relaxed text-blue-700 pt-2 border-t border-blue-200/50">
+                                            You can optionally send the suggested advance via bKash/Nagad to confirm your pre-order quickly, or simply place via Cash on Delivery.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Special notes section -->
+                            <section>
+                                <div class="flex items-center space-x-3 mb-3 mt-1">
+                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
+                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Special notes <span class="text-gray-400 font-semibold">(Optional)</span></h2>
+                                </div>
+                                <textarea v-model="form.customer_notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 outline-none transition-all resize-none font-medium bg-white text-sm"></textarea>
+                            </section>
+
+                            <!-- Terms and Submit -->
+                            <div class="space-y-6">
+                                <label class="flex items-start gap-3 cursor-pointer group">
+                                    <input type="checkbox" required class="mt-1 w-5 h-5 accent-orange-500 rounded border-gray-300 text-orange-500 focus:ring-orange-500" checked />
+                                    <span class="text-xs text-gray-500 leading-relaxed font-medium">
+                                        I have read and agree to the <span class="text-orange-500 font-bold hover:underline">Terms and Conditions</span>, <span class="text-orange-500 font-bold hover:underline">Privacy Policy</span> & <span class="text-orange-500 font-bold hover:underline">Refund and Return Policy</span>.
                                     </span>
-                                </div>
-                            </div>
+                                </label>
 
-
-
-                            <!-- Totals -->
-                            <div
-                                class="border-t border-gray-200 pt-4 space-y-3"
-                            >
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Subtotal</span>
-                                    <span class="font-medium text-gray-900"
-                                        >৳{{ subtotal.toFixed(2) }}</span
-                                    >
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Shipping</span>
-                                    <span class="font-medium text-gray-900"
-                                        >৳{{
-                                            form.shipping_cost.toFixed(2)
-                                        }}</span
-                                    >
-                                </div>
-                                <div
-                                    v-if="cart?.data?.discount > 0"
-                                    class="flex justify-between text-sm text-green-600"
-                                >
-                                    <span
-                                        >Discount ({{
-                                            cart.data.coupon_code
-                                        }})</span
-                                    >
-                                    <span class="font-medium"
-                                        >-৳{{
-                                            parseFloat(
-                                                cart.data.discount
-                                            ).toFixed(2)
-                                        }}</span
-                                    >
-                                </div>
-                                <div
-                                    class="flex justify-between text-lg font-bold border-t border-gray-200 pt-3"
-                                >
-                                    <span class="text-gray-900">Total</span>
-                                    <span class="text-primary"
-                                        >৳{{ total.toFixed(2) }}</span
-                                    >
-                                </div>
-                                <div v-if="hasPreOrderItems" class="bg-indigo-50 border border-indigo-100 p-3 rounded-lg mt-3 space-y-2 animate-in fade-in zoom-in duration-300">
-                                    <p class="text-xs font-bold text-indigo-800 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Pre-Order Notice</p>
-                                    <div class="flex justify-between text-sm text-indigo-700">
-                                        <span>Suggested Advance (50%)</span>
-                                        <span class="font-bold">৳{{ advancePaymentAmount.toFixed(2) }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm text-indigo-700">
-                                        <span>Due on Delivery</span>
-                                        <span class="font-bold">৳{{ (total - advancePaymentAmount).toFixed(2) }}</span>
-                                    </div>
-                                    <p class="text-[10px] text-indigo-600 leading-tight">You can optionally send the suggested advance via bKash/Nagad to confirm your pre-order quickly, or simply place via Cash on Delivery.</p>
-                                </div>
-                            </div>
-
-                            <!-- Submit Button (Desktop) -->
-                            <div class="hidden lg:block mt-6">
-                                <button
-                                    @click="submitOrder"
-                                    :disabled="form.processing || !isPhoneValid"
-                                    class="w-full py-4 px-6 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white font-semibold rounded-xl shadow-lg transition-colors flex items-center justify-center"
-                                >
-                                    <svg
-                                        v-if="form.processing"
-                                        class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            class="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            stroke-width="4"
-                                        ></circle>
-                                        <path
-                                            class="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                    {{
-                                        form.processing
-                                            ? "Processing..."
-                                            : "Place Order"
-                                    }}
+                                <button @click="submitOrder" :disabled="form.processing"
+                                        class="w-full bg-orange-500 text-white font-medium py-3.5 rounded-lg shadow-[0_10px_20px_rgba(249,115,22,0.15)] hover:bg-orange-600 transition-all transform hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.1em] text-sm">
+                                    {{ form.processing ? 'Processing...' : 'PLACE ORDER' }}
                                 </button>
                             </div>
-
-                            <!-- Security Note -->
-                            <p
-                                class="mt-4 text-xs text-gray-500 text-center flex items-center justify-center"
-                            >
-                                <svg
-                                    class="w-4 h-4 mr-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                    />
-                                </svg>
-                                Secure checkout
-                            </p>
                         </div>
                     </div>
                 </div>
-                <!-- End v-else -->
             </div>
         </div>
 
-        <!-- Floating coupon action on mobile -->
-        <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 lg:hidden z-40">
-            <button @click="focusCoupon" class="px-4 py-3 bg-primary text-white rounded-full shadow-lg">
-                Apply Coupon
+        <!-- Floating coupon action on mobile (Custom style) -->
+        <div v-if="cart?.data?.items?.length > 0" class="fixed bottom-6 right-6 lg:hidden z-50">
+            <button @click="focusCoupon" class="w-14 h-14 bg-orange-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
             </button>
         </div>
     </FrontendLayout>

@@ -2,8 +2,8 @@
     <section class="py-6 bg-white">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                <!-- Main Slider (Left side) -->
-                <div class="lg:col-span-8">
+                <!-- Main Slider (Full width) -->
+                <div class="lg:col-span-12">
                     <swiper
                         v-if="sliders && sliders.length > 0"
                         :modules="modules"
@@ -19,7 +19,7 @@
                             dynamicBullets: true,
                         }"
                         :navigation="false"
-                        class="main-slider rounded-2xl overflow-hidden shadow-sm h-full lg:h-[500px]"
+                        class="main-slider rounded-2xl overflow-hidden shadow-sm h-full"
                     >
                         <swiper-slide v-for="slider in sliders" :key="slider.id">
                             <Link
@@ -43,39 +43,6 @@
                         </swiper-slide>
                     </swiper>
                 </div>
-
-                <!-- Side Banners (Right side) -->
-                <div class="lg:col-span-4 flex flex-row lg:flex-col gap-4 lg:h-[500px]">
-                    <!-- Banner 1 -->
-                    <div class="flex-1 relative overflow-hidden rounded-2xl shadow-sm group h-full">
-                        <Link 
-                            v-if="sideBanners?.new_arrival_b_banner1" 
-                            :href="sideBanners.new_arrival_b_banner1_url || '#'" 
-                            class="block h-full w-full"
-                        >
-                            <img 
-                                :src="sideBanners.new_arrival_b_banner1" 
-                                alt="Side Banner 1" 
-                                class="w-full h-full object-cover transition-transform duration-500 "
-                            />
-                        </Link>
-                    </div>
-                    
-                    <!-- Banner 2 -->
-                    <div class="flex-1 relative overflow-hidden rounded-2xl shadow-sm group h-full">
-                        <Link 
-                            v-if="sideBanners?.new_arrival_b_banner2" 
-                            :href="sideBanners.new_arrival_b_banner2_url || '#'" 
-                            class="block h-full w-full"
-                        >
-                            <img 
-                                :src="sideBanners.new_arrival_b_banner2" 
-                                alt="Side Banner 2" 
-                                class="w-full h-full object-cover transition-transform duration-500"
-                            />
-                        </Link>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -97,11 +64,6 @@ const props = defineProps({
         required: true,
         default: () => [],
     },
-    sideBanners: {
-        type: Object,
-        required: false,
-        default: () => ({}),
-    }
 });
 
 const modules = [Autoplay, Pagination, Navigation];

@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { Home, Gift, Heart, GitCompare, MapPin, User } from "lucide-vue-next";
+import { Home, Gift, Heart, GitCompare, MapPin, User, Zap } from "lucide-vue-next";
 
 defineProps({
     wishlistCount: {
@@ -37,6 +37,15 @@ defineProps({
             >
                 <Gift class="w-5 h-5" />
                 <span class="text-[10px] font-medium">Offers</span>
+            </Link>
+
+            <Link
+                :href="route('pre-order-lead.form')"
+                class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
+                :class="{ 'text-primary': $page.url === '/pre-order-lead' }"
+            >
+                <Zap class="w-5 h-5" />
+                <span class="text-[10px] font-medium">Request</span>
             </Link>
 
             <Link

@@ -44,6 +44,8 @@ class GeneralSettingRequest extends FormRequest
             'facebook_page_id' => 'nullable|string',
             'footer_text' => 'nullable|string',
             'primary_color' => 'nullable|string|max:7',
+            'bkash_instructions' => 'nullable|string',
+            'nagad_instructions' => 'nullable|string',
         ];
     }
 }

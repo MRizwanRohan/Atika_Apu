@@ -35,6 +35,8 @@ return new class extends Migration
             $table->text('facebook_page_id')->nullable();
             $table->text('footer_text')->nullable();
             $table->string('primary_color')->default('#f0512e')->nullable();
+            $table->text('bkash_instructions')->nullable();
+            $table->text('nagad_instructions')->nullable();
             $table->timestamps();
         });
     }

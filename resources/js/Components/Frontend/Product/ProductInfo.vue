@@ -11,6 +11,7 @@ import {
     RefreshCcw, 
     Zap, 
     ShoppingBag, 
+    ShoppingCart,
     ArrowRight,
     Star,
     Check
@@ -128,21 +129,25 @@ const availableAttributes = computed(() => {
         variation.attributes?.forEach((attr) => {
             const attrName = attr.value.attribute.name.toLowerCase();
             if (!attributesMap.has(attrName)) {
-                attributesMap.set(attrName, { name: attr.value.attribute.name, values: new Set() });
+                attributesMap.set(attrName, { name: attr.value.attribute.name, values: new Map() });
             }
-            attributesMap.get(attrName).values.add(JSON.stringify({
-                id: attr.value.id,
-                value: attr.value.value,
-                color: attr.value.color,
-                image: variation.image_path || null
-            }));
+            
+            const valuesMap = attributesMap.get(attrName).values;
+            if (!valuesMap.has(attr.value.id)) {
+                valuesMap.set(attr.value.id, {
+                    id: attr.value.id,
+                    value: attr.value.value,
+                    color: attr.value.color,
+                    image: variation.image_path || null
+                });
+            }
         });
     });
 
     return Array.from(attributesMap).map(([key, data]) => ({
         key,
         name: data.name,
-        values: Array.from(data.values).map(v => JSON.parse(v))
+        values: Array.from(data.values.values())
     }));
 });
 
@@ -208,201 +213,170 @@ watch(() => props.product, (newVal) => {
         trackViewContent(newVal, pricing.value.main);
     }
 }, { immediate: true });
+const whatsappLink = computed(() => {
+    const number = props.settings?.generalSettings?.whatsapp_number || "8801887573015";
+    const message = encodeURIComponent(`Hello, I'm interested in buying this product: "${props.product.name}".\n\nLink: ${window.location.href}`);
+    return `https://wa.me/${number}?text=${message}`;
+});
 
 </script>
 
 <template>
-    <div class="flex flex-col gap-6 selection:bg-primary/10">
-        <!-- Brand & Badge Row -->
-        <div class="flex items-center justify-between gap-4">
-            <div v-if="product.brand" class="px-3 py-1 bg-gray-50 border border-gray-100 rounded-lg">
-                <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">{{ product.brand.name }}</span>
+    <div class="flex flex-col gap-5 selection:bg-primary/10">
+        <!-- Brand & Title -->
+        <div class="space-y-1">
+            <div v-if="product.brand" class="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">
+                {{ product.brand.name }}
             </div>
-            
-            <div v-if="isPreOrderMode" class="flex items-center gap-1.5 px-3 py-1 bg-violet-50 text-violet-700 rounded-lg text-xs font-semibold ring-1 ring-violet-200">
-                <Truck :size="14" />
-                Pre-Order
-            </div>
-            <div v-else-if="!hasStock" class="px-3 py-1 bg-rose-50 text-rose-700 rounded-lg text-xs font-semibold ring-1 ring-rose-200 uppercase">
-                Out of Stock
-            </div>
-            <div v-else class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold ring-1 ring-emerald-200 uppercase">
-                <ShieldCheck :size="14" />
-                In Stock
-            </div>
-        </div>
-
-        <!-- Product Title -->
-        <div class="space-y-2">
-            <h1 class="text-xl md:text-3xl font-bold text-gray-900 leading-[1.2] tracking-tight">
+            <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 leading-tight">
                 {{ product.name }}
             </h1>
-            
-            <!-- Trust Bar -->
-            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 py-1">
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center gap-0.5">
-                        <Star v-for="i in 5" :key="i" :size="14" :class="i <= (product.avg_rating || 5) ? 'fill-orange-400 text-orange-400' : 'text-gray-200'" />
-                    </div>
-                    <span class="text-sm font-semibold text-gray-900">{{ product.avg_rating || '5.0' }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-sm text-gray-500">
-                    <span class="font-semibold text-gray-900">{{ (product.sold_stock || 0) + (product.fake_sold_count || 0) }}</span>
-                    <span>Units Sold</span>
-                </div>
-                <div v-if="product.product_code" class="text-sm text-gray-500">
-                    <span class="opacity-60">SKU:</span> <span class="font-semibold text-gray-900">{{ product.product_code }}</span>
-                </div>
-            </div>
         </div>
 
-        <!-- Pricing Section -->
-        <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap items-baseline gap-3 md:gap-4">
-                <span class="text-2xl md:text-4xl font-bold text-gray-900">
-                    ৳{{ formatPrice(pricing.main) }}
-                </span>
+        <!-- Price & Info Bar -->
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-semibold text-gray-900">৳{{ formatPrice(pricing.main) }}</span>
                 <div v-if="pricing.cross" class="flex items-center gap-2">
-                    <span class="text-base md:text-lg text-gray-400 line-through font-medium">৳{{ formatPrice(pricing.cross) }}</span>
-                    <span class="px-2 py-0.5 bg-rose-500 text-white text-[10px] md:text-xs font-bold rounded-full">
+                    <span class="text-gray-400 line-through font-normal">৳{{ formatPrice(pricing.cross) }}</span>
+                    <span class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
                         -{{ Math.round(pricing.discountValue) }}%
                     </span>
                 </div>
+                <!-- <span class="text-gray-400 font-normal">(Cash Price)</span> -->
             </div>
-            <div v-if="pricing.cross" class="flex items-center gap-1.5 text-emerald-600 font-semibold text-sm">
-                <Zap :size="16" />
-                <span>You Save: ৳{{ formatPrice(pricing.cross - pricing.main) }}</span>
+            
+            <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+            
+            <div class="flex items-center gap-1">
+                <span class="font-normal">Availability:</span>
+                <span v-if="isPreOrderMode" class="text-violet-600 font-semibold">Pre-Order</span> 
+                <span v-else-if="!hasStock" class="text-rose-600 font-semibold">Out of Stock</span>
+                <span v-else class="text-emerald-600 font-semibold">In Stock</span>
             </div>
 
-            <!-- Pre-order Note -->
-            <div v-if="isPreOrderMode" class="mt-4 p-4 bg-violet-600/5 border border-violet-100 rounded-xl">
-                <p class="text-xs font-semibold text-violet-700 leading-relaxed uppercase tracking-wide">
-                    20-30 days delivery • 50% advance (৳{{ formatPrice(pricing.main * 0.5) }})
-                </p>
+            <div v-if="product.product_code" class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+
+            <div v-if="product.product_code" class="flex items-center gap-1">
+                <span class="font-normal">Code:</span>
+                <span class="text-gray-900 font-semibold">{{ product.product_code }}</span>
             </div>
-        </div>
+        </div>        <!-- Attributes Grid (2 Columns) -->
+        <div v-if="availableAttributes.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div v-for="attribute in availableAttributes" :key="attribute.key" 
+                class="border border-gray-200 rounded-2xl p-4 space-y-3 bg-white">
+                <span class="text-xs font-semibold text-gray-900 block">{{ attribute.name }}</span>
 
-        <!-- Short Description -->
-        <div v-if="product.short_description" class="space-y-3">
-            <div 
-                class="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none 
-                prose-p:m-0 prose-ul:list-disc prose-ul:pl-4 prose-li:my-1"
-                v-html="product.short_description"
-            ></div>
-        </div>
-
-        <!-- Attributes Selector -->
-        <div v-if="availableAttributes.length > 0" class="flex flex-col gap-6 pt-2">
-            <div v-for="attribute in availableAttributes" :key="attribute.key" class="space-y-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-gray-500 uppercase tracking-widest">{{ attribute.name }}</span>
-                    <span class="text-sm font-bold text-gray-900" v-if="selectedAttributes[attribute.key]">
-                        {{ selectedAttributes[attribute.key].value }}
-                    </span>
-                </div>
-
-                <!-- Color Swatches -->
-                <div v-if="attribute.key.toLowerCase() === 'color'" class="flex flex-wrap gap-4">
-                    <div
-                        v-for="value in attribute.values"
-                        :key="value.id"
-                        class="group relative"
-                    >
-                        <!-- Color Name Tooltip -->
-                        <div class="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                            {{ value.value }}
-                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900"></div>
-                        </div>
-
-                        <button
-                            @click="selectAttribute(attribute.key, value)"
-                            class="relative w-11 h-11 rounded-full transition-all duration-300 ring-2 ring-offset-1"
-                            :class="selectedAttributes[attribute.key]?.id === value.id 
-                                ? 'ring-gray-900 scale-105' 
-                                : 'ring-transparent hover:ring-gray-200'"
+                <div class="flex flex-wrap gap-3">
+                    <!-- Color Swatches (Circular) -->
+                    <template v-if="attribute.key.toLowerCase() === 'color'">
+                        <div
+                            v-for="value in attribute.values"
+                            :key="value.id"
+                            class="group relative"
                         >
-                            <div v-if="value.image" class="w-full h-full rounded-full overflow-hidden">
-                                <img :src="value.image" class="w-full h-full object-cover" />
+                            <!-- Tooltip -->
+                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-semibold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                                {{ value.value }}
+                                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900"></div>
                             </div>
-                            <div v-else :style="{ backgroundColor: value.color || '#eee' }" class="w-full h-full rounded-full border border-gray-100"></div>
-                            
-                            <!-- Selected Indicator (Check Icon) -->
-                            <div v-if="selectedAttributes[attribute.key]?.id === value.id" class="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center">
-                                <Check class="text-white" :size="20" stroke-width="3" />
-                            </div>
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Standard Pickers (Size, Storage, etc.) -->
-                <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <button
-                        v-for="value in attribute.values"
-                        :key="value.id"
-                        @click="selectAttribute(attribute.key, value)"
-                        class="px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200"
-                        :class="selectedAttributes[attribute.key]?.id === value.id
-                            ? 'border-gray-900 bg-gray-900 text-white shadow-md'
-                            : 'border-gray-100 hover:border-gray-200 text-gray-700'"
-                    >
-                        {{ value.value }}
-                    </button>
+                            <button
+                                @click="selectAttribute(attribute.key, value)"
+                                class="w-11 h-11 rounded-full border-2 transition-all duration-300 p-0.5"
+                                :class="selectedAttributes[attribute.key]?.id === value.id 
+                                    ? 'border-orange-500 scale-105' 
+                                    : 'border-gray-200 hover:border-gray-200'"
+                            >
+                                <div v-if="value.image" class="w-full h-full rounded-full overflow-hidden">
+                                    <img :src="value.image" class="w-full h-full object-cover" />
+                                </div>
+                                <div v-else :style="{ backgroundColor: value.color || '#eee' }" class="w-full h-full rounded-full border border-black/5"></div>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Standard Pickers (Size, Storage, etc.) -->
+                    <template v-else>
+                        <button
+                            v-for="value in attribute.values"
+                            :key="value.id"
+                            @click="selectAttribute(attribute.key, value)"
+                            class="px-4 py-2 rounded-xl border text-xs font-semibold transition-all duration-200"
+                            :class="selectedAttributes[attribute.key]?.id === value.id
+                                ? 'border-orange-500 bg-orange-50 text-orange-600'
+                                : 'border-gray-200 hover:border-gray-200 text-gray-500 bg-white'"
+                        >
+                            {{ value.value }}
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>
 
-
-        <!-- Action Section -->
-        <div class="sticky bottom-0 md:relative bg-white pt-6 pb-2 md:pt-4 z-40 border-t border-gray-50 md:border-t-0 -mx-4 px-4 md:mx-0 md:px-0">
-            <div class="flex flex-col gap-3">
-                <div class="flex gap-4">
-                    <!-- Quantity Picker -->
-                    <div class="h-14 flex items-center bg-gray-100 rounded-2xl px-1">
-                        <button @click="quantity > 1 && quantity--" class="w-10 h-10 flex items-center justify-center text-xl font-medium hover:bg-white rounded-xl transition-all">-</button>
-                        <span class="w-10 font-semibold text-center text-lg">{{ quantity }}</span>
-                        <button @click="quantity < currentStock && quantity++" class="w-10 h-10 flex items-center justify-center text-xl font-medium hover:bg-white rounded-xl transition-all">+</button>
-                    </div>
-
-                    <!-- Add to Cart -->
-                    <button
-                        @click="addToCart"
-                        :disabled="isAddingToCart || !hasStock"
-                        class="flex-1 h-14 bg-gray-900 hover:bg-black text-white rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none group shadow-md shadow-gray-200"
-                    >
-                        <ShoppingBag v-if="!isAddingToCart" :size="20" class="group-hover:translate-y-[-2px] transition-transform" />
-                        <span v-if="isAddingToCart" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span class="uppercase tracking-widest text-[11px] md:text-sm font-bold">{{ isPreOrderMode ? 'Pre-Order Now' : 'Add to Cart' }}</span>
-                    </button>
+        <!-- Actions Section -->
+        <div class="flex flex-col gap-6 mt-4">
+            <!-- Quantity Section -->
+            <div class="space-y-3">
+                <span class="text-sm font-semibold text-gray-900 block">Select Quantity:</span>
+                <div class="inline-flex items-center bg-[#f3f4f6] rounded-full p-1.5 gap-4">
+                    <button @click="quantity > 1 && quantity--" 
+                        class="w-8 h-8 flex items-center justify-center text-gray-900 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-all">-</button>
+                    <span class="w-6 font-semibold text-center text-gray-900 text-base">{{ quantity }}</span>
+                    <button @click="quantity < currentStock && quantity++" 
+                        class="w-8 h-8 flex items-center justify-center text-gray-900 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-all">+</button>
                 </div>
+            </div>
 
-                <!-- Checkout Now -->
+            <!-- Primary Actions (Shop Now & Add to Cart) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                     @click="buyNow"
                     :disabled="isAddingToCart || !hasStock"
-                    class="h-14 bg-primary text-white rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 group hover:shadow-lg hover:shadow-primary/20"
+                    class="h-12 bg-[#f5811e] hover:bg-[#e67610] text-white rounded-full font-semibold text-base transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
                 >
-                    <Zap :size="20" class="group-hover:scale-110 transition-transform" />
-                    <span class="uppercase tracking-widest text-[11px] md:text-sm font-bold">Instant Checkout</span>
-                    <ArrowRight :size="18" class="group-hover:translate-x-1 transition-transform" />
+                    Shop Now
+                </button>
+
+                <button
+                    @click="addToCart"
+                    :disabled="isAddingToCart || !hasStock"
+                    class="h-12 bg-white border border-gray-200 text-gray-900 rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97] disabled:opacity-50 group hover:bg-gray-50"
+                >
+                    <ShoppingCart :size="20" class="group-hover:translate-y-[-1px] transition-transform" />
+                    <span>Add To Cart</span>
                 </button>
             </div>
         </div>
 
-        <!-- Service Trust Bar -->
-        <!-- <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
-            <div class="flex flex-col items-center gap-2 text-center">
-                <Truck :size="20" class="text-gray-400" />
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Fast Delivery</span>
-            </div>
-            <div class="flex flex-col items-center gap-2 text-center border-x border-gray-100">
-                <ShieldCheck :size="20" class="text-gray-400" />
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Authentic</span>
-            </div>
-            <div class="flex flex-col items-center gap-2 text-center">
-                <RefreshCcw :size="20" class="text-gray-400" />
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Easy Returns</span>
-            </div>
-        </div> -->
+            <!-- Social/Support Actions -->
+            <div class="flex flex-col gap-4">
+                <a
+                    :href="whatsappLink"
+                    target="_blank"
+                    class="w-full h-14 bg-[#e8fbf3] hover:bg-[#d4f7e8] text-[#1bd741] rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97]"
+                >
+                    <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                    </svg>
+                    <span>Order via Whatsapp</span>
+                </a>
+
+                <!-- Delivery Info -->
+                <div class="border border-gray-200 rounded-2xl p-4 flex items-center gap-4 bg-gray-50/50">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+                        <Truck :size="24" class="text-gray-400" />
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-400 font-semibold uppercase text-[10px] tracking-wider block">Estimated Delivery</span>
+                        <span v-if="isPreOrderMode" class="font-semibold text-gray-900 text-sm leading-tight block">
+                            20-30 days delivery • 50% advance (৳{{ formatPrice(pricing.main * 0.5) }})
+                        </span>
+                        <span v-else class="font-semibold text-gray-900 text-base">3-5 Working Days</span>
+                    </div>
+                </div>
+        </div>
+
     </div>
 </template>
 

@@ -77,7 +77,7 @@ defineProps({
                 <div
                     v-for="product in group.products"
                     :key="product.id"
-                    class="transform transition-all duration-300 hover:-translate-y-1"
+                    class=""
                 >
                     <ProductCard :product="product" />
                 </div>

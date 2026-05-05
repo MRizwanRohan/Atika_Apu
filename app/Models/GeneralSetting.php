@@ -29,5 +29,7 @@ class GeneralSetting extends Model
         'facebook_page_id',
         'footer_text',
         'primary_color',
+        'bkash_instructions',
+        'nagad_instructions',
     ];
 }

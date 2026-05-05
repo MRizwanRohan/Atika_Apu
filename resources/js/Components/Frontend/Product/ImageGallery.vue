@@ -1,157 +1,11 @@
 <template>
-    <div class="w-full mx-auto md:p-4">
-        <div class="flex gap-4 md:flex-row flex-col">
-            <!-- Vertical Thumbnail Gallery (Desktop Only) -->
-            <div
-                class="hidden md:flex flex-col w-24 flex-shrink-0 relative group"
-            >
-                <!-- Scroll Up Button -->
-                <button
-                    @click="scrollThumbnails('up')"
-                    class="absolute top-2 left-1/2 -translate-x-1/2 z-20 w-8 h-8 bg-white/30 backdrop-blur-md hover:bg-white/50 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-white/20"
-                    :class="{ 'opacity-0 pointer-events-none': !canScrollUp }"
-                >
-                    <svg
-                        class="w-4 h-4 text-gray-800"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 15l7-7 7 7"
-                        />
-                    </svg>
-                </button>
-
-                <!-- Thumbnails Container -->
-                <div
-                    ref="thumbnailContainer"
-                    @scroll="checkScroll"
-                    class="flex flex-col gap-2 overflow-y-auto scrollbar-y-hide"
-                    style="max-height: 500px"
-                >
-                    <button
-                        v-for="(media, index) in allMedia"
-                        :key="index"
-                        @click="handleThumbnailClick(index)"
-                        class="w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 hover:border-blue-400 flex-shrink-0"
-                        :class="
-                            index === activeIndex
-                                ? 'border-blue-500 ring-2 ring-blue-300'
-                                : 'border-gray-200'
-                        "
-                    >
-                        <img
-                            v-if="media.type === 'image'"
-                            :src="media.src"
-                            :alt="`Thumbnail ${index + 1}`"
-                            class="w-full h-full object-cover"
-                        />
-                        <div
-                            v-else
-                            class="w-full h-full bg-gray-200 flex items-center justify-center relative cursor-pointer group"
-                        >
-                            <!-- Thumbnail video preview -->
-                            <video
-                                :src="media.src"
-                                class="w-full h-full object-cover pointer-events-none"
-                                muted
-                                playsinline
-                                preload="metadata"
-                            />
-
-                            <!-- Glass effect play button -->
-                            <div
-                                class="absolute inset-0 flex items-center justify-center"
-                            >
-                                <div
-                                    class="bg-white/30 backdrop-blur-md rounded-full p-4 transition-transform group-hover:scale-110"
-                                >
-                                    <!-- Play icon -->
-                                    <svg
-                                        class="w-8 h-8 text-white"
-                                        fill="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path d="M4 2v20l18-10L4 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </button>
-                </div>
-
-                <!-- Scroll Down Button -->
-                <button
-                    @click="scrollThumbnails('down')"
-                    class="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 w-8 h-8 bg-white/30 backdrop-blur-md hover:bg-white/50 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-white/20"
-                    :class="{
-                        'opacity-0 pointer-events-none': !canScrollDown,
-                    }"
-                >
-                    <svg
-                        class="w-4 h-4 text-gray-800"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                        />
-                    </svg>
-                </button>
-            </div>
-
+    <div class="w-full mx-auto">
+        <div class="flex flex-col gap-4">
             <!-- Main Image Display -->
-            <div class="flex-1 w-full">
+            <div class="w-full">
                 <div
-                    class="relative w-full border border-gray-200 bg-gray-100 md:rounded-lg overflow-hidden"
+                    class="relative w-full aspect-square border border-gray-100 bg-white rounded-3xl overflow-hidden shadow-sm"
                 >
-                    <!-- Navigation Arrows -->
-                    <button
-                        @click="handlePrevious"
-                        class="hidden md:flex absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/30 backdrop-blur-md hover:bg-white/50 rounded-full items-center justify-center transition-all hover:scale-110"
-                    >
-                        <svg
-                            class="w-4 h-4 text-gray-800"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                    </button>
-
-                    <button
-                        @click="handleNext"
-                        class="hidden md:flex absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/30 backdrop-blur-md hover:bg-white/50 rounded-full items-center justify-center transition-all hover:scale-110"
-                    >
-                        <svg
-                            class="w-4 h-4 text-gray-800"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </button>
-
                     <!-- Main Content -->
                     <div
                         v-if="activeMedia"
@@ -168,7 +22,7 @@
                             v-if="activeMedia.type === 'image'"
                             :src="activeMedia.src"
                             :alt="`Product image ${activeIndex + 1}`"
-                            class="w-full h-full object-cover transition-transform duration-200"
+                            class="w-full h-full object-contain p-8 transition-transform duration-200"
                             :style="zoomStyle"
                         />
 
@@ -182,39 +36,10 @@
                             class="w-full h-full object-cover"
                         />
 
-                        <!-- Zoom Indicator -->
-                        <!-- <div
-                            v-if="isZooming"
-                            class="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2"
-                        >
-                            <svg
-                                class="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
-                                />
-                            </svg>
-                            Zoom Active
-                        </div> -->
-
-                        <!-- Variation Badge -->
-                        <!-- <div
-                            v-if="activeMedia.isVariation"
-                            class="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold"
-                        >
-                            Selected Variation
-                        </div> -->
-
                         <!-- Discount Badge -->
                         <div
                             v-if="pricingProp && pricingProp.cross && !isOutOfStockProp"
-                            class="absolute top-4 right-4 z-30 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md"
+                            class="absolute top-6 right-6 z-30 bg-rose-500 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md"
                         >
                             <span v-if="pricingProp.discountType === 'percentage'">
                                 {{ Math.round(pricingProp.discountValue) }}% OFF
@@ -222,36 +47,60 @@
                             <span v-else>৳ {{ formatPrice(pricingProp.discountValue) }} OFF</span>
                         </div>
 
-                        <!-- New Arrival Badge (main gallery, top-left) -->
-                        <div v-if="isNewProp && !isOutOfStockProp" class="absolute top-0 left-0 z-30">
+                        <!-- New Arrival Badge -->
+                        <div v-if="isNewProp && !isOutOfStockProp" class="absolute top-2 left-2 z-30">
                             <img src="/assets/img/new-arrival.svg" alt="New Arrival" class="w-16 h-16" />
                         </div>
+
+                        <!-- Red Ribbon for Pre-Order -->
+                        <div v-if="isPreOrderMode" class="absolute top-0 right-0 z-40 overflow-hidden w-28 h-28 pointer-events-none">
+                            <div class="absolute top-[22px] right-[-36px] w-[140px] bg-red-600 text-white text-[11px] font-bold uppercase tracking-widest py-1.5 rotate-45 text-center shadow-lg border-y border-white/20">
+                                Pre-Order
+                            </div>
+                        </div>
                     </div>
-
-                    <!-- Image Counter -->
-                    <!-- <div
-            class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm"
-          >
-            {{ activeIndex + 1 }} / {{ allMedia.length }}
-          </div> -->
                 </div>
+            </div>
 
-                <!-- Pagination Dots (mobile only) -->
-                <div class="md:hidden flex justify-center gap-2 mt-4">
+            <!-- Horizontal Thumbnail Gallery -->
+            <div class="relative group">
+                <div
+                    ref="thumbnailContainer"
+                    class="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+                >
                     <button
                         v-for="(media, index) in allMedia"
                         :key="index"
-                        type="button"
                         @click="handleThumbnailClick(index)"
-                        :aria-label="`Go to image ${index + 1}`"
-                        :aria-current="index === activeIndex ? 'true' : 'false'"
-                        class="transition-transform duration-150 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        class="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0"
                         :class="
                             index === activeIndex
-                                ? 'w-3 h-3 bg-primary rounded-full scale-110'
-                                : 'w-2 h-2 bg-gray-300 rounded-full hover:bg-gray-400'
+                                ? 'border-orange-500 shadow-md scale-[1.02]'
+                                : 'border-gray-100 hover:border-gray-200'
                         "
-                    ></button>
+                    >
+                        <img
+                            v-if="media.type === 'image'"
+                            :src="media.src"
+                            :alt="`Thumbnail ${index + 1}`"
+                            class="w-full h-full object-cover p-1"
+                        />
+                        <div
+                            v-else
+                            class="w-full h-full bg-gray-50 flex items-center justify-center relative"
+                        >
+                            <video
+                                :src="media.src"
+                                class="w-full h-full object-cover"
+                                muted
+                            />
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/10">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M4 2v20l18-10L4 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -274,6 +123,7 @@ interface Props {
     pricing?: { main?: number; cross?: number | null; discountValue?: number; discountType?: string } | null;
     isOutOfStock?: boolean;
     isNew?: boolean;
+    isPreOrderMode?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -283,6 +133,7 @@ const props = withDefaults(defineProps<Props>(), {
     pricing: null,
     isOutOfStock: false,
     isNew: false,
+    isPreOrderMode: false,
 });
 
 const activeIndex = ref(0);

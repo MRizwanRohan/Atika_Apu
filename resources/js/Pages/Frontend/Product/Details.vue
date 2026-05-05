@@ -238,31 +238,36 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     if (sectionsObserver) sectionsObserver.disconnect();
+});const isPreOrderMode = computed(() => {
+    return props.product.stock <= 0 && props.product.is_pre_order;
 });
+
 </script>
 
 <template>
     <FrontendLayout>
         <Head :title="pageTitle" />
         <div class="min-h-screen bg-white font-sans pb-12">
+            <!-- <pre>{{ product }}</pre> -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
 
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                     <!-- Left Column: Image Gallery -->
-                    <div class="lg:col-span-7">
+                    <div class="lg:col-span-5">
                         <div class="sticky top-24">
                             <ImageGallery
                                 :images="productImages"
                                 :selected-variation-image="selectedVariationImage"
                                 :video="product.youtube_video || product.upload_video"
                                 :product-id="product.id"
+                                :is-pre-order-mode="isPreOrderMode"
                             />
                         </div>
                     </div>
 
                     <!-- Right Column: Product Info -->
-                    <div class="lg:col-span-5">
+                    <div class="lg:col-span-7">
                         <ProductInfo
                             :product="product"
                             @variation-change="handleVariationChange"
