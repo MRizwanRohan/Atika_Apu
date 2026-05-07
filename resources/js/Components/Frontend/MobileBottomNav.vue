@@ -1,6 +1,14 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { Home, Gift, Heart, GitCompare, MapPin, User, Zap } from "lucide-vue-next";
+import { 
+    PhHouse, 
+    PhGift, 
+    PhHeart, 
+    PhArrowsLeftRight, 
+    PhTruck, 
+    PhUser, 
+    PhLightning 
+} from "@phosphor-icons/vue";
 
 defineProps({
     wishlistCount: {
@@ -26,7 +34,7 @@ defineProps({
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
                 :class="{ 'text-primary': $page.url === '/' }"
             >
-                <Home class="w-5 h-5" />
+                <PhHouse class="w-6 h-6"  />
                 <span class="text-[10px] font-medium">Home</span>
             </Link>
 
@@ -35,7 +43,7 @@ defineProps({
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
                 :class="{ 'text-primary': $page.url === '/offers' }"
             >
-                <Gift class="w-5 h-5" />
+                <PhGift class="w-6 h-6"  />
                 <span class="text-[10px] font-medium">Offers</span>
             </Link>
 
@@ -44,7 +52,7 @@ defineProps({
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
                 :class="{ 'text-primary': $page.url === '/pre-order-lead' }"
             >
-                <Zap class="w-5 h-5" />
+                <PhLightning class="w-6 h-6"  />
                 <span class="text-[10px] font-medium">Request</span>
             </Link>
 
@@ -52,7 +60,7 @@ defineProps({
                 href="/order/track"
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
             >
-                <MapPin class="w-5 h-5" />
+                <PhTruck class="w-6 h-6"  />
                 <span class="text-[10px] font-medium">Track</span>
             </Link>
 
@@ -60,7 +68,7 @@ defineProps({
                 :href="route('user.dashboard')"
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
             >
-                <User class="w-5 h-5" />
+                <PhUser class="w-6 h-6"  />
                 <span class="text-[10px] font-medium">Account</span>
             </Link>
 

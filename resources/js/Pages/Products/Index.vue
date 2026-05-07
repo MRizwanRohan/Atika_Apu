@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { router, Head, Link } from "@inertiajs/vue3";
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import 'swiper/css';
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 import CategoryFilterTree from "@/Components/Filters/CategoryFilterTree.vue";
@@ -81,7 +83,6 @@ const applyFilters = () => {
     const params = {};
 
     if (searchQuery.value) params.search = searchQuery.value;
-    if (selectedCategory.value) params.category = selectedCategory.value;
     if (selectedBrands.value.length > 0)
         params.brand_ids = selectedBrands.value;
     if (minPrice.value) params.min_price = minPrice.value;
@@ -93,10 +94,17 @@ const applyFilters = () => {
         params.attributes = selectedAttributes.value;
     }
 
-    router.get("/products", params, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    if (selectedCategory.value) {
+        router.get(route("category.show", { slug: selectedCategory.value }), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    } else {
+        router.get(route("products.index"), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
 };
 
 // Debounced apply filters
@@ -125,7 +133,7 @@ const clearAllFilters = () => {
     maxPrice.value = "";
     sortBy.value = "latest";
     searchQuery.value = "";
-    router.get("/products");
+    router.get(route("products.index"));
 };
 
 // Toggle brand selection
@@ -240,13 +248,69 @@ const getCategoryName = (slug) => {
     return findCategory(props.filters.categories, slug) || slug;
 };
 
+// Find category node by slug
+const findCategoryNode = (categories, targetSlug) => {
+    for (const cat of categories) {
+        if (cat.slug === targetSlug) return cat;
+        if (cat.children?.length) {
+            const found = findCategoryNode(cat.children, targetSlug);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
+// Remove the currently selected category from the tree
+const removeSelectedCategoryFromTree = (categories, targetSlug) => {
+    return categories
+        .filter((cat) => cat.slug !== targetSlug)
+        .map((cat) => ({
+            ...cat,
+            children: cat.children
+                ? removeSelectedCategoryFromTree(cat.children, targetSlug)
+                : [],
+        }));
+};
+
+// Display only subcategories when visiting a parent category with children
+const displayCategories = computed(() => {
+    if (!selectedCategory.value) {
+        return props.filters.categories;
+    }
+
+    const activeCategory = findCategoryNode(props.filters.categories, selectedCategory.value);
+    if (activeCategory && activeCategory.children?.length) {
+        return activeCategory.children;
+    }
+
+    return removeSelectedCategoryFromTree(props.filters.categories, selectedCategory.value);
+});
+
+const activeCategory = computed(() => {
+    if (!selectedCategory.value) return null;
+    return findCategoryNode(props.filters.categories, selectedCategory.value);
+});
+
+const childCategories = computed(() => {
+    return activeCategory.value?.children ?? [];
+});
+
 // Pagination
 const goToPage = (page) => {
     const params = { ...props.appliedFilters, page };
-    router.get("/products", params, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+
+    if (selectedCategory.value) {
+        delete params.category;
+        router.get(route("category.show", { slug: selectedCategory.value }), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    } else {
+        router.get(route("products.index"), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
 };
 
 // Format price
@@ -271,6 +335,49 @@ const formatPrice = (price) => {
                         }}</span>
                         <span v-else>All Products</span>
                     </h1>
+                </div>
+
+
+                <!-- Child Categories (top of content) -->
+                <div v-if="childCategories.length > 0" class="mb-4 md:mb-6">
+                    <swiper
+                        :slides-per-view="'auto'"
+                        :breakpoints="{
+                            0: { spaceBetween: 4 },
+                            768: { spaceBetween: 12 }
+                        }"
+                        :centered-slides="false"
+                        :grab-cursor="true"                        :loop="true"                        class="category-swiper !px-4"
+                    >
+                        <swiper-slide
+                            v-for="child in childCategories"
+                            :key="child.id"
+                            class="!w-20 md:!w-24"
+                        >
+                            <button
+                                @click="selectCategory(child.slug)"
+                                class="group flex flex-col items-center gap-1 md:gap-2 w-full rounded-2xl text-center transition-transform duration-200"
+                            >
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                    <img
+                                        v-if="child.image"
+                                        :src="child.image"
+                                        :alt="child.name"
+                                        class="w-full h-full object-contain object-center"
+                                    />
+                                    <span
+                                        v-else
+                                        class="text-[10px] uppercase tracking-[0.2em] text-gray-500"
+                                    >
+                                        {{ child.name.charAt(0) }}
+                                    </span>
+                                </div>
+                                <span class="text-[11px] font-medium text-gray-700 leading-tight break-words line-clamp-2">
+                                    {{ child.name }}
+                                </span>
+                            </button>
+                        </swiper-slide>
+                    </swiper>
                 </div>
 
                 <!-- Top Bar: Results count, Sort, Filter Button -->
@@ -399,54 +506,9 @@ const formatPrice = (price) => {
                                     </button>
 
                                     <div class="space-y-0">
-                                        <!-- Categories -->
-                                        <div class="border-b border-gray-100">
-                                            <button
-                                                @click="
-                                                    showCategories =
-                                                        !showCategories
-                                                "
-                                                class="w-full flex items-center justify-between py-4 group"
-                                            >
-                                                <span
-                                                    class="text-xs font-bold uppercase tracking-widest group-hover:text-primary transition-colors text-gray-900"
-                                                    >Categories</span
-                                                >
-                                                <ChevronDown
-                                                    class="w-4 h-4 text-gray-400 transition-transform duration-300"
-                                                    :class="{
-                                                        'rotate-180':
-                                                            showCategories,
-                                                    }"
-                                                />
-                                            </button>
-                                            <transition
-                                                enter-active-class="transition-all duration-300 ease-out"
-                                                enter-from-class="max-h-0 opacity-0 overflow-hidden"
-                                                enter-to-class="max-h-[1000px] opacity-100 overflow-hidden"
-                                                leave-active-class="transition-all duration-300 ease-in"
-                                                leave-from-class="max-h-[1000px] opacity-100 overflow-hidden"
-                                                leave-to-class="max-h-0 opacity-0 overflow-hidden"
-                                            >
-                                                <div
-                                                    v-show="showCategories"
-                                                    class="pb-6"
-                                                >
-                                                    <CategoryFilterTree
-                                                        :categories="
-                                                            filters.categories
-                                                        "
-                                                        :selected="
-                                                            selectedCategory
-                                                        "
-                                                        @select="selectCategory"
-                                                    />
-                                                </div>
-                                            </transition>
-                                        </div>
 
                                         <!-- Brands -->
-                                        <div class="border-b border-gray-100">
+                                        <div v-if="!showBrands" class="border-b border-gray-100">
                                             <button
                                                 @click="
                                                     showBrands = !showBrands
@@ -868,5 +930,10 @@ const formatPrice = (price) => {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #d1d5db;
+}
+
+:deep(.swiper-wrapper) {
+    display: flex;
+    justify-content: center;
 }
 </style>

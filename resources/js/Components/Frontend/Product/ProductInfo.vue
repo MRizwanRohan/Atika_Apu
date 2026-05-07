@@ -329,23 +329,25 @@ const whatsappLink = computed(() => {
             </div>
 
             <!-- Primary Actions (Shop Now & Add to Cart) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button
-                    @click="buyNow"
-                    :disabled="isAddingToCart || !hasStock"
-                    class="h-12 bg-[#f5811e] hover:bg-[#e67610] text-white rounded-full font-semibold text-base transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
-                >
-                    Shop Now
-                </button>
+            <div class="hidden md:block">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                        @click="buyNow"
+                        :disabled="isAddingToCart || !hasStock"
+                        class="h-12 bg-primary hover:bg-black text-white rounded-full font-semibold text-base transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
+                    >
+                        Shop Now
+                    </button>
 
-                <button
-                    @click="addToCart"
-                    :disabled="isAddingToCart || !hasStock"
-                    class="h-12 bg-white border border-gray-200 text-gray-900 rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97] disabled:opacity-50 group hover:bg-gray-50"
-                >
-                    <ShoppingCart :size="20" class="group-hover:translate-y-[-1px] transition-transform" />
-                    <span>Add To Cart</span>
-                </button>
+                    <button
+                        @click="addToCart"
+                        :disabled="isAddingToCart || !hasStock"
+                        class="h-12 bg-white border border-gray-200 text-gray-900 rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97] disabled:opacity-50 group hover:bg-gray-50"
+                    >
+                        <ShoppingCart :size="20" class="group-hover:translate-y-[-1px] transition-transform" />
+                        <span>Add To Cart</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -377,6 +379,26 @@ const whatsappLink = computed(() => {
                 </div>
         </div>
 
+        <!-- Mobile fixed bottom actions -->
+        <div class="fixed inset-x-0 bottom-0 z-40 bg-white border-t border-gray-200 p-4 pb-safe shadow-[0_-1px_15px_rgba(0,0,0,0.05)] md:hidden">
+            <div class="flex items-center gap-3">
+                <button
+                    @click="buyNow"
+                    :disabled="isAddingToCart || !hasStock"
+                    class="flex-1 h-12 bg-primary hover:bg-black text-white rounded-full font-semibold text-base transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
+                >
+                    Shop Now
+                </button>
+                <button
+                    @click="addToCart"
+                    :disabled="isAddingToCart || !hasStock"
+                    class="flex-1 h-12 bg-white border border-gray-200 text-gray-900 rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97] disabled:opacity-50 group hover:bg-gray-50"
+                >
+                    <ShoppingCart :size="20" class="group-hover:translate-y-[-1px] transition-transform" />
+                    <span>Add To Cart</span>
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 

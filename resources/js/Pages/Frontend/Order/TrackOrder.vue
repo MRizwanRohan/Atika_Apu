@@ -50,70 +50,89 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
 <template>
     <Head title="Track Order" />
     <FrontendLayout>
-        <div class="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 relative">
+        <div class="min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8 relative">
             <div class="max-w-4xl mx-auto relative z-10">
-                <!-- Header -->
-                <div class="text-center mb-12">
-                    <h1
-                        class="text-3xl md:text-5xl font-bold text-gray-900 mb-4"
-                    >
-                        Track Your Order
-                    </h1>
-                    <p class="text-gray-600 text-lg">
-                        Enter your Order Number or Phone Number to check status.
-                    </p>
-                </div>
-
                 <!-- Search Card -->
                 <div
-                    class="bg-gray-50 border border-gray-100 rounded-2xl p-8 mb-12 shadow-sm"
+                    class="bg-white rounded-[2rem] p-8 mb-12 shadow-xl shadow-gray-200/50 border border-gray-100 max-w-md mx-auto"
                 >
+                    <!-- Icon -->
+                    <div class="flex justify-center mb-6">
+                        <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-900" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 7.5L12 3L3 7.5M21 7.5V16.5L12 21M21 7.5L12 12M3 7.5V16.5L12 21M3 7.5L12 12M12 12V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Header -->
+                    <div class="text-center mb-8">
+                        <h1
+                            class="text-2xl font-bold text-gray-900 mb-2"
+                        >
+                            Track Your Order
+                        </h1>
+                        <p class="text-gray-500 text-sm">
+                            Enter your Order ID or Phone Number to check the delivery status.
+                        </p>
+                    </div>
+
                     <form @submit.prevent="submit" class="space-y-6">
-                        <div class="max-w-xl mx-auto">
+                        <div>
                             <label
                                 for="track_input"
-                                class="block text-sm font-medium text-gray-700 mb-2"
+                                class="block text-sm font-bold text-gray-900 mb-2"
                             >
-                                Order Number or Phone Number
+                                Order ID or Phone Number
                             </label>
-                            <div class="relative">
-                                <input
-                                    id="track_input"
-                                    v-model="form.track_input"
-                                    type="text"
-                                    placeholder="Enter Order # or Phone Number"
-                                    class="w-full px-5 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white shadow-sm"
-                                    required
-                                />
-                                <button
-                                    type="submit"
-                                    :disabled="form.processing"
-                                    class="absolute right-2 top-2 bottom-2 bg-primary text-white font-bold px-6 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-                                >
-                                    <svg
-                                        v-if="form.processing"
-                                        class="animate-spin h-5 w-5"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            class="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            stroke-width="4"
-                                        ></circle>
-                                        <path
-                                            class="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                    <span v-else>TRACK</span>
-                                </button>
-                            </div>
+                            <input
+                                id="track_input"
+                                v-model="form.track_input"
+                                type="text"
+                                placeholder="e.g. TNM-10294 or 017XXXXXX"
+                                class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white placeholder:text-gray-300"
+                                required
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="w-full bg-[#0a1d37] text-white font-bold py-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-wider text-sm"
+                        >
+                            <svg
+                                v-if="form.processing"
+                                class="animate-spin h-5 w-5"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            <template v-else>
+                                TRACK ORDER
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </template>
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">
+                                Having trouble? <a href="#" class="text-primary font-bold">Contact Support</a>
+                            </p>
                         </div>
                     </form>
                 </div>
@@ -124,20 +143,20 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                         <div
                             v-for="order in orders"
                             :key="order.id"
-                            class="bg-white rounded-xl p-6 shadow-md border border-gray-100"
+                            class="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100"
                         >
                             <!-- Order Header -->
                             <div
-                                class="flex flex-col md:flex-row justify-between md:items-center mb-6 border-b border-gray-100 pb-4 gap-4"
+                                class="flex flex-col md:flex-row justify-between md:items-start mb-8 gap-4"
                             >
                                 <div>
                                     <h3
-                                        class="text-xl font-bold text-gray-900 flex items-center gap-3"
+                                        class="text-2xl font-bold text-gray-900"
                                     >
                                         Order {{ order.order_number }}
                                         <span
                                             :class="{
-                                                'bg-yellow-100 text-yellow-800':
+                                                'bg-[#FEF9C3] text-[#854D0E]':
                                                     order.status === 'pending',
                                                 'bg-blue-100 text-blue-800':
                                                     order.status ===
@@ -159,12 +178,12 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                                     order.status ===
                                                         'incomplete',
                                             }"
-                                            class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide"
+                                            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide inline-block align-middle"
                                         >
                                             {{ order.status }}
                                         </span>
                                     </h3>
-                                    <p class="text-gray-500 text-sm mt-1">
+                                    <p class="text-gray-400 text-sm mt-1">
                                         Date:
                                         {{
                                             new Date(
@@ -174,14 +193,15 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                     </p>
                                 </div>
                                 <div class="text-left md:text-right">
-                                    <p class="text-sm text-gray-500">
+                                    <p class="text-sm text-gray-400">
                                         Total Amount
                                     </p>
-                                    <p class="text-xl font-bold text-primary">
+                                    <p class="text-3xl font-bold text-primary">
                                         {{ order.total }}
                                     </p>
                                 </div>
                             </div>
+                            <div class="h-px bg-gray-100 w-full mb-8"></div>
 
                             <!-- Progress Bar (Desktop) -->
                             <div
@@ -195,11 +215,11 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                         'returned',
                                     ].includes(order.status)
                                 "
-                                class="mb-8 px-2 hidden md:block"
+                                class="mb-12 px-2 hidden md:block"
                             >
                                 <div class="relative">
                                     <div
-                                        class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-100"
+                                        class="overflow-hidden h-2.5 mb-6 text-xs flex rounded-full bg-gray-100"
                                     >
                                         <div
                                             v-if="
@@ -208,12 +228,12 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                                 )
                                             "
                                             :class="{
-                                                'w-[25%]':
+                                                'w-[12.5%]':
                                                     order.status === 'pending',
-                                                'w-[50%]':
+                                                'w-[37.5%]':
                                                     order.status ===
                                                     'processing',
-                                                'w-[75%]':
+                                                'w-[62.5%]':
                                                     order.status === 'shipped',
                                                 'w-[100%]':
                                                     order.status ===
@@ -227,9 +247,10 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                         ></div>
                                     </div>
                                     <div
-                                        class="flex justify-between text-xs font-medium text-gray-400"
+                                        class="flex justify-between text-sm font-medium text-gray-400"
                                     >
                                         <div
+                                            class="w-[25%] text-left"
                                             :class="{
                                                 'text-primary font-bold':
                                                     isStatusCompleted(
@@ -241,6 +262,7 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                             Pending
                                         </div>
                                         <div
+                                            class="w-[25%] text-center"
                                             :class="{
                                                 'text-primary font-bold':
                                                     isStatusCompleted(
@@ -252,6 +274,7 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                             Processing
                                         </div>
                                         <div
+                                            class="w-[25%] text-center"
                                             :class="{
                                                 'text-primary font-bold':
                                                     isStatusCompleted(
@@ -263,6 +286,7 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                             Shipped
                                         </div>
                                         <div
+                                            class="w-[25%] text-right"
                                             :class="{
                                                 'text-primary font-bold':
                                                     isStatusCompleted(
@@ -272,18 +296,6 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                             }"
                                         >
                                             Delivered
-                                        </div>
-                                        <div
-                                            v-if="order.status === 'cancelled'"
-                                            class="text-red-600 font-bold"
-                                        >
-                                            Cancelled
-                                        </div>
-                                        <div
-                                            v-if="order.status === 'returned'"
-                                            class="text-red-600 font-bold"
-                                        >
-                                            Returned
                                         </div>
                                     </div>
                                 </div>

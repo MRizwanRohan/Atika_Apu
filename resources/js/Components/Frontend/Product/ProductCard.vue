@@ -190,7 +190,7 @@ const handleCartClick = (e) => {
                 :src="product.feature_image"
                 :alt="product.name"
                 loading="lazy"
-                class="w-full h-full object-contain p-4"
+                class="w-full h-full object-contain"
                 @load="imageLoaded = true"
             />
 

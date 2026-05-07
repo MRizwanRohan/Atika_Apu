@@ -28,6 +28,17 @@ const siteName = computed(() => general.value?.app_name || general.value?.site_n
 const siteDescription = computed(() => general.value?.footer_text || general.value?.site_description || 'Your premium destination for beauty and wellness. We provide curated high-end products to enhance your natural grace.');
 
 const footerLogo = computed(() => media.value?.footer_logo || media.value?.footerLogo || media.value?.logo || null);
+const facebookIframe = computed(() => {
+    const html = general.value?.facebook_iframe || null;
+    if (!html) return null;
+    return html
+        .replace(/width=["']\d+["']/gi, 'width="100%"')
+        .replace(/height=["']\d+["']/gi, 'height="100%"')
+        .replace(/(style=["'])([^"']*)(["'])/gi, (match, prefix, style, suffix) => {
+            const cleaned = `${style}; width:100% !important; height:100% !important;`;
+            return `${prefix}${cleaned}${suffix}`;
+        });
+});
 
 // Social links
 const facebookUrl = computed(() => general.value?.facebook_url || null);
@@ -80,39 +91,15 @@ const scrollToTop = () => {
 <template>
     <footer class="bg-[#0a0a0a] text-zinc-400 font-['Jost',sans-serif] selection:bg-primary selection:text-white">
         <!-- Newsletter Section -->
-        <div class="border-y border-zinc-800/50 bg-zinc-900/10">
-            <div class="container mx-auto px-4 py-12">
-                <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
-                    <div class="max-w-xl text-center lg:text-left">
-                        <h3 class="text-2xl md:text-3xl font-semibold text-white mb-2">Join Our Newsletter</h3>
-                        <p class="text-zinc-500">Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.</p>
-                    </div>
-                    <div class="w-full max-w-md">
-                        <form @submit.prevent class="relative group">
-                            <input
-                                type="email"
-                                placeholder="Your email address"
-                                class="w-full bg-zinc-800/50 border border-zinc-700/50 text-white px-6 py-4 rounded-full focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 placeholder:text-zinc-600"
-                            />
-                            <button
-                                type="submit"
-                                class="absolute right-2 top-2 bottom-2 bg-primary hover:bg-primary/90 text-white px-6 rounded-full font-medium transition-all duration-300 transform group-hover:translate-x-1"
-                            >
-                                Subscribe
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        
+
+        <!-- <pre>{{ settings }}</pre> -->
 
         <!-- Main Footer Content -->
         <div class="container mx-auto px-4 py-20">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
                 <!-- Brand Section -->
-                <div class="lg:col-span-4 space-y-8">
+                <div class="lg:col-span-3 space-y-8">
                     <Link href="/" class="inline-block group">
                         <img v-if="footerLogo" :src="footerLogo" alt="Footer Logo" class="h-12 w-auto object-contain brightness-110 group-hover:scale-105 transition-transform duration-300" />
                         <span v-else class="text-2xl font-bold text-white tracking-widest">{{ siteName }}</span>
@@ -137,20 +124,8 @@ const scrollToTop = () => {
                     </div>
                 </div>
 
-                <!-- Quick Shop -->
-                <div class="lg:col-span-2">
-                    <h4 class="text-white font-semibold uppercase tracking-wider text-sm mb-8">Shop By</h4>
-                    <ul class="space-y-4">
-                        <li v-for="cat in categoriesList" :key="cat.id">
-                            <Link :href="`/category/${cat.slug}`" class="hover:text-primary transition-all duration-300 inline-block hover:translate-x-1">
-                                {{ cat.name }}
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
-
                 <!-- Support & Info -->
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-3">
                     <h4 class="text-white font-semibold uppercase tracking-wider text-sm mb-8">Customer Care</h4>
                     <ul class="space-y-4">
                         <li v-for="page in infoPages" :key="page.id">
@@ -167,7 +142,7 @@ const scrollToTop = () => {
                 </div>
 
                 <!-- Contact & Info -->
-                <div class="lg:col-span-4 space-y-6">
+                <div class="lg:col-span-3 space-y-6">
                     <h4 class="text-white font-semibold uppercase tracking-wider text-sm mb-8">Get In Touch</h4>
                     <div class="space-y-4">
                         <div v-if="storeAddress" class="flex items-start gap-4 group">
@@ -196,6 +171,15 @@ const scrollToTop = () => {
                                 <span class="block text-xs uppercase tracking-widest text-zinc-600 mb-1">Email Address</span>
                                 <a :href="`mailto:${storeEmail}`" class="text-zinc-300 hover:text-primary transition-colors">{{ storeEmail }}</a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="facebookIframe" class="lg:col-span-3">
+                    <h4 class="text-white font-semibold uppercase tracking-wider text-sm mb-8">Facebook</h4>
+                    <div class="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
+                        <div class="facebook-iframe-wrapper overflow-hidden">
+                            <div class="facebook-iframe-content h-full" v-html="facebookIframe"></div>
                         </div>
                     </div>
                 </div>
@@ -240,7 +224,7 @@ const scrollToTop = () => {
     </footer>
 
         <!-- Live Chat & scroll to top Container -->
-        <div class="fixed bottom-16 right-4 md:bottom-8 md:right-8 z-[100] flex flex-col items-end gap-3 md:gap-4">
+        <div v-if="route().current() !== 'order.create'" class="fixed bottom-16 right-4 md:bottom-8 md:right-8 z-[100] flex flex-col items-end gap-3 md:gap-4">
             <!-- Scroll to Top Button (Small) -->
             <!-- <button
                 @click="scrollToTop"
@@ -338,6 +322,18 @@ footer ::-webkit-scrollbar-thumb {
     .container {
         max-width: 100%;
     }
+}
+
+.facebook-iframe-wrapper,
+.facebook-iframe-wrapper > .facebook-iframe-content,
+.facebook-iframe-wrapper iframe {
+    width: 100% !important;
+    min-height: 100% !important;
+    height: 100% !important;
+}
+
+.facebook-iframe-wrapper iframe {
+    display: block !important;
 }
 </style>
 

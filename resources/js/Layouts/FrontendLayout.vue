@@ -159,7 +159,13 @@ const injectMarketingTools = () => {
         </main>
 
         <!-- Footer -->
-        <FrontendFooter :settings="settings" :pages="pages" :categories="categories" />
+        <div :class="route().current('home') ? '' : 'hidden md:block'">
+            <FrontendFooter
+                :settings="settings"
+                :pages="pages"
+                :categories="categories"
+            />
+        </div>
 
         <!-- Toast Notifications -->
         <Toast />

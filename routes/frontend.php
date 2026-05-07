@@ -41,10 +41,8 @@ Route::get('/offers', [OfferController::class, 'index'])->name('offers.index');
 // Products listing/filter page
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 
-// Category page - redirects to products with category filter
-Route::get('/category/{slug}', function ($slug) {
-    return redirect()->route('products.index', ['category' => $slug]);
-})->name('category.show');
+// Category page - render the product listing for a given category slug
+Route::get('/category/{slug}', [ProductController::class, 'index'])->name('category.show');
 
 // Search page - redirects to products with search filter
 Route::get('/search', function (\Illuminate\Http\Request $request) {

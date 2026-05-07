@@ -15,7 +15,7 @@ defineProps({
     <section
         v-for="group in productGroups"
         :key="group.id"
-        class="py-10 md:py-16 bg-white border-b border-gray-100 last:border-0"
+        class="py-4 md:py-16 bg-white border-b border-gray-100 last:border-0"
     >
         <div class="container mx-auto px-4">
             <!-- Banner Section -->

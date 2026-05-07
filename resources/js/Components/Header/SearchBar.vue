@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import axios from "axios";
-import { Search, X, Loader2 } from "lucide-vue-next";
+import { PhMagnifyingGlass, PhX, PhCircleNotch } from "@phosphor-icons/vue";
 import debounce from "lodash/debounce";
 
 const props = defineProps({
@@ -124,7 +124,7 @@ onUnmounted(() => {
 
 <template>
     <div ref="searchContainerRef" class="relative flex-1 w-full">
-        <div class="relative flex items-stretch">
+        <div class="flex items-stretch border border-gray-200 rounded-lg bg-gray-50 focus-within:bg-white focus-within:border-primary/40 transition-all overflow-hidden">
             <input
                 ref="inputRef"
                 v-model="searchQuery"
@@ -132,31 +132,31 @@ onUnmounted(() => {
                 @focus="searchQuery.length >= 2 && (showSuggestions = true)"
                 type="text"
                 placeholder="Search in..."
-                class="w-full pl-6 pr-24 py-3 transition-all outline-none border text-sm bg-gray-50 text-gray-900 border-gray-200 rounded-l-md focus:bg-white focus:border-primary/40 focus:ring-0"
+                class="flex-1 pl-4 pr-2 py-2 outline-none border-none text-xs bg-transparent text-gray-900 focus:ring-0"
             />
 
-            <div class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <div class="flex items-center gap-1 pr-2">
                 <!-- Loading indicator -->
-                <Loader2 v-if="loading" class="w-5 h-5 text-gray-400 animate-spin mr-2" />
+                <PhCircleNotch v-if="loading" class="w-4 h-4 text-gray-400 animate-spin mr-1"  />
 
                 <!-- Clear button -->
                 <button
                     v-if="searchQuery && !loading"
                     @click="clearSearch"
-                    class="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    class="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                    <X class="w-4 h-4" />
+                    <PhX class="w-3.5 h-3.5"  />
+                </button>
+
+                <!-- Search Icon/Button -->
+                <button
+                    @click="handleSearch"
+                    class="p-2 ml-1 text-primary hover:bg-primary/5 rounded-md transition-all active:scale-95"
+                    aria-label="Search"
+                >
+                    <PhMagnifyingGlass class="w-4 h-4" />
                 </button>
             </div>
-
-            <!-- Search Button -->
-            <button
-                @click="handleSearch"
-                class="px-6 flex items-center justify-center bg-primary text-white hover:bg-black rounded-r-md transition-all active:scale-95 border-y border-r border-primary"
-                aria-label="Search"
-            >
-                <Search class="w-5 h-5 stroke-[2.5]" />
-            </button>
         </div>
 
         <!-- Suggestions dropdown -->
@@ -227,7 +227,7 @@ onUnmounted(() => {
         >
             <div class="flex flex-col items-center gap-4">
                 <div class="p-4 bg-gray-50 rounded-full">
-                    <Search class="w-10 h-10 text-gray-200" />
+                    <PhMagnifyingGlass class="w-10 h-10 text-gray-200"  />
                 </div>
                 <div>
                     <p class="text-gray-900 font-semibold">No results found</p>

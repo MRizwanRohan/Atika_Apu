@@ -30,11 +30,11 @@ class ProductController extends Controller
     /**
      * Product listing/filter page (Inertia page)
      */
-    public function index(Request $request)
+    public function index(Request $request, $slug = null)
     {
         // Get filter parameters
         $search = $request->input('search', '');
-        $categorySlug = $request->input('category', '');
+        $categorySlug = $request->input('category', $slug ?? '');
         $categoryIds = $request->input('category_ids', []);
         $brandIds = $request->input('brand_ids', []);
         $minPrice = $request->input('min_price', null);
@@ -47,6 +47,10 @@ class ProductController extends Controller
         $filterPayload = $request->only([
             'search', 'category', 'category_ids', 'brand_ids', 'min_price', 'max_price', 'sort_by', 'per_page', 'attributes'
         ]);
+
+        if ($categorySlug) {
+            $filterPayload['category'] = $categorySlug;
+        }
 
         $products = $this->productService->getFilteredProducts($filterPayload);
 

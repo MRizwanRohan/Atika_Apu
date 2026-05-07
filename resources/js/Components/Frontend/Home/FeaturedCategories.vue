@@ -23,8 +23,8 @@ const parentCategories = computed(() => {
 const swiperModules = [Autoplay, Navigation];
 
 const swiperBreakpoints = {
-    320: {
-        slidesPerView: 3,
+    0: {
+        slidesPerView: 4,
         spaceBetween: 10,
     },
     640: {
@@ -32,7 +32,7 @@ const swiperBreakpoints = {
         spaceBetween: 15,
     },
     768: {
-        slidesPerView: 4,
+        slidesPerView: 5,
         spaceBetween: 20,
     },
     1024: {
@@ -47,10 +47,10 @@ const swiperBreakpoints = {
 </script>
 
 <template>
-    <section class="py-12 bg-white">
-        <div class="container mx-auto px-4">
+    <section class="py-4 lg:py-10 bg-white">
+        <div class="container mx-auto px-2">
             <!-- Section Header -->
-            <div class="text-center mb-10">
+            <div class="text-center hidden lg:block mb-10">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                     Explore Popular Categories
                 </h2>

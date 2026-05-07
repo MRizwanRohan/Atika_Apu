@@ -58,7 +58,7 @@ const loadMoreReviews = () => {
             <button
                 v-if="canReview.can_review"
                 @click="showReviewForm = !showReviewForm"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-black transition"
             >
                 {{ showReviewForm ? 'Cancel' : 'Write a Review' }}
             </button>

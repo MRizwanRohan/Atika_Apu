@@ -51,10 +51,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    sideBanners: {
-        type: Object,
-        default: () => ({}),
-    },
+    // sideBanners: {
+    //     type: Object,
+    //     default: () => ({}),
+    // },
 });
 
 // Expose settings as a ref so it's accessible in the template and reactive in script
@@ -87,7 +87,7 @@ const pageTitle = computed(
 
      <!-- <pre>{{ sideBanners }}</pre> -->
 
-      <Sliders :sliders="sliders" :sideBanners="sideBanners" />
+      <Sliders :sliders="sliders" />
 
 
     <!-- Featured Categories -->

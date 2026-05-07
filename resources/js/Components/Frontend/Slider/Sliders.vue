@@ -1,5 +1,5 @@
 <template>
-    <section class="py-6 bg-white">
+    <section class="lg:py-6 py-0 bg-white">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <!-- Main Slider (Full width) -->

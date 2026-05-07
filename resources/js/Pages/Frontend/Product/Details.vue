@@ -247,12 +247,12 @@ onBeforeUnmount(() => {
 <template>
     <FrontendLayout>
         <Head :title="pageTitle" />
-        <div class="min-h-screen bg-white font-sans pb-12">
+        <div class="min-h-screen bg-white font-sans pb-28 lg:pb-12">
             <!-- <pre>{{ product }}</pre> -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
 
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-16">
                     <!-- Left Column: Image Gallery -->
                     <div class="lg:col-span-5">
                         <div class="sticky top-24">

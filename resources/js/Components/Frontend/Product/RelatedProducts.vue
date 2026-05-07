@@ -25,7 +25,7 @@ const modules = [Navigation, Autoplay];
         class="mt-16 border-t border-gray-200 pt-16"
     >
         <div class="flex items-center justify-between mb-8">
-            <h3 class="text-2xl font-bold text-gray-900">Similar Products</h3>
+            <h3 class="text-xl lg:text-2xl font-bold text-gray-900">Similar Products</h3>
 
             <!-- Custom Navigation Buttons -->
             <div class="flex gap-2">
@@ -79,7 +79,7 @@ const modules = [Navigation, Autoplay];
                 disableOnInteraction: false,
             }"
             :breakpoints="{
-                640: {
+                0: {
                     slidesPerView: 2,
                 },
                 768: {

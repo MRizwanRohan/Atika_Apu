@@ -7,17 +7,17 @@ import { useCartSidebar } from "@/Composables/useCartSidebar";
 import SearchBar from "../Header/SearchBar.vue";
 import MobileBottomNav from "./MobileBottomNav.vue";
 import {
-    MapPin,
-    Search,
-    ShoppingBag,
-    User as UserIcon,
-    LogIn,
-    Menu,
-    X,
-    Heart,
-    Gift,
-    Zap,
-} from "lucide-vue-next";
+    PhTruck,
+    PhMagnifyingGlass,
+    PhShoppingBag,
+    PhUser,
+    PhSignOut,
+    PhList,
+    PhX,
+    PhHeart,
+    PhGift,
+    PhLightning,
+} from "@phosphor-icons/vue";
 
 const props = defineProps({
     categories: {
@@ -100,25 +100,25 @@ const cleantopnotice = (html) => {
                 <div class="flex items-center gap-6">
                     <Link
                         href="/order/track"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-white/90 hover:text-white transition-colors group"
+                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <MapPin class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                        <PhTruck class="w-4 h-4 group-hover:scale-110 transition-transform"  />
                         <span>Track Order</span>
                     </Link>
 
                     <Link
                         :href="route('pre-order-lead.form')"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-white/90 hover:text-white transition-colors group"
+                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <Zap class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                        <PhLightning class="w-4 h-4 group-hover:scale-110 transition-transform"  />
                         <span>Request Product</span>
                     </Link>
 
                     <Link
                         href="/offers"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-white/90 hover:text-white transition-colors group"
+                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <Gift class="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                        <PhGift class="w-4 h-4 group-hover:scale-110 transition-transform"  />
                         <span>Offers</span>
                     </Link>
                 </div>
@@ -132,7 +132,7 @@ const cleantopnotice = (html) => {
             <div class="container mx-auto px-4">
                 <!-- Desktop Layout -->
                 <div
-                    class="hidden lg:flex items-center justify-between h-20 gap-12"
+                    class="hidden lg:flex items-center justify-between h-14 gap-12"
                 >
                     <!-- Logo -->
                     <Link
@@ -143,30 +143,32 @@ const cleantopnotice = (html) => {
                             v-if="logoUrl"
                             :src="logoUrl"
                             :alt="siteName"
-                            class="w-[160px] object-contain"
+                            class="w-[130px] object-contain"
                         />
-                        <div v-else class="text-3xl font-black tracking-tighter">
+                        <div v-else class="text-2xl font-black tracking-tighter">
                             <span class="text-gray-900">Smart</span><span class="text-primary">Gear</span>
                         </div>
                     </Link>
 
                     <!-- Search Bar (Centered) -->
-                    <div class="flex-1 max-w-2xl px-4">
+                    <div v-if="route().current() !== 'order.create'" class="flex-1 max-w-2xl px-4">
                         <SearchBar />
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-8">
+                    <div class="flex items-center gap-6">
                         <!-- Account -->
                         <div class="relative group">
                             <Link
                                 :href="route('user.dashboard')"
-                                class="flex flex-col items-center gap-1 text-gray-700 hover:text-primary transition-colors group"
+                                class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
                             >
-                                <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 group-hover:bg-primary/5 transition-all">
-                                    <UserIcon class="w-6 h-6 stroke-[1.5]" />
+                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all">
+                                    <PhUser class="w-5 h-5"  />
                                 </div>
-                                <span class="text-[11px] font-bold uppercase tracking-tight">Login/Register</span>
+                                <span class="text-[10px] font-medium uppercase tracking-tight">
+                                    {{ user ? user.name.split(' ')[0] : 'Login/Register' }}
+                                </span>
                             </Link>
 
                             <!-- Dropdown -->
@@ -178,12 +180,12 @@ const cleantopnotice = (html) => {
                                         class="px-4 py-3 bg-gray-50/50 mb-1 border-b border-gray-50"
                                     >
                                         <p
-                                            class="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1"
+                                            class="text-[10px] text-gray-400 font-medium uppercase tracking-widest leading-none mb-1"
                                         >
                                             Account
                                         </p>
                                         <p
-                                            class="text-sm font-bold text-gray-900 truncate"
+                                            class="text-sm font-medium text-gray-900 truncate"
                                         >
                                             {{ user.name }}
                                         </p>
@@ -212,7 +214,7 @@ const cleantopnotice = (html) => {
                                         :href="route('logout')"
                                         method="post"
                                         as="button"
-                                        class="block w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"
+                                        class="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
                                         >Logout</Link
                                     >
                                 </template>
@@ -240,42 +242,42 @@ const cleantopnotice = (html) => {
                                 <Heart class="w-6 h-6 stroke-[1.5]" />
                                 <span
                                     v-if="wishlistCount > 0"
-                                    class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
+                                    class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-medium rounded-full flex items-center justify-center border-2 border-white"
                                 >
                                     {{ wishlistCount }}
                                 </span>
                             </div>
-                            <span class="text-[11px] font-bold uppercase tracking-tight">Wishlist</span>
+                            <span class="text-[11px] font-medium uppercase tracking-tight">Wishlist</span>
                         </Link> -->
 
                         <!-- Cart Button -->
                         <button
                             @click="toggleCartSidebar"
-                            class="flex flex-col items-center gap-1 text-gray-700 hover:text-primary transition-colors group"
+                            class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
                         >
-                            <div class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 group-hover:bg-primary/5 transition-all">
-                                <ShoppingBag class="w-6 h-6 stroke-[1.5]" />
+                            <div class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all">
+                                <PhShoppingBag class="w-5 h-5"  />
                                 <span
-                                    class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
+                                    class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
                                 >
                                     {{ cartCount }}
                                 </span>
                             </div>
-                            <span class="text-[11px] font-bold uppercase tracking-tight">Cart</span>
+                            <span class="text-[10px] font-medium uppercase tracking-tight">Cart</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Mobile Layout (2 Rows) -->
-                <div class="lg:hidden flex flex-col py-3">
+                <div class="lg:hidden flex flex-col py-2">
                     <!-- Row 1: Menu, Logo, Cart -->
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-between mb-3">
                         <button
                             @click="emit('toggle-mobile-menu')"
                             class="p-1 -ml-1 text-gray-900 transition-transform active:scale-95"
                             aria-label="Menu"
                         >
-                            <Menu class="w-8 h-8" />
+                            <svg data-v-c6900758="" data-v-68fa2a2f="" xmlns="http://www.w3.org/2000/svg" width="30" height="16" viewBox="0 0 30 16" fill="currentColor"><rect data-v-c6900758="" data-v-68fa2a2f="" width="30" height="1.5"></rect><rect data-v-c6900758="" data-v-68fa2a2f="" y="7" width="20" height="1.5"></rect><rect data-v-c6900758="" data-v-68fa2a2f="" y="14" width="30" height="1.5"></rect></svg>
                         </button>
 
                         <Link
@@ -286,11 +288,11 @@ const cleantopnotice = (html) => {
                                 v-if="logoUrl"
                                 :src="logoUrl"
                                 :alt="siteName"
-                                class="h-10 w-auto object-contain"
+                                class="h-8 w-auto object-contain"
                             />
                             <span
                                 v-else
-                                class="text-xl font-black italic tracking-tighter text-gray-900"
+                                class="text-lg font-black italic tracking-tighter text-gray-900"
                                 >{{ siteName }}</span
                             >
                         </Link>
@@ -300,10 +302,10 @@ const cleantopnotice = (html) => {
                             class="relative p-1 -mr-1 text-gray-900 transition-transform active:scale-95"
                             aria-label="Cart"
                         >
-                            <ShoppingBag class="w-8 h-8" />
+                            <PhShoppingBag class="w-7 h-7"  />
                             <span
                                 v-if="cartCount > 0"
-                                class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
                             >
                                 {{ cartCount }}
                             </span>
@@ -311,7 +313,7 @@ const cleantopnotice = (html) => {
                     </div>
 
                     <!-- Row 2: Full Width Search -->
-                    <div class="w-full">
+                    <div v-if="route().current() !== 'order.create'" class="w-full">
                         <SearchBar
                             placeholder="Search products, models, brands..."
                         />
@@ -340,11 +342,11 @@ const cleantopnotice = (html) => {
                     @click="isSearchOpen = false"
                     class="absolute top-6 right-6 p-2 bg-gray-50 rounded-full text-gray-500 hover:text-black transition-colors"
                 >
-                    <X class="w-6 h-6" />
+                    <PhX class="w-6 h-6"  />
                 </button>
                 <div class="max-w-xl mx-auto space-y-6">
                     <div class="text-center">
-                        <h3 class="text-2xl font-bold text-gray-900">
+                        <h3 class="text-2xl font-medium text-gray-900">
                             What are you looking for?
                         </h3>
                         <p class="text-gray-500 mt-1">
@@ -362,6 +364,7 @@ const cleantopnotice = (html) => {
         <!-- Components -->
         <CartSidebar :is-open="isCartSidebarOpen" @close="closeCartSidebar" />
         <MobileBottomNav
+            v-if="!route().current('product.details')"
             :wishlist-count="wishlistCount"
         />
     </header>

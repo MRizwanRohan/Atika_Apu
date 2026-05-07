@@ -56,10 +56,13 @@ class ProductGroupController extends Controller
 
         if ($request->hasFile('banner')) {
             // Delete old banner if exists
-            if ($productGroup->banner) {
-                ImageHelper::deleteImage($productGroup->banner);
+            if ($productGroup->getRawOriginal('banner')) {
+                ImageHelper::deleteImage($productGroup->getRawOriginal('banner'));
             }
             $data['banner'] = ImageHelper::uploadImage($request->file('banner'), 'uploads/product_groups');
+        } else {
+            // Keep the old banner if no new file is uploaded
+            unset($data['banner']);
         }
 
         $this->service->update($productGroup, $data);

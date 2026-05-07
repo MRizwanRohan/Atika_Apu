@@ -367,20 +367,38 @@ onMounted(() => {
 
 </script>
 
+<style scoped>
+@keyframes rsiShaker {
+  0%, 40%, 100% { transform: scaleX(1); }
+  5%, 10% { transform: scale3d(0.97, 0.97, 0.97) rotate(-1deg); }
+  15%, 25%, 35% { transform: scale3d(1.03, 1.03, 1.03) rotate(1deg); }
+  20%, 30% { transform: scale3d(1.03, 1.03, 1.03) rotate(-1deg); }
+}
+
+.animate-rsi-shaker {
+  animation: rsiShaker 2s cubic-bezier(0.35, 0.06, 0.2, 0.98) infinite;
+}
+
+/* Optional: pause on hover to make it less intrusive */
+.animate-rsi-shaker:hover {
+  animation-play-state: paused;
+}
+</style>
+
 <template>
     <Head title="Checkout" />
     <FrontendLayout>
-        <div class="min-h-screen bg-[#f2f4f7] py-8">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Page Header -->
-                <div class="text-center mb-8">
-                    <h1 class="text-2xl font-semibold text-gray-900 mb-1 font-outfit uppercase tracking-tight">Checkout</h1>
-                    <nav class="flex justify-center items-center space-x-2 text-xs text-gray-500 font-normal">
-                        <Link href="/" class="hover:text-orange-500 transition-colors">Home</Link>
+        <div class="min-h-screen bg-[#f2f4f7]">
+                            <!-- Page Header -->
+                <div class="text-center bg-white mb-3 sm:mb-8 py-2 sm:py-4">
+                    <h1 class=" text-xl md:text-2xl font-semibold text-gray-900 mb-1 font-outfit tracking-tight">Checkout</h1>
+                    <nav class=" hidden md:flex justify-center items-center space-x-2 text-xs text-gray-500 font-normal">
+                        <Link href="/" class="hover:text-primary transition-colors">Home</Link>
                         <span class="text-gray-400">&gt;</span>
-                        <span class="text-orange-500">Checkout</span>
+                        <span class="text-primary">Checkout</span>
                     </nav>
                 </div>
+            <div class="container mx-auto px-2 sm:px-6 lg:px-8">
 
                 <!-- Empty Cart Message -->
                 <div
@@ -412,7 +430,7 @@ onMounted(() => {
                         </p>
                         <Link
                             href="/"
-                            class="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors"
+                            class="inline-flex items-center px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary transition-colors"
                         >
                             <svg
                                 class="w-5 h-5 mr-2"
@@ -434,45 +452,45 @@ onMounted(() => {
 
                 <div v-else>
                     <!-- Login/Register Alert -->
-                    <div v-if="!user" class="bg-gray-100/80 border border-gray-200 rounded-lg p-5 flex flex-wrap items-center justify-between gap-4 mb-8">
-                        <span class="text-gray-700 font-normal tracking-tight">Have any account? please login or register</span>
-                        <div class="flex gap-2">
-                            <Link :href="route('login')" class="px-7 py-2 bg-white border border-gray-300 rounded text-sm font-medium hover:bg-gray-50 transition-all">Login</Link>
-                            <Link :href="route('register')" class="px-7 py-2 bg-orange-500 text-white rounded text-sm font-medium hover:bg-orange-600 transition-all shadow-sm">Register</Link>
+                    <div v-if="!user" class="bg-gray-100/80 border border-gray-200 rounded-lg p-2.5 sm:p-5 flex items-center justify-between gap-3 mb-3 sm:mb-8">
+                        <span class="text-gray-700 font-medium tracking-tight text-[11px] sm:text-sm">Have an account? Login here</span>
+                        <div class="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                            <Link :href="route('login')" class="px-3 sm:px-7 py-1 sm:py-2 bg-white border border-gray-300 rounded text-[11px] sm:text-sm font-medium hover:bg-gray-50 transition-all">Login</Link>
+                            <Link :href="route('register')" class="px-3 sm:px-7 py-1 sm:py-2 bg-primary text-white rounded text-[11px] sm:text-sm font-medium hover:bg-primary transition-all shadow-sm">Register</Link>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
                         <!-- Left Column -->
-                        <div class="lg:col-span-7 space-y-6">
+                        <div class="lg:col-span-7 space-y-4 sm:space-y-6">
                             <!-- Order review section -->
                             <section>
-                                <div class="flex items-center space-x-3 mb-4">
-                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
-                                    <h2 class="text-lg font-medium text-gray-900 tracking-tight">Order review</h2>
+                                <div class="flex items-center space-x-3 mb-2 sm:mb-4">
+                                    <div class="w-1 h-5 bg-primary rounded-full"></div>
+                                    <h2 class="text-base sm:text-lg font-medium text-gray-900 tracking-tight">Order review</h2>
                                 </div>
                                 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
                                     <div v-for="(item, index) in cart?.data?.items" :key="item.id" 
-                                         class="p-4 flex items-center gap-4 relative"
+                                         class="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 relative"
                                          :class="{'border-b border-gray-100': index !== cart.data.items.length - 1}">
-                                        <div class="w-16 h-16 border border-gray-200 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 p-1">
+                                        <div class="w-14 h-14 sm:w-16 sm:h-16 border border-gray-200 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 p-1">
                                             <img v-if="item.product_image" :src="item.product_image" :alt="item.product_name" class="w-full h-full object-contain" />
                                             <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-[10px]">No Image</div>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="text-[14px] font-medium text-gray-900 mb-2">{{ item.product_name }}</h4>
-                                            <div class="flex items-center gap-4">
+                                            <h4 class="text-[13px] sm:text-[14px] font-medium text-gray-900 mb-1 sm:mb-2 truncate sm:whitespace-normal">{{ item.product_name }}</h4>
+                                            <div class="flex items-center gap-3 sm:gap-4">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-sm font-normal text-gray-600">Qty:</span>
+                                                    <span class="text-xs sm:text-sm font-normal text-gray-600">Qty:</span>
                                                     <div class="flex items-center bg-[#f2f4f7] rounded-full p-0.5 select-none">
-                                                        <button @click="decrementQuantity(item.id, item.quantity)" class="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-500 transition-colors text-lg font-medium">−</button>
-                                                        <div class="bg-white w-8 h-7 flex items-center justify-center text-gray-900 font-semibold text-xs">
+                                                        <button @click="decrementQuantity(item.id, item.quantity)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-red-500 hover:text-red-600 transition-colors text-base sm:text-lg font-medium">−</button>
+                                                        <div class="bg-white w-7 h-6 sm:w-8 sm:h-7 flex items-center justify-center text-gray-900 font-semibold text-[10px] sm:text-xs">
                                                             {{ item.quantity }}
                                                         </div>
-                                                        <button @click="incrementQuantity(item.id)" class="w-7 h-7 flex items-center justify-center text-orange-500 hover:text-orange-600 transition-colors text-lg font-medium">+</button>
+                                                        <button @click="incrementQuantity(item.id)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-primary hover:text-primary transition-colors text-base sm:text-lg font-medium">+</button>
                                                     </div>
                                                 </div>
-                                                <span class="text-[14px] font-medium text-gray-900">৳{{ (parseFloat(item.price) * item.quantity).toLocaleString() }}.00</span>
+                                                <span class="text-xs sm:text-[14px] font-medium text-gray-900">৳{{ (parseFloat(item.price) * item.quantity).toLocaleString() }}</span>
                                             </div>
                                         </div>
                                         <button @click="removeItem(item.id)" class="bg-red-500/90 text-white p-1 rounded-md hover:bg-red-600 transition-all shadow-sm ml-auto flex-shrink-0">
@@ -484,39 +502,48 @@ onMounted(() => {
 
                             <!-- Shipping Address section -->
                             <section>
-                                <div class="flex items-center space-x-3 mb-4">
-                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
-                                    <h2 class="text-lg font-medium text-gray-900 tracking-tight">Shipping Address</h2>
+                                <div class="flex items-center space-x-3 mb-2 sm:mb-4">
+                                    <div class="w-1 h-5 bg-primary rounded-full"></div>
+                                    <h2 class="text-base sm:text-lg font-medium text-gray-900 tracking-tight">Shipping Address</h2>
                                 </div>
-                                <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                         <div class="relative">
                                             <input v-model="form.customer_name" type="text" placeholder="Your Full Name *" 
-                                                   class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all placeholder:text-gray-400 font-normal text-gray-800 text-sm" />
+                                                   class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-gray-400 font-normal text-gray-800 text-sm" />
                                         </div>
-                                        <div class="flex items-center border border-gray-200 rounded-lg px-4 py-2.5 focus-within:ring-1 focus-within:ring-orange-500 focus-within:border-orange-500 bg-white transition-all">
+                                        <div class="flex items-center border border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary bg-white transition-all">
                                             <span class="mr-2 text-gray-500 font-normal border-r pr-2 border-gray-200 text-sm">88</span>
                                             <input v-model="form.customer_phone" type="tel" placeholder="01*********" 
                                                    class="flex-1 bg-transparent border-none outline-none p-0 focus:ring-0 placeholder:text-gray-400 font-normal text-gray-800 text-sm" />
                                         </div>
                                         
-                                        <div class="relative">
-                                            <select v-model="form.shipping_district" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-sm cursor-pointer" style="appearance: none; -webkit-appearance: none;">
-                                                <option value="" disabled>Select District</option>
-                                                <option v-for="d in districts" :key="d.id" :value="d.name">{{ d.name }}</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="relative">
-                                            <select v-model="form.shipping_thana" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-sm cursor-pointer" :disabled="!form.shipping_district" style="appearance: none; -webkit-appearance: none;">
-                                                <option value="" disabled>Select Thana (Optional)</option>
-                                                <option v-for="t in thanas" :key="t.id" :value="t.name">{{ t.name }}</option>
-                                            </select>
+                                        <!-- District & Thana side by side on mobile -->
+                                        <div class="grid grid-cols-2 gap-2 md:gap-4 md:col-span-2">
+                                            <div class="relative">
+                                                <select v-model="form.shipping_district" class="w-full px-2 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-[12px] sm:text-sm cursor-pointer" style="appearance: none; -webkit-appearance: none;">
+                                                    <option value="" disabled>District</option>
+                                                    <option v-for="d in districts" :key="d.id" :value="d.name">{{ d.name }}</option>
+                                                </select>
+                                                <!-- <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none sm:hidden">
+                                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                </div> -->
+                                            </div>
+                                            
+                                            <div class="relative">
+                                                <select v-model="form.shipping_thana" class="w-full px-2 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-[12px] sm:text-sm cursor-pointer" :disabled="!form.shipping_district" style="appearance: none; -webkit-appearance: none;">
+                                                    <option value="" disabled>Thana</option>
+                                                    <option v-for="t in thanas" :key="t.id" :value="t.name">{{ t.name }}</option>
+                                                </select>
+                                                <!-- <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none sm:hidden">
+                                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                </div> -->
+                                            </div>
                                         </div>
 
                                         <div class="md:col-span-2">
                                             <textarea v-model="form.shipping_address" rows="2" placeholder="ex: House no. / building / street / area" 
-                                                      class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all placeholder:text-gray-400 font-medium text-gray-800 resize-none text-sm"></textarea>
+                                                      class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-gray-400 font-normal text-gray-800 resize-none text-sm"></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -524,113 +551,113 @@ onMounted(() => {
                         </div>
 
                         <!-- Right Column -->
-                        <div class="lg:col-span-5 space-y-6">
+                        <div class="lg:col-span-5 space-y-4 sm:space-y-6">
                             <!-- Payment method section -->
                             <section>
-                                <div class="flex items-center space-x-3 mb-4">
-                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
-                                    <h2 class="text-lg font-medium text-gray-900 tracking-tight">Payment method</h2>
+                                <div class="flex items-center space-x-3 mb-2 sm:mb-4">
+                                    <div class="w-1 h-5 bg-primary rounded-full"></div>
+                                    <h2 class="text-base sm:text-lg font-medium text-gray-900 tracking-tight">Payment method</h2>
                                 </div>
-                                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                                    <div class="grid gap-3 mb-3" :class="hasPreOrderItems ? 'grid-cols-2' : 'grid-cols-1'">
+                                <div class="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                                    <div class="grid gap-2 sm:gap-3 mb-2 sm:mb-3" :class="hasPreOrderItems ? 'grid-cols-2' : 'grid-cols-1'">
                                         <button type="button" @click="form.payment_method = 'cod'" 
-                                                class="flex items-center gap-3 p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
-                                                :class="form.payment_method === 'cod' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
-                                            <div class="w-8 h-8 flex items-center justify-center text-xl">💵</div>
-                                            <span class="text-sm font-medium text-gray-800">Cash On Delivery</span>
-                                            <div v-if="form.payment_method === 'cod'" class="absolute -top-1 -right-1 flex items-center justify-center w-8 h-8">
-                                                <div class="bg-orange-500 w-full h-full rotate-45 translate-x-4 -translate-y-4"></div>
-                                                <svg class="w-3 h-3 text-white absolute top-1.5 right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                                                class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
+                                                :class="form.payment_method === 'cod' ? 'border-primary bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
+                                            <div class="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-lg sm:text-xl">💵</div>
+                                            <span class="text-xs sm:text-sm font-medium text-gray-800">Cash On Delivery</span>
+                                            <div v-if="form.payment_method === 'cod'" class="absolute -top-1 -right-1 flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8">
+                                                <div class="bg-primary w-full h-full rotate-45 translate-x-3 -translate-y-3 sm:translate-x-4 sm:-translate-y-4"></div>
+                                                <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
                                             </div>
                                         </button>
                                         <button v-if="hasPreOrderItems" type="button" @click="form.payment_method = 'nagad'" 
-                                                class="flex items-center gap-3 p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
-                                                :class="form.payment_method === 'nagad' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
-                                            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                                                class="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
+                                                :class="form.payment_method === 'nagad' ? 'border-primary bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
+                                            <div class="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded flex items-center justify-center overflow-hidden">
                                                 <img src="/assets/img/logo/nogod.png" class="w-full h-full object-contain p-0.5" alt="nagad" />
                                             </div>
-                                            <span class="text-sm font-medium text-gray-800">Nagad</span>
-                                            <div v-if="form.payment_method === 'nagad'" class="absolute -top-1 -right-1 flex items-center justify-center w-8 h-8">
-                                                <div class="bg-orange-500 w-full h-full rotate-45 translate-x-4 -translate-y-4"></div>
-                                                <svg class="w-3 h-3 text-white absolute top-1.5 right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                                            <span class="text-xs sm:text-sm font-medium text-gray-800">Nagad</span>
+                                            <div v-if="form.payment_method === 'nagad'" class="absolute -top-1 -right-1 flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8">
+                                                <div class="bg-primary w-full h-full rotate-45 translate-x-3 -translate-y-3 sm:translate-x-4 sm:-translate-y-4"></div>
+                                                <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
                                             </div>
                                         </button>
                                     </div>
                                     <button v-if="hasPreOrderItems" type="button" @click="form.payment_method = 'bkash'" 
-                                            class="w-full flex items-center gap-4 p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
-                                            :class="form.payment_method === 'bkash' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
-                                        <div class="w-10 h-10 rounded-lg p-1 bg-white flex items-center justify-center overflow-hidden">
+                                            class="w-full flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3.5 border-2 rounded-xl transition-all relative overflow-hidden"
+                                            :class="form.payment_method === 'bkash' ? 'border-primary bg-orange-50/50' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'">
+                                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded p-1 bg-white flex items-center justify-center overflow-hidden">
                                             <img src="/assets/img/logo/BKash-Icon-Logo.wine.svg" class="w-full h-full object-contain" alt="bkash" />
                                         </div>
-                                        <span class="text-base font-medium text-gray-800">Bkash</span>
-                                        <div v-if="form.payment_method === 'bkash'" class="absolute -top-1 -right-1 flex items-center justify-center w-8 h-8">
-                                            <div class="bg-orange-500 w-full h-full rotate-45 translate-x-4 -translate-y-4"></div>
-                                            <svg class="w-3 h-3 text-white absolute top-1.5 right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
+                                        <span class="text-xs sm:text-base font-medium text-gray-800">Bkash</span>
+                                        <div v-if="form.payment_method === 'bkash'" class="absolute -top-1 -right-1 flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8">
+                                            <div class="bg-primary w-full h-full rotate-45 translate-x-3 -translate-y-3 sm:translate-x-4 sm:-translate-y-4"></div>
+                                            <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>
                                         </div>
                                     </button>
 
                                     <!-- Manual Payment Instructions -->
-                                    <div v-if="form.payment_method === 'bkash' || form.payment_method === 'nagad'" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <h3 class="text-sm font-bold text-blue-900 mb-2 uppercase tracking-tight">Instructions:</h3>
-                                        <p class="text-[13px] text-blue-800 mb-4 whitespace-pre-line leading-relaxed" v-html="highlightNumbers(form.payment_method === 'bkash' ? (settings.generalSettings?.bkash_instructions || 'Please send the amount to our official bKash number. Then provide your Transaction ID below.') : (settings.generalSettings?.nagad_instructions || 'Please send the amount to our official Nagad number. Then provide your Transaction ID below.'))"></p>
+                                    <div v-if="form.payment_method === 'bkash' || form.payment_method === 'nagad'" class="mt-3 sm:mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <h3 class="text-xs sm:text-sm font-bold text-blue-900 mb-1 sm:mb-2 uppercase tracking-tight">Instructions:</h3>
+                                        <p class="text-[12px] sm:text-[13px] text-blue-800 mb-3 sm:mb-4 whitespace-pre-line leading-snug sm:leading-relaxed" v-html="highlightNumbers(form.payment_method === 'bkash' ? (settings.generalSettings?.bkash_instructions || 'Please send the amount to our official bKash number. Then provide your Transaction ID below.') : (settings.generalSettings?.nagad_instructions || 'Please send the amount to our official Nagad number. Then provide your Transaction ID below.'))"></p>
                                         
-                                        <div class="space-y-3 pt-3 border-t border-blue-200/50">
+                                        <div class="space-y-2 sm:space-y-3 pt-2 sm:pt-3 border-t border-blue-200/50">
                                             <div>
-                                                <label class="block text-[10px] font-bold text-blue-900 uppercase tracking-wider mb-1">Transaction ID (TrxID) <span class="text-red-500">*</span></label>
-                                                <input type="text" v-model="form.transaction_id" placeholder="Ex: 8NH7YH9L" class="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-sm font-medium" required />
-                                                <p v-if="form.errors.transaction_id" class="mt-1 text-[10px] text-red-500 font-bold tracking-tight">{{ form.errors.transaction_id }}</p>
+                                                <label class="block text-[9px] sm:text-[10px] font-bold text-blue-900 uppercase tracking-wider mb-1">Transaction ID (TrxID) <span class="text-red-500">*</span></label>
+                                                <input type="text" v-model="form.transaction_id" placeholder="Ex: 8NH7YH9L" class="w-full px-3 py-1.5 sm:py-2 border border-blue-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-xs sm:text-sm font-medium" required />
+                                                <p v-if="form.errors.transaction_id" class="mt-1 text-[9px] sm:text-[10px] text-red-500 font-bold tracking-tight">{{ form.errors.transaction_id }}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </section>
 
-                            <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
+                            <div class="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3 sm:space-y-4">
                                 <!-- Coupon Accordion -->
                                 <div>
-                                    <button @click="showCoupon = !showCoupon" class="w-full flex items-center justify-between text-sm font-medium text-gray-800 group py-1">
-                                        <span>Have any coupon or gift voucher?</span>
-                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{'rotate-180': showCoupon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                    <button @click="showCoupon = !showCoupon" class="w-full flex items-center justify-between text-xs sm:text-sm font-medium text-gray-800 group py-1">
+                                        <span>Have any coupon or voucher?</span>
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-300" :class="{'rotate-180': showCoupon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
                                     </button>
-                                    <div v-show="showCoupon" class="mt-3 flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <input v-model="couponForm.code" type="text" placeholder="Enter code" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 outline-none font-normal text-sm" />
-                                        <button @click="applyCoupon" class="px-5 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-black transition-all text-sm">Apply</button>
+                                    <div v-show="showCoupon" class="mt-2 sm:mt-3 flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <input v-model="couponForm.code" type="text" placeholder="Enter code" class="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none font-normal text-sm" />
+                                        <button @click="applyCoupon" class="px-4 sm:px-5 py-1.5 sm:py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-black transition-all text-sm">Apply</button>
                                     </div>
                                 </div>
 
                                 <!-- Summary -->
-                                <div class="space-y-3 pt-4 border-t border-gray-100">
+                                <div class="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-gray-100">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-sm font-normal text-gray-600">Sub total</span>
-                                        <span class="text-sm font-normal text-gray-900">{{ subtotal.toLocaleString() }}.00 BDT</span>
+                                        <span class="text-xs sm:text-sm font-normal text-gray-600">Sub total</span>
+                                        <span class="text-xs sm:text-sm font-normal text-gray-900">{{ subtotal.toLocaleString() }}.00 BDT</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-sm font-normal text-gray-600">Delivery cost</span>
-                                        <span class="text-sm font-normal text-gray-900">{{ form.shipping_cost }}.00 BDT</span>
+                                        <span class="text-xs sm:text-sm font-normal text-gray-600">Delivery cost</span>
+                                        <span class="text-xs sm:text-sm font-normal text-gray-900">{{ form.shipping_cost }}.00 BDT</span>
                                     </div>
-                                    <div class="flex justify-between items-center pt-3 border-t border-gray-100">
-                                        <span class="text-base font-semibold text-gray-900">Total</span>
-                                        <span class="text-base font-semibold text-gray-900">{{ total.toLocaleString() }}.00BDT</span>
+                                    <div class="flex justify-between items-center pt-2 sm:pt-3 border-t border-gray-100">
+                                        <span class="text-sm sm:text-base font-semibold text-gray-900">Total</span>
+                                        <span class="text-sm sm:text-base font-semibold text-gray-900">{{ total.toLocaleString() }}.00BDT</span>
                                     </div>
 
                                     <!-- Pre-Order Notice -->
-                                    <div v-if="hasPreOrderItems" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div v-if="hasPreOrderItems" class="mt-3 sm:mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div class="flex items-center gap-2 text-blue-900">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            <span class="text-sm font-bold uppercase tracking-tight">Pre-Order Notice</span>
+                                            <span class="text-xs sm:text-sm font-bold uppercase tracking-tight">Pre-Order Notice</span>
                                         </div>
-                                        <div class="space-y-2">
-                                            <div class="flex justify-between items-center text-[13px] font-medium text-blue-800">
+                                        <div class="space-y-1 sm:space-y-2">
+                                            <div class="flex justify-between items-center text-[12px] sm:text-[13px] font-medium text-blue-800">
                                                 <span>Suggested Advance (50%)</span>
                                                 <span class="font-bold">৳{{ (total / 2).toLocaleString() }}.00</span>
                                             </div>
-                                            <div class="flex justify-between items-center text-[13px] font-medium text-blue-800">
+                                            <div class="flex justify-between items-center text-[12px] sm:text-[13px] font-medium text-blue-800">
                                                 <span>Due on Delivery</span>
                                                 <span class="font-bold">৳{{ (total / 2).toLocaleString() }}.00</span>
                                             </div>
                                         </div>
-                                        <p class="text-[11px] leading-relaxed text-blue-700 pt-2 border-t border-blue-200/50">
-                                            You can optionally send the suggested advance via bKash/Nagad to confirm your pre-order quickly, or simply place via Cash on Delivery.
+                                        <p class="text-[10px] sm:text-[11px] leading-relaxed text-blue-700 pt-1.5 sm:pt-2 border-t border-blue-200/50">
+                                            Send advance via bKash/Nagad to confirm or simply place via COD.
                                         </p>
                                     </div>
                                 </div>
@@ -638,26 +665,42 @@ onMounted(() => {
 
                             <!-- Special notes section -->
                             <section>
-                                <div class="flex items-center space-x-3 mb-3 mt-1">
-                                    <div class="w-1 h-5 bg-orange-500 rounded-full"></div>
-                                    <h2 class="text-sm font-bold text-gray-900 tracking-tight">Special notes <span class="text-gray-400 font-semibold">(Optional)</span></h2>
+                                <div class="flex items-center space-x-3 mb-2 mt-1">
+                                    <div class="w-1 h-5 bg-primary rounded-full"></div>
+                                    <h2 class="text-xs sm:text-sm font-bold text-gray-900 tracking-tight">Special notes <span class="text-gray-400 font-semibold">(Optional)</span></h2>
                                 </div>
-                                <textarea v-model="form.customer_notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-500 outline-none transition-all resize-none font-medium bg-white text-sm"></textarea>
+                                <textarea v-model="form.customer_notes" rows="2" class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none transition-all resize-none font-medium bg-white text-sm"></textarea>
                             </section>
 
                             <!-- Terms and Submit -->
-                            <div class="space-y-6">
-                                <label class="flex items-start gap-3 cursor-pointer group">
-                                    <input type="checkbox" required class="mt-1 w-5 h-5 accent-orange-500 rounded border-gray-300 text-orange-500 focus:ring-orange-500" checked />
-                                    <span class="text-xs text-gray-500 leading-relaxed font-medium">
-                                        I have read and agree to the <span class="text-orange-500 font-bold hover:underline">Terms and Conditions</span>, <span class="text-orange-500 font-bold hover:underline">Privacy Policy</span> & <span class="text-orange-500 font-bold hover:underline">Refund and Return Policy</span>.
+                            <div class="space-y-4 sm:space-y-6">
+                                <label class="flex items-start gap-2 sm:gap-3 cursor-pointer group">
+                                    <input type="checkbox" required class="mt-0.5 w-4 h-4 sm:w-5 sm:h-5 accent-primary rounded border-gray-300 text-primary focus:ring-primary" checked />
+                                    <span class="text-[10px] sm:text-xs text-gray-500 leading-tight sm:leading-relaxed font-medium">
+                                        I agree to the <span class="text-primary font-bold hover:underline">Terms</span>, <span class="text-primary font-bold hover:underline">Privacy</span> & <span class="text-primary font-bold hover:underline">Refund Policy</span>.
                                     </span>
                                 </label>
 
+                                <!-- Button Desktop View -->
                                 <button @click="submitOrder" :disabled="form.processing"
-                                        class="w-full bg-orange-500 text-white font-medium py-3.5 rounded-lg shadow-[0_10px_20px_rgba(249,115,22,0.15)] hover:bg-orange-600 transition-all transform hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.1em] text-sm">
+                                        class="hidden sm:flex w-full bg-primary text-white font-medium py-3.5 rounded-lg shadow-[0_10px_20px_rgba(249,115,22,0.15)] hover:bg-primary transition-all items-center justify-center uppercase tracking-[0.1em] text-sm animate-rsi-shaker">
                                     {{ form.processing ? 'Processing...' : 'PLACE ORDER' }}
                                 </button>
+
+                                <!-- Mobile Fixed Bottom Button Container -->
+                                <div class="sm:hidden fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-100 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-[100] flex items-center gap-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total</span>
+                                        <span class="text-lg font-bold text-gray-900 leading-none">৳{{ total.toLocaleString() }}</span>
+                                    </div>
+                                    <button @click="submitOrder" :disabled="form.processing"
+                                            class="flex-1 bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center uppercase tracking-wider text-sm animate-rsi-shaker">
+                                        {{ form.processing ? 'Processing...' : 'PLACE ORDER' }}
+                                    </button>
+                                </div>
+
+                                <!-- Spacer for mobile so content isn't hidden by fixed footer -->
+                                <div class="h-20 sm:hidden"></div>
                             </div>
                         </div>
                     </div>
@@ -666,10 +709,10 @@ onMounted(() => {
         </div>
 
         <!-- Floating coupon action on mobile (Custom style) -->
-        <div v-if="cart?.data?.items?.length > 0" class="fixed bottom-6 right-6 lg:hidden z-50">
-            <button @click="focusCoupon" class="w-14 h-14 bg-orange-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
+        <!-- <div v-if="cart?.data?.items?.length > 0" class="fixed bottom-6 right-6 lg:hidden z-50">
+            <button @click="focusCoupon" class="w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
             </button>
-        </div>
+        </div> -->
     </FrontendLayout>
 </template>

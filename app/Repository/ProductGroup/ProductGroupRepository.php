@@ -69,7 +69,11 @@ class ProductGroupRepository implements ProductGroupRepositoryInterface
     public function getAllWithProducts(): Collection
     {
         return ProductGroup::with(['products' => function($query) {
-                $query->take(10); // Show mapping 10 products
+                $query->where('status', 'Published')
+                    ->with(['category', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
+                    ->withAvg('reviews', 'rating')
+                    ->withCount('reviews')
+                    ->take(10); // Show mapping 10 products
             }])
             ->where('status', true)
             ->orderBy('order_number', 'asc')

@@ -42,7 +42,7 @@ class HomeController extends Controller
             return InstagramFeed::active()->orderBy('sort_order', 'asc')->get();
         });
 
-        $newArrivalBanners = $this->getNewArrivalBannersFromDB();
+        // $newArrivalBanners = $this->getNewArrivalBannersFromDB();
 
         // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [
@@ -52,7 +52,7 @@ class HomeController extends Controller
             'sliders' => $sliders,
             'productswithVideo' => $productVideos,
             'instagramFeeds' => $instagramFeeds,
-            'sideBanners' => $newArrivalBanners,
+            // 'sideBanners' => $newArrivalBanners,
         ]);
     }
 

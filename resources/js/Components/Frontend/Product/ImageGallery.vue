@@ -4,7 +4,7 @@
             <!-- Main Image Display -->
             <div class="w-full">
                 <div
-                    class="relative w-full aspect-square border border-gray-100 bg-white rounded-3xl overflow-hidden shadow-sm"
+                    class="relative w-full aspect-square border border-gray-100 bg-white rounded-sm overflow-hidden shadow-sm"
                 >
                     <!-- Main Content -->
                     <div
@@ -22,7 +22,7 @@
                             v-if="activeMedia.type === 'image'"
                             :src="activeMedia.src"
                             :alt="`Product image ${activeIndex + 1}`"
-                            class="w-full h-full object-contain p-8 transition-transform duration-200"
+                            class="w-full h-full object-contain transition-transform duration-200"
                             :style="zoomStyle"
                         />
 
@@ -227,7 +227,11 @@ const scrollThumbnailIntoView = (index: number) => {
             index
         ] as HTMLElement;
         if (thumbnail) {
-            thumbnail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            thumbnail.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+                inline: "center",
+            });
             setTimeout(checkScroll, 500);
         }
     }
@@ -327,12 +331,12 @@ const handleTouchEnd = () => {
 
 <style scoped>
 /* Custom Scrollbar */
-.scrollbar-y-hide::-webkit-scrollbar {
-    width: 0px; /* Chrome, Safari */
+.scrollbar-hide::-webkit-scrollbar {
+    height: 0px; /* Chrome, Safari */
     background: transparent; /* Optional */
 }
 
-.scrollbar-y-hide {
+.scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
 }
