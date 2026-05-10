@@ -1,0 +1,271 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Custom Product</title>
+  
+  <script src="https://unpkg.com/feather-icons"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="customer-wrapper">
+  
+  <div class="page-header">
+    <h2 class="page-title">Request Product</h2>
+    <p class="page-subtitle">আপনি যে পণ্যটি খুঁজছেন তার বিস্তারিত আমাদের পাঠান, আমরা আপনার জন্য এটি ইম্পোর্ট করে দেব!</p>
+  </div>
+
+  <div class="how-it-works-box">
+    <div class="step">
+      <div class="step-icon"><i data-feather="upload-cloud"></i></div>
+      <span>1. Submit Details</span>
+    </div>
+    <div class="step-divider"><i data-feather="chevron-right"></i></div>
+    <div class="step">
+      <div class="step-icon"><i data-feather="tag"></i></div> 
+      <span>2. Get Pricing</span> 
+    </div>
+    <div class="step-divider"><i data-feather="chevron-right"></i></div>
+    <div class="step">
+      <div class="step-icon"><i data-feather="link"></i></div>
+      <span>3. Get Checkout Link</span> 
+    </div>
+  </div>
+
+  <form class="request-form-card">
+    
+    <div class="form-group">
+      <label class="form-label">Product Images <span class="optional-text">(Upload up to 5 photos) *</span></label>
+      <div class="image-upload-area" onclick="document.getElementById('fileInput').click()">
+        <i data-feather="camera" class="upload-main-icon"></i>
+        <p class="upload-text">Click here to upload product photos</p>
+        <p class="upload-subtext">JPG, PNG formats supported</p>
+        <input type="file" id="fileInput" multiple accept="image/*" style="display: none;" onchange="showPreviews(event)">
+      </div>
+      <div id="imagePreviewContainer" class="preview-gallery"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Product Name / Title *</label>
+      <input type="text" class="custom-input" placeholder="e.g. iQOO 12 Pro Custom Anime Case">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Reference Link <span class="optional-text">(AliExpress, Amazon, etc.)</span></label>
+      <div class="input-with-icon">
+        <i data-feather="link-2" class="field-icon"></i>
+        <input type="url" class="custom-input icon-padding" placeholder="Paste product URL">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Your WhatsApp Number * <span class="optional-text">(We will contact you here)</span></label>
+      <div class="input-with-icon whatsapp-theme">
+        <i data-feather="message-circle" class="field-icon"></i>
+        <input type="tel" class="custom-input icon-padding" placeholder="e.g. 017XXXXXXXX">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 25px;">
+      <label class="form-label">Additional Note / Model Details</label>
+      <textarea rows="3" class="custom-input" placeholder="আপনার ফোনের মডেল, কালার বা অন্য কোনো চাহিদা থাকলে লিখুন..."></textarea>
+    </div>
+
+    <button type="button" class="submit-request-btn">
+      <i data-feather="send"></i> Submit Product Request
+    </button>
+    
+    <div class="important-notice">
+      <div class="notice-icon">
+        <i data-feather="alert-circle"></i>
+      </div>
+      <p class="notice-content">
+        প্রি-অর্ডার প্রোডাক্ট ডেলিভারি হতে <strong>২০-২৫ দিন</strong> সময় লাগবে। প্রোডাক্টের মোট দামের <strong>৫০% এডভান্স</strong> পে করতে হবে। রিকোয়েস্ট করার পর আমাদের প্যানেল থেকে আপনাকে কল করে বিস্তারিত বলা হবে।
+      </p>
+    </div>
+
+    <p class="secure-note"><i data-feather="shield"></i> No payment required right now.</p>
+
+  </form>
+  
+  <div style="height: 40px;"></div>
+
+</div>
+
+<script>
+  // Initialize icons
+  feather.replace({ 'stroke-width': 2 });
+
+  // Image preview script
+  function showPreviews(event) {
+    const container = document.getElementById('imagePreviewContainer');
+    container.innerHTML = ''; 
+    const files = event.target.files;
+    const maxFiles = Math.min(files.length, 5);
+
+    for (let i = 0; i < maxFiles; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const box = document.createElement('div');
+        box.className = 'preview-box';
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        const removeBtn = document.createElement('div');
+        removeBtn.className = 'remove-img-btn';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = function(ev) {
+          ev.stopPropagation();
+          box.remove();
+        };
+        box.appendChild(img);
+        box.appendChild(removeBtn);
+        container.appendChild(box);
+      }
+      reader.readAsDataURL(file);
+    }
+  }
+</script>
+
+</body>
+</html>
+
+
+<style>
+body {
+  margin: 0; 
+  padding: 20px; 
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Roboto, sans-serif; 
+  display: flex; 
+  justify-content: center;
+}
+
+.customer-wrapper { 
+  width: 100%; 
+  max-width: ; 
+}
+
+/* --- Header --- */
+.page-header { text-align: center; margin-bottom: 25px; }
+.page-title { margin: 0 0 8px 0; font-size: 26px; font-weight: 800; color: #0a1f44; text-transform: uppercase; letter-spacing: 0.5px;}
+.page-subtitle { margin: 0; font-size: 14px; color: #666; line-height: 1.5; }
+
+/* --- How it works --- */
+.how-it-works-box {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #fff; padding: 15px 15px; border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(10, 31, 68, 0.05); margin-bottom: 20px; border: 1px solid #eef2f5;
+}
+.step { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; flex: 1; }
+.step-icon { width: 34px; height: 34px; background: #f0f4f8; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #0a1f44; }
+.step-icon i { width: 15px; height: 15px; }
+.step span { font-size: 10px; font-weight: bold; color: #444; }
+.step-divider { color: #d1d5da; padding-bottom: 15px; }
+
+/* --- Form Card --- */
+.request-form-card {
+  background: #ffffff; border-radius: 12px; padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e1e4e8;
+}
+
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px; }
+.optional-text { font-weight: normal; color: #888; font-size: 11px; }
+
+/* Input & Icons Container */
+.input-with-icon { position: relative; display: flex; align-items: center; }
+
+.field-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: #7f8c8d;
+  pointer-events: none;
+}
+
+.custom-input {
+  width: 100%; padding: 12px 14px; border: 1px solid #d1d5da; border-radius: 8px;
+  font-size: 14px; font-family: inherit; color: #222; outline: none; box-sizing: border-box; background: #fafbfc; transition: 0.2s;
+}
+.icon-padding { padding-left: 42px !important; }
+
+.custom-input:focus { border-color: #0a1f44; background: #fff; box-shadow: 0 0 0 3px rgba(10, 31, 68, 0.1); }
+
+/* WhatsApp Highlight */
+.whatsapp-theme .field-icon { color: #25D366; }
+.whatsapp-theme .custom-input:focus { border-color: #25D366; box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15); }
+
+/* --- Image Upload --- */
+.image-upload-area {
+  border: 2px dashed #d1d5da; border-radius: 8px; padding: 25px 20px; text-align: center;
+  background: #fafbfc; cursor: pointer; transition: 0.2s;
+}
+.image-upload-area:hover { border-color: #0a1f44; background: #f0f4f8; }
+.upload-main-icon { width: 30px; height: 30px; color: #0a1f44; margin-bottom: 5px; }
+.upload-text { margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #333; }
+.upload-subtext { margin: 0; font-size: 12px; color: #777; }
+
+/* Preview Gallery */
+.preview-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.preview-box { width: 60px; height: 60px; border-radius: 6px; border: 1px solid #ddd; position: relative; }
+.preview-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; }
+.remove-img-btn {
+  position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #ff4757; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; cursor: pointer; border: 2px solid #fff;
+}
+
+/* --- Submit Button --- */
+.submit-request-btn {
+  width: 100%; padding: 16px; background: #0a1f44; color: #fff; border: none;
+  border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
+  display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s;
+}
+.submit-request-btn:hover { background: #123471; transform: translateY(-1px); }
+
+/* --- Important Notice Box (Left Border + Alert Icon) --- */
+.important-notice {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff8f0; /* হালকা কমলা ব্যাকগ্রাউন্ড */
+  border-left: 5px solid #ff9800; /* বাম পাশে লম্বা কমলা দাগ */
+  border-radius: 4px 8px 8px 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 2px 5px rgba(255, 152, 0, 0.1);
+}
+
+.notice-icon {
+  color: #ff9800; /* কমলা অ্যালার্ট আইকন */
+  margin-top: 2px;
+}
+
+.notice-content {
+  font-size: 13px;
+  color: #d35400; /* গাঢ় কমলা টেক্সট */
+  line-height: 1.6;
+  margin: 0;
+  text-align: justify;
+}
+
+.notice-content strong {
+  color: #b83b00; /* বোল্ড টেক্সট আরও একটু গাঢ় */
+  font-weight: 700;
+}
+
+/* Secure Note */
+.secure-note { margin-top: 15px; text-align: center; font-size: 12px; color: #666; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+@media (max-width: 500px) {
+  .how-it-works-box { padding: 12px 8px; }
+  .step span { font-size: 9px; }
+}
+
+</style>

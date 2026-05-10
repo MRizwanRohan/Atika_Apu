@@ -218,14 +218,14 @@ const handleCartClick = (e) => {
             </h3>
 
             <!-- Pre-Order Info -->
-            <div v-if="isPreOrderMode" class="mb-2 space-y-0.5">
+            <!-- <div v-if="isPreOrderMode" class="mb-2 space-y-0.5">
                 <p class="text-[10px] font-semibold text-gray-500">
                     20-30 Days Delivery
                 </p>
                 <p class="text-[10px] font-bold text-[#9333ea] uppercase">
                     ৳{{ formatPrice(pricing.main * 0.5) }} ADV
                 </p>
-            </div>
+            </div> -->
 
             <!-- Price Section -->
             <div class="flex items-baseline gap-2">

@@ -213,10 +213,12 @@ watch(() => props.product, (newVal) => {
         trackViewContent(newVal, pricing.value.main);
     }
 }, { immediate: true });
-const whatsappLink = computed(() => {
-    const number = props.settings?.generalSettings?.whatsapp_number || "8801887573015";
-    const message = encodeURIComponent(`Hello, I'm interested in buying this product: "${props.product.name}".\n\nLink: ${window.location.href}`);
-    return `https://wa.me/${number}?text=${message}`;
+const messengerLink = computed(() => {
+    const pageId = props.settings?.generalSettings?.facebook_page_id || "AuxtechbdDev";
+    const productUrl = `${window.location.origin}/products/${props.product.slug}`;
+    // Messenger m.me links use the 'ref' parameter for passing context (max 30 chars, alphanumeric)
+    const ref = `product_${props.product.id} ${props.product.name} URL: ${productUrl}`;
+    return `https://m.me/${pageId}?ref=${ref}`;
 });
 
 </script>
@@ -228,10 +230,12 @@ const whatsappLink = computed(() => {
             <div v-if="product.brand" class="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">
                 {{ product.brand.name }}
             </div>
-            <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 leading-tight">
+            <h1 class="text-xl md:text-3xl font-semibold text-gray-900 leading-tight">
                 {{ product.name }}
             </h1>
         </div>
+
+        <!-- <pre>{{ settings }}</pre> -->
 
         <!-- Price & Info Bar -->
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
@@ -255,11 +259,16 @@ const whatsappLink = computed(() => {
                 <span v-else class="text-emerald-600 font-semibold">In Stock</span>
             </div>
 
-            <div v-if="product.product_code" class="h-4 w-px bg-gray-200 hidden sm:block"></div>
-
-            <div v-if="product.product_code" class="flex items-center gap-1">
+            <!-- <div v-if="product.product_code" class="flex items-center gap-1">
                 <span class="font-normal">Code:</span>
                 <span class="text-gray-900 font-semibold">{{ product.product_code }}</span>
+            </div> -->
+
+            <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+
+            <div class="flex items-center gap-1">
+                <span class="font-normal">Sold:</span>
+                <span class="text-gray-900 font-semibold">{{ (Number(product.fake_sold_count || 0) + Number(product.sold_stock || 0)) }}</span>
             </div>
         </div>        <!-- Attributes Grid (2 Columns) -->
         <div v-if="availableAttributes.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -336,7 +345,7 @@ const whatsappLink = computed(() => {
                         :disabled="isAddingToCart || !hasStock"
                         class="h-12 bg-primary hover:bg-black text-white rounded-full font-semibold text-base transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
                     >
-                        Shop Now
+                        {{ isPreOrderMode ? 'Pre Order' : 'Shop Now' }}
                     </button>
 
                     <button
@@ -354,14 +363,14 @@ const whatsappLink = computed(() => {
             <!-- Social/Support Actions -->
             <div class="flex flex-col gap-4">
                 <a
-                    :href="whatsappLink"
+                    :href="messengerLink"
                     target="_blank"
-                    class="w-full h-14 bg-[#e8fbf3] hover:bg-[#d4f7e8] text-[#1bd741] rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97]"
+                    class="w-full h-14 bg-[#E7F3FF] hover:bg-[#D1E9FF] text-[#0084FF] rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97]"
                 >
                     <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                        <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.908 1.464 5.503 3.746 7.234.195.148.308.38.306.63l-.004 2.18c-.002.508.514.887.973.666l2.454-1.18a.8.8 0 0 1 .533-.049c.64.167 1.306.257 1.992.257 5.523 0 10-4.145 10-9.258S17.523 2 12 2zm.797 12.35l-2.586-2.756-5.047 2.756 5.553-5.894 2.586 2.756L18.441 8.45l-5.644 5.9z"/>
                     </svg>
-                    <span>Order via Whatsapp</span>
+                    <span>Order via Messenger</span>
                 </a>
 
                 <!-- Delivery Info -->
@@ -387,7 +396,7 @@ const whatsappLink = computed(() => {
                     :disabled="isAddingToCart || !hasStock"
                     class="flex-1 h-12 bg-primary hover:bg-black text-white rounded-full font-semibold text-base transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
                 >
-                    Shop Now
+                    {{ isPreOrderMode ? 'Pre Order' : 'Shop Now' }}
                 </button>
                 <button
                     @click="addToCart"

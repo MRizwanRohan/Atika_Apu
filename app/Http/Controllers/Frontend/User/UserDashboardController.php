@@ -51,19 +51,172 @@ class UserDashboardController extends Controller
             ->where('status', 'delivered')
             ->count();
 
+        $incompleteOrdersCount = Order::where('user_id', $user->id)
+            ->where('status', 'incomplete')
+            ->count();
+
         $canceledOrders = Order::where('user_id', $user->id)
             ->where('status', 'cancelled')
             ->count();
 
+        $preOrderLeads = \App\Models\PreOrderLead::where(function($query) use ($user) {
+                if ($user->email) $query->where('email', $user->email);
+                if ($user->phone_number) $query->orWhere('phone', $user->phone_number);
+            })->latest()->get();
+
+        $preOrderOrders = Order::where('user_id', $user->id)
+            ->where('status', '!=', 'incomplete')
+            ->whereHas('items', function($query) {
+                $query->where('is_pre_order', true);
+            })
+            ->with(['items' => function($q) {
+                $q->where('is_pre_order', true)->with('product:id,name,feature_image,slug');
+            }])
+            ->latest()
+            ->get();
+
+        $reviews = \App\Models\Review::where('user_id', $user->id)
+            ->with('product:id,name,feature_image,slug')
+            ->latest()
+            ->get();
+
+        // Orders that can be reviewed (Delivered)
+        $reviewableOrders = Order::where('user_id', $user->id)
+            ->where('status', 'delivered')
+            ->with('items.product:id,name,feature_image,slug')
+            ->latest()
+            ->get();
+
         return Inertia::render('Frontend/User/Dashboard', [
             'user' => $user,
             'orders' => $orders,
+            'preOrderLeads' => $preOrderLeads,
+            'preOrderOrders' => $preOrderOrders,
+            'reviews' => $reviews,
+            'reviewableOrders' => $reviewableOrders,
             'stats' => [
                 'totalOrders' => $totalOrders,
                 'pendingOrders' => $pendingOrders,
                 'completedOrders' => $completedOrders,
                 'canceledOrders' => $canceledOrders,
+                'incompleteOrders' => $incompleteOrdersCount,
+                'preOrderCount' => $preOrderLeads->count() + $preOrderOrders->count(),
+                'reviewsCount' => $reviews->count(),
             ],
+            'general_settings' => \App\Models\GeneralSetting::first(),
+        ]);
+    }
+
+    /**
+     * Show all user orders.
+     */
+    public function orders(Request $request): Response
+    {
+        $user = Auth::user();
+        $status = $request->input('status');
+
+        $query = Order::where('user_id', $user->id)
+            ->where('status', '!=', 'incomplete');
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $orders = $query->with(['items.product:id,name,feature_image,slug'])
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('Frontend/User/Orders', [
+            'orders' => $orders,
+            'status' => $status,
+        ]);
+    }
+
+    /**
+     * Show incomplete orders.
+     */
+    public function incompleteOrders(Request $request): Response
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->where('status', 'incomplete')
+            ->with(['items.product:id,name,feature_image,slug'])
+            ->latest()
+            ->paginate(15);
+
+        return Inertia::render('Frontend/User/IncompleteOrders', [
+            'orders' => $orders,
+        ]);
+    }
+
+    /**
+     * Show the profile edit form.
+     */
+    public function editProfile(Request $request): Response
+    {
+        return Inertia::render('Frontend/User/Profile', [
+            'user' => Auth::user(),
+        ]);
+    }
+
+    /**
+     * Show the password edit form.
+     */
+    public function editPassword(Request $request): Response
+    {
+        return Inertia::render('Frontend/User/Password', [
+            'user' => Auth::user(),
+        ]);
+    }
+
+    /**
+     * Show user reviews.
+     */
+    public function reviews(Request $request): Response
+    {
+        $user = Auth::user();
+        $reviews = \App\Models\Review::where('user_id', $user->id)
+            ->with('product:id,name,feature_image,slug')
+            ->latest()
+            ->paginate(15);
+
+        $reviewableOrders = Order::where('user_id', $user->id)
+            ->where('status', 'delivered')
+            ->with('items.product:id,name,feature_image,slug')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Frontend/User/Reviews', [
+            'reviews' => $reviews,
+            'reviewableOrders' => $reviewableOrders,
+        ]);
+    }
+
+    /**
+     * Show user pre-orders.
+     */
+    public function preOrders(Request $request): Response
+    {
+        $user = Auth::user();
+        $preOrderLeads = \App\Models\PreOrderLead::where(function($query) use ($user) {
+                if ($user->email) $query->where('email', $user->email);
+                if ($user->phone_number) $query->orWhere('phone', $user->phone_number);
+            })->latest()->paginate(15);
+
+        $preOrderOrders = Order::where('user_id', $user->id)
+            ->where('status', '!=', 'incomplete')
+            ->whereHas('items', function($query) {
+                $query->where('is_pre_order', true);
+            })
+            ->with(['items' => function($q) {
+                $q->where('is_pre_order', true)->with('product:id,name,feature_image');
+            }])
+            ->latest()
+            ->get();
+
+        return Inertia::render('Frontend/User/PreOrders', [
+            'preOrderLeads' => $preOrderLeads,
+            'preOrderOrders' => $preOrderOrders,
         ]);
     }
 

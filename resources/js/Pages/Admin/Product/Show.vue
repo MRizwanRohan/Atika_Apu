@@ -34,8 +34,8 @@
               <h1 class="text-3xl font-bold mb-2">{{ product.name }}</h1>
               <p class="text-gray-600 mb-4">{{ product.description }}</p>
               <div class="flex items-baseline mb-4">
-                <span class="text-2xl font-semibold text-gray-900">${{ currentPrice }}</span>
-                <span v-if="isDiscounted" class="ml-2 text-sm font-medium text-gray-500 line-through">${{ product.price }}</span>
+                <span class="text-2xl font-semibold text-gray-900">৳{{ currentPrice }}</span>
+                <span v-if="isDiscounted" class="ml-2 text-sm font-medium text-gray-500 line-through">৳{{ product.price }}</span>
               </div>
               <p class="text-sm text-gray-600 mb-4">
                 Stock: <span class="font-medium">{{ currentStock }}</span>

@@ -143,6 +143,7 @@ const initFilters = () => {
         sort_by: url.searchParams.get("sort_by") || "created_at",
         sort_direction: url.searchParams.get("sort_direction") || "desc",
         source: url.searchParams.get("source") || "",
+        is_pre_order: url.searchParams.get("is_pre_order") || "",
     };
 };
 
@@ -223,7 +224,9 @@ const sendBulkToPathao = () => {
     const payload = {
         orders: selectedOrders.value.map((orderId) => ({
             orderId,
-            specialInstruction: savedOrderData.value[orderId]?.specialInstruction || "Need to Delivery before 5 PM",
+            specialInstruction:
+                savedOrderData.value[orderId]?.specialInstruction ||
+                "Need to Delivery before 5 PM",
         })),
     };
 
@@ -234,7 +237,10 @@ const sendBulkToPathao = () => {
             selectedOrders.value = [];
             selectAll.value = false;
             savedOrderData.value = {};
-            toast.success(page.props.flash?.message || "Bulk shipments created successfully");
+            toast.success(
+                page.props.flash?.message ||
+                    "Bulk shipments created successfully",
+            );
         },
         onError: (errors) => {
             const firstError = Object.values(errors)[0];
@@ -388,6 +394,7 @@ const resetFilters = () => {
         sort_by: "created_at",
         sort_direction: "desc",
         source: "",
+        is_pre_order: "",
     };
     currentPage.value = 1;
     applyFilters();
@@ -396,58 +403,86 @@ const resetFilters = () => {
 // Helper functions for Status Chips
 const getStatusChipClass = (status) => {
     const isActive = filters.value.status === status;
-    
+
     if (isActive) {
         const activeClasses = {
-            pending: 'bg-blue-600 text-white border-blue-600 scale-105 shadow-blue-100',
-            confirmed: 'bg-violet-600 text-white border-violet-600 scale-105 shadow-violet-100',
-            processing: 'bg-emerald-600 text-white border-emerald-600 scale-105 shadow-emerald-100',
-            shipped: 'bg-amber-600 text-white border-amber-600 scale-105 shadow-amber-100',
-            delivered: 'bg-indigo-600 text-white border-indigo-600 scale-105 shadow-indigo-100',
-            cancelled: 'bg-rose-600 text-white border-rose-600 scale-105 shadow-rose-100',
-            returned: 'bg-primary text-white border-primary scale-105 shadow-primary/20',
-            on_hold: 'bg-cyan-600 text-white border-cyan-600 scale-105 shadow-cyan-100',
-            partially_delivered: 'bg-slate-700 text-white border-slate-700 scale-105 shadow-slate-200'
+            pending:
+                "bg-blue-600 text-white border-blue-600 scale-105 shadow-blue-100",
+            confirmed:
+                "bg-violet-600 text-white border-violet-600 scale-105 shadow-violet-100",
+            processing:
+                "bg-emerald-600 text-white border-emerald-600 scale-105 shadow-emerald-100",
+            shipped:
+                "bg-amber-600 text-white border-amber-600 scale-105 shadow-amber-100",
+            delivered:
+                "bg-indigo-600 text-white border-indigo-600 scale-105 shadow-indigo-100",
+            cancelled:
+                "bg-rose-600 text-white border-rose-600 scale-105 shadow-rose-100",
+            returned:
+                "bg-primary text-white border-primary scale-105 shadow-primary/20",
+            on_hold:
+                "bg-cyan-600 text-white border-cyan-600 scale-105 shadow-cyan-100",
+            partially_delivered:
+                "bg-slate-700 text-white border-slate-700 scale-105 shadow-slate-200",
         };
-        return activeClasses[status] || 'bg-gray-900 text-white border-gray-900 scale-105';
+        return (
+            activeClasses[status] ||
+            "bg-gray-900 text-white border-gray-900 scale-105"
+        );
     }
 
     // Default colorful (soft versions)
     const softClasses = {
-        pending: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
-        confirmed: 'bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100',
-        processing: 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100',
-        shipped: 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100',
-        delivered: 'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100',
-        cancelled: 'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100',
-        returned: 'bg-primary/5 text-primary border-primary/10 hover:bg-primary/10',
-        on_hold: 'bg-cyan-50 text-cyan-700 border-cyan-100 hover:bg-cyan-100',
-        partially_delivered: 'bg-slate-50 text-slate-700 border-slate-100 hover:bg-slate-100'
+        pending: "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
+        confirmed:
+            "bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100",
+        processing:
+            "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
+        shipped:
+            "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
+        delivered:
+            "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100",
+        cancelled: "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
+        returned:
+            "bg-primary/5 text-primary border-primary/10 hover:bg-primary/10",
+        on_hold: "bg-cyan-50 text-cyan-700 border-cyan-100 hover:bg-cyan-100",
+        partially_delivered:
+            "bg-slate-50 text-slate-700 border-slate-100 hover:bg-slate-100",
     };
-    return softClasses[status] || 'bg-white text-gray-500 border-gray-100';
+    return softClasses[status] || "bg-white text-gray-500 border-gray-100";
 };
 
 const getStatusDotClass = (status) => {
     const classes = {
-        pending: 'bg-white',
-        confirmed: 'bg-white',
-        processing: 'bg-white',
-        shipped: 'bg-white',
-        delivered: 'bg-white',
-        cancelled: 'bg-white',
-        returned: 'bg-white',
-        on_hold: 'bg-white',
-        partially_delivered: 'bg-white'
+        pending: "bg-white",
+        confirmed: "bg-white",
+        processing: "bg-white",
+        shipped: "bg-white",
+        delivered: "bg-white",
+        cancelled: "bg-white",
+        returned: "bg-white",
+        on_hold: "bg-white",
+        partially_delivered: "bg-white",
     };
-    return filters.value.status === status ? (classes[status] || 'bg-white') : 
-           (status === 'pending' ? 'bg-blue-500' : 
-            status === 'confirmed' ? 'bg-violet-500' :
-            status === 'processing' ? 'bg-emerald-500' :
-            status === 'shipped' ? 'bg-amber-500' :
-            status === 'delivered' ? 'bg-indigo-500' :
-            status === 'cancelled' ? 'bg-rose-500' :
-            status === 'returned' ? 'bg-primary' :
-            status === 'on_hold' ? 'bg-cyan-500' : 'bg-gray-400');
+    return filters.value.status === status
+        ? classes[status] || "bg-white"
+        : status === "pending"
+          ? "bg-blue-500"
+          : status === "confirmed"
+            ? "bg-violet-500"
+            : status === "processing"
+              ? "bg-emerald-500"
+              : status === "shipped"
+                ? "bg-amber-500"
+                : status === "delivered"
+                  ? "bg-indigo-500"
+                  : status === "cancelled"
+                    ? "bg-rose-500"
+                    : status === "returned"
+                      ? "bg-primary"
+                      : status === "on_hold"
+                        ? "bg-cyan-500"
+                        : "bg-gray-400";
 };
 
 const activeFilterCount = computed(() => {
@@ -459,11 +494,14 @@ const activeFilterCount = computed(() => {
     if (filters.value.min_total) count++;
     if (filters.value.max_total) count++;
     if (filters.value.source) count++;
+    if (filters.value.is_pre_order) count++;
     return count;
 });
 
 const filterToday = () => {
-    const dhakaDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
+    const dhakaDate = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Dhaka",
+    });
     filters.value.date_from = dhakaDate;
     filters.value.date_to = dhakaDate;
     applyFilters();
@@ -608,7 +646,7 @@ const updateOrderStatus = async (orderId, newStatus) => {
         const response = await axios.put(
             route("admin.orders.status.update", { orderId }),
             {
-            status: newStatus,
+                status: newStatus,
             },
         );
         toast.success(
@@ -643,9 +681,13 @@ const bulkCheckFraud = async () => {
         return;
     }
 
-    const phones = [...new Set(visibleOrders.value
-        .filter(order => selectedOrders.value.includes(order.id))
-        .map(order => order.customer.phone))];
+    const phones = [
+        ...new Set(
+            visibleOrders.value
+                .filter((order) => selectedOrders.value.includes(order.id))
+                .map((order) => order.customer.phone),
+        ),
+    ];
 
     if (phones.length === 0) {
         toast.error("No valid phone numbers found");
@@ -654,21 +696,28 @@ const bulkCheckFraud = async () => {
 
     try {
         isBulkCheckingFraud.value = true;
-        const response = await axios.post(route("admin.fraud-check.bulk"), { phones });
-        toast.success(response.data.message || `${phones.length} phone numbers checked successfully`);
+        const response = await axios.post(route("admin.fraud-check.bulk"), {
+            phones,
+        });
+        toast.success(
+            response.data.message ||
+                `${phones.length} phone numbers checked successfully`,
+        );
         router.reload();
     } catch (error) {
         console.error("Bulk fraud check error:", error);
-        toast.error(error.response?.data?.message || "Failed to check bulk fraud");
+        toast.error(
+            error.response?.data?.message || "Failed to check bulk fraud",
+        );
     } finally {
         isBulkCheckingFraud.value = false;
     }
 };
 
 const getFraudProgressColor = (rate) => {
-    if (rate > 70) return 'bg-green-500';
-    if (rate > 40) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (rate > 70) return "bg-green-500";
+    if (rate > 40) return "bg-amber-500";
+    return "bg-red-500";
 };
 
 const checkFraud = async (phone) => {
@@ -752,63 +801,71 @@ const handleNotesSaved = (newNotes) => {
 // Close menu when clicking outside (optional but good for UX)
 // For simplicity in this step, we'll just rely on the toggle or clicking another one.
 
-
-
 const sendToPathao = (order) => {
-    router.post(route('admin.couriers.pathao.shipment'), {
-        orderId: order.id,
-        specialInstruction: "Need to Delivery before 5 PM"
-    }, {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: (page) => {
-            toast.success(page.props.flash?.message || "Order sent to Pathao successfully");
+    router.post(
+        route("admin.couriers.pathao.shipment"),
+        {
+            orderId: order.id,
+            specialInstruction: "Need to Delivery before 5 PM",
         },
-        onError: (errors) => {
-            toast.error(errors.message || "Failed to send order to Pathao");
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: (page) => {
+                toast.success(
+                    page.props.flash?.message ||
+                        "Order sent to Pathao successfully",
+                );
+            },
+            onError: (errors) => {
+                toast.error(errors.message || "Failed to send order to Pathao");
+            },
         },
-    });
+    );
 };
 
 const sendToSteadfastSingle = async (order) => {
     try {
-        const response = await axios.post('/api/courier/orders', {
-            oders_id: order.id.toString()
+        const response = await axios.post("/api/courier/orders", {
+            oders_id: order.id.toString(),
         });
-        toast.success(response.data.message || 'Order sent to Steadfast successfully');
+        toast.success(
+            response.data.message || "Order sent to Steadfast successfully",
+        );
         router.reload();
     } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to send order to Steadfast');
+        toast.error(
+            error.response?.data?.message ||
+                "Failed to send order to Steadfast",
+        );
     }
 };
 
 const getSourceColorClass = (source) => {
     const classes = {
-        website: 'bg-blue-600 text-white shadow-blue-100',
-        facebook: 'bg-[#1877F2] text-white shadow-blue-100',
-        whatsapp: 'bg-[#25D366] text-white shadow-green-100',
-        phone_call: 'bg-orange-500 text-white shadow-orange-100',
-        telegram: 'bg-[#0088cc] text-white shadow-blue-100',
-        tiktok: 'bg-[#EE1D52] text-white shadow-pink-100',
-        manual: 'bg-gray-600 text-white shadow-gray-100'
+        website: "bg-blue-600 text-white shadow-blue-100",
+        facebook: "bg-[#1877F2] text-white shadow-blue-100",
+        whatsapp: "bg-[#25D366] text-white shadow-green-100",
+        phone_call: "bg-orange-500 text-white shadow-orange-100",
+        telegram: "bg-[#0088cc] text-white shadow-blue-100",
+        tiktok: "bg-[#EE1D52] text-white shadow-pink-100",
+        manual: "bg-gray-600 text-white shadow-gray-100",
     };
-    return classes[source] || 'bg-gray-600 text-white';
+    return classes[source] || "bg-gray-600 text-white";
 };
 
 const getSourceSoftColorClass = (source) => {
     const classes = {
-        website: 'bg-blue-50 text-blue-700 border-blue-100',
-        facebook: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-        whatsapp: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-        phone_call: 'bg-orange-50 text-orange-700 border-orange-100',
-        telegram: 'bg-cyan-50 text-cyan-700 border-cyan-100',
-        tiktok: 'bg-pink-50 text-pink-700 border-pink-100',
-        manual: 'bg-gray-50 text-gray-700 border-gray-100'
+        website: "bg-blue-50 text-blue-700 border-blue-100",
+        facebook: "bg-indigo-50 text-indigo-700 border-indigo-100",
+        whatsapp: "bg-emerald-50 text-emerald-700 border-emerald-100",
+        phone_call: "bg-orange-50 text-orange-700 border-orange-100",
+        telegram: "bg-cyan-50 text-cyan-700 border-cyan-100",
+        tiktok: "bg-pink-50 text-pink-700 border-pink-100",
+        manual: "bg-gray-50 text-gray-700 border-gray-100",
     };
-    return classes[source] || 'bg-gray-50 text-gray-700 border-gray-100';
+    return classes[source] || "bg-gray-50 text-gray-700 border-gray-100";
 };
-
-
 </script>
 
 <template>
@@ -865,20 +922,40 @@ const getSourceSoftColorClass = (source) => {
             </div>
 
             <!-- Status Horizontal Scroll (Minimalist Chips) -->
-            <div class="mb-8 mt-4 ">
-                <div class="flex items-center flex-wrap  gap-2 pb-2">
+            <div class="mb-8 mt-4">
+                <div class="flex items-center flex-wrap gap-2 pb-2">
                     <!-- Total Orders Chip -->
                     <button
                         @click="selectStatus('')"
                         class="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 font-black text-[11px] uppercase tracking-tighter border shadow-sm"
-                        :class="filters.status === '' 
-                            ? 'bg-gray-900 text-white border-gray-900 shadow-gray-200 scale-105' 
-                            : 'bg-white text-gray-500 border-gray-100 hover:border-gray-300 hover:bg-gray-50'"
+                        :class="
+                            filters.status === ''
+                                ? 'bg-gray-900 text-white border-gray-900 shadow-gray-200 scale-105'
+                                : 'bg-white text-gray-500 border-gray-100 hover:border-gray-300 hover:bg-gray-50'
+                        "
                     >
-                        <div class="w-1.5 h-1.5 rounded-full" :class="filters.status === '' ? 'bg-blue-400' : 'bg-gray-300'"></div>
+                        <div
+                            class="w-1.5 h-1.5 rounded-full"
+                            :class="
+                                filters.status === ''
+                                    ? 'bg-blue-400'
+                                    : 'bg-gray-300'
+                            "
+                        ></div>
                         Total
-                        <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" :class="filters.status === '' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-400'">
-                            {{ props.statusCounts.statuses.find(s => s.status === 'total')?.count || 0 }}
+                        <span
+                            class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]"
+                            :class="
+                                filters.status === ''
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-gray-100 text-gray-400'
+                            "
+                        >
+                            {{
+                                props.statusCounts.statuses.find(
+                                    (s) => s.status === "total",
+                                )?.count || 0
+                            }}
                         </span>
                     </button>
 
@@ -887,44 +964,83 @@ const getSourceSoftColorClass = (source) => {
                         @click="filterToday"
                         class="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 font-black text-[11px] uppercase tracking-tighter border shadow-sm bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100"
                     >
-                        <div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                        <div
+                            class="w-1.5 h-1.5 rounded-full bg-orange-500"
+                        ></div>
                         Today's Orders
-                        <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-orange-200/50 text-orange-900">
-                            {{ props.statusCounts.statuses.find(s => s.status === 'today')?.count || 0 }}
+                        <span
+                            class="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-orange-200/50 text-orange-900"
+                        >
+                            {{
+                                props.statusCounts.statuses.find(
+                                    (s) => s.status === "today",
+                                )?.count || 0
+                            }}
                         </span>
                     </button>
 
                     <!-- Dynamic Status Chips -->
                     <button
-                        v-for="status in availableStatuses.filter(s => s !== 'incomplete')"
+                        v-for="status in availableStatuses.filter(
+                            (s) => s !== 'incomplete',
+                        )"
                         :key="status"
                         @click="selectStatus(status)"
                         class="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-300 font-black text-[11px] uppercase tracking-tighter border shadow-sm"
                         :class="getStatusChipClass(status)"
                     >
-                        <div class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(status)"></div>
-                        {{ status.replace('_', ' ') }}
-                        <span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" :class="filters.status === status ? 'bg-white/20 text-white' : 'bg-black/5 text-black/40'">
-                            {{ props.statusCounts.statuses.find(s => s.status === status)?.count || 0 }}
+                        <div
+                            class="w-1.5 h-1.5 rounded-full"
+                            :class="getStatusDotClass(status)"
+                        ></div>
+                        {{ status.replace("_", " ") }}
+                        <span
+                            class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]"
+                            :class="
+                                filters.status === status
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-black/5 text-black/40'
+                            "
+                        >
+                            {{
+                                props.statusCounts.statuses.find(
+                                    (s) => s.status === status,
+                                )?.count || 0
+                            }}
                         </span>
                     </button>
                 </div>
 
                 <!-- Source Counts section -->
-                <div class="mt-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300">
+                <div
+                    class="mt-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300"
+                >
                     <div class="flex items-center justify-between mb-4">
-                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Orders by Source (Current Date Range)</label>
-                        <div v-if="filters.date_from || filters.date_to" class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold">Filtered by Date</div>
+                        <label
+                            class="text-[10px] font-black text-gray-400 uppercase tracking-widest block"
+                            >Orders by Source (Current Date Range)</label
+                        >
+                        <div
+                            v-if="filters.date_from || filters.date_to"
+                            class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold"
+                        >
+                            Filtered by Date
+                        </div>
                     </div>
                     <div class="flex items-center flex-wrap gap-2">
-                        <div 
-                            v-for="source in props.statusCounts.sources" 
+                        <div
+                            v-for="source in props.statusCounts.sources"
                             :key="source.source"
                             class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all hover:shadow-sm"
                             :class="getSourceSoftColorClass(source.source)"
                         >
-                            <span class="text-[10px] font-black uppercase tracking-tighter">{{ source.source.replace('_', ' ') }}</span>
-                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-white/50 text-gray-900">
+                            <span
+                                class="text-[10px] font-black uppercase tracking-tighter"
+                                >{{ source.source.replace("_", " ") }}</span
+                            >
+                            <span
+                                class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-white/50 text-gray-900"
+                            >
                                 {{ source.count }}
                             </span>
                         </div>
@@ -933,11 +1049,26 @@ const getSourceSoftColorClass = (source) => {
             </div>
 
             <!-- Filter Toggle & Search Bar -->
-            <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <div
+                class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"
+            >
                 <div class="relative w-full md:w-1/2">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <span
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
                         </svg>
                     </span>
                     <input
@@ -947,31 +1078,58 @@ const getSourceSoftColorClass = (source) => {
                         class="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
                     />
                 </div>
-                
+
                 <div class="flex items-center gap-2 w-full md:w-auto">
                     <button
                         @click="toggleFilters"
                         class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
-                        :class="showFilters 
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                        :class="
+                            showFilters
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                        "
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                            />
                         </svg>
                         Advanced Filters
-                        <span v-if="activeFilterCount > 0" class="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600 text-[10px] font-black">
+                        <span
+                            v-if="activeFilterCount > 0"
+                            class="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600 text-[10px] font-black"
+                        >
                             {{ activeFilterCount }}
                         </span>
                     </button>
-                    
+
                     <button
                         @click="resetFilters"
                         class="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-gray-100"
                         title="Reset all filters"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
                         </svg>
                     </button>
                 </div>
@@ -982,10 +1140,15 @@ const getSourceSoftColorClass = (source) => {
                 v-show="showFilters"
                 class="mb-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300"
             >
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"
+                >
                     <!-- Date Range -->
                     <div class="space-y-2">
-                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Order Date</label>
+                        <label
+                            class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1"
+                            >Order Date</label
+                        >
                         <div class="flex items-center gap-2">
                             <input
                                 v-model="filters.date_from"
@@ -1003,14 +1166,21 @@ const getSourceSoftColorClass = (source) => {
 
                     <!-- Payment Status -->
                     <div class="space-y-2">
-                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Payment Status</label>
+                        <label
+                            class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1"
+                            >Payment Status</label
+                        >
                         <select
                             v-model="filters.payment_status"
                             class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                         >
                             <option value="">All Payments</option>
-                            <option v-for="status in paymentStatusOptions" :key="status" :value="status">
-                                {{ status.toUpperCase().replace('_', ' ') }}
+                            <option
+                                v-for="status in paymentStatusOptions"
+                                :key="status"
+                                :value="status"
+                            >
+                                {{ status.toUpperCase().replace("_", " ") }}
                             </option>
                         </select>
                     </div>
@@ -1028,7 +1198,10 @@ const getSourceSoftColorClass = (source) => {
 
                     <!-- Amount Range -->
                     <div class="space-y-2">
-                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Total Amount</label>
+                        <label
+                            class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1"
+                            >Total Amount</label
+                        >
                         <div class="flex items-center gap-2">
                             <input
                                 v-model="filters.min_total"
@@ -1047,7 +1220,10 @@ const getSourceSoftColorClass = (source) => {
 
                     <!-- Order Source -->
                     <div class="space-y-2">
-                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1">Order Source</label>
+                        <label
+                            class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1"
+                            >Order Source</label
+                        >
                         <select
                             v-model="filters.source"
                             class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
@@ -1062,10 +1238,28 @@ const getSourceSoftColorClass = (source) => {
                             <option value="manual">Manual</option>
                         </select>
                     </div>
+
+                    <!-- Pre-Order Filter -->
+                    <div class="space-y-2">
+                        <label
+                            class="text-[11px] font-black text-gray-400 uppercase tracking-widest pl-1"
+                            >Pre-Order Status</label
+                        >
+                        <select
+                            v-model="filters.is_pre_order"
+                            class="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                        >
+                            <option value="">All Orders</option>
+                            <option value="yes">Pre-Order Only</option>
+                            <option value="no">Regular Orders Only</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="mb-6 flex justify-end flex-wrap gap-1 items-center space-x-2">
+            <div
+                class="mb-6 flex justify-end flex-wrap gap-1 items-center space-x-2"
+            >
                 <button
                     v-if="selectedOrders.length > 0"
                     @click="bulkFireMetaEvent"
@@ -1101,7 +1295,10 @@ const getSourceSoftColorClass = (source) => {
                     }}
                 </button>
                 <button
-                    v-if="selectedOrders.length > 0 && courierSettings?.steadfast_is_enabled === 'yes'"
+                    v-if="
+                        selectedOrders.length > 0 &&
+                        courierSettings?.steadfast_is_enabled === 'yes'
+                    "
                     @click="sendBulkToSteadfast"
                     class="px-2 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 hover:shadow-lg transition-all duration-200"
                     :disabled="isDownloading"
@@ -1109,7 +1306,10 @@ const getSourceSoftColorClass = (source) => {
                     🚚 Send {{ selectedOrders.length }} to Steadfast
                 </button>
                 <button
-                    v-if="selectedOrders.length > 0 && courierSettings?.is_enabled === 'yes'"
+                    v-if="
+                        selectedOrders.length > 0 &&
+                        courierSettings?.is_enabled === 'yes'
+                    "
                     @click="sendBulkToPathao"
                     class="px-2 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 hover:shadow-lg transition-all duration-200"
                     :disabled="isDownloading"
@@ -1275,9 +1475,18 @@ const getSourceSoftColorClass = (source) => {
                                 </p>
                                 <span
                                     class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter shadow-sm border border-black/5"
-                                    :class="getSourceColorClass(order.source || 'website')"
+                                    :class="
+                                        getSourceColorClass(
+                                            order.source || 'website',
+                                        )
+                                    "
                                 >
-                                    {{ (order.source || 'website').replace('_', ' ') }}
+                                    {{
+                                        (order.source || "website").replace(
+                                            "_",
+                                            " ",
+                                        )
+                                    }}
                                 </span>
                                 <!-- Meta event sent badge -->
                                 <span
@@ -1317,7 +1526,10 @@ const getSourceSoftColorClass = (source) => {
                                         }}
                                     </p>
                                     <p
-                                        v-if="order.customer?.email && order.customer?.email !== 'N/A'"
+                                        v-if="
+                                            order.customer?.email &&
+                                            order.customer?.email !== 'N/A'
+                                        "
                                         class="text-gray-600 flex items-center text-xs mt-1"
                                     >
                                         <Mail
@@ -1327,17 +1539,25 @@ const getSourceSoftColorClass = (source) => {
                                     <div
                                         class="text-gray-600 flex items-center flex-wrap gap-1 text-xs mt-1"
                                     >
-                                        <a class="underline text-blue-500 flex gap-1" :href="`tel:${order.customer?.phone}`">
+                                        <a
+                                            class="underline text-blue-500 flex gap-1"
+                                            :href="`tel:${order.customer?.phone}`"
+                                        >
                                             <Phone
-                                            class="w-3 h-3 text-gray-500"
-                                        /><span>{{ order.customer?.phone }}</span>
+                                                class="w-3 h-3 text-gray-500"
+                                            /><span>{{
+                                                order.customer?.phone
+                                            }}</span>
                                         </a>
                                         <span
-                                            v-if="order.duplicate_percentage > 0"
+                                            v-if="
+                                                order.duplicate_percentage > 0
+                                            "
                                             class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200"
                                             title="Duplicate order from this phone number"
                                         >
-                                            Duplicate {{ order.duplicate_percentage }}%
+                                            Duplicate
+                                            {{ order.duplicate_percentage }}%
                                         </span>
                                     </div>
                                     <p
@@ -1348,12 +1568,25 @@ const getSourceSoftColorClass = (source) => {
                                         />{{ order.customer?.address }}
                                     </p>
                                     <p
-                                        v-if="order.customer?.district && order.customer.district !== 'N/A'"
+                                        v-if="
+                                            order.customer?.district &&
+                                            order.customer.district !== 'N/A'
+                                        "
                                         class="text-gray-600 flex items-center text-[10px] mt-1 bg-blue-50 w-fit px-1.5 py-0.5 rounded border border-blue-100"
                                     >
-                                        <MapPin class="w-2.5 h-2.5 mr-1 text-blue-500" />
-                                        <span class="font-bold text-blue-700">{{ order.customer.district }}</span>
-                                        <span v-if="order.customer?.thana && order.customer.thana !== 'N/A'" class="text-blue-600">
+                                        <MapPin
+                                            class="w-2.5 h-2.5 mr-1 text-blue-500"
+                                        />
+                                        <span class="font-bold text-blue-700">{{
+                                            order.customer.district
+                                        }}</span>
+                                        <span
+                                            v-if="
+                                                order.customer?.thana &&
+                                                order.customer.thana !== 'N/A'
+                                            "
+                                            class="text-blue-600"
+                                        >
                                             &nbsp;• {{ order.customer.thana }}
                                         </span>
                                     </p>
@@ -1433,33 +1666,91 @@ const getSourceSoftColorClass = (source) => {
                                 </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
-                                <div v-if="order.customer?.fraud_data?.aggregated" class="group relative space-y-1.5 bg-gray-50/50 p-2 rounded-xl border border-gray-100 hover:bg-white hover:shadow-md transition-all duration-300">
-                                    <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                                        <span :class="order.customer?.fraud_data?.aggregated?.success_rate > 70 ? 'text-green-600' : (order.customer?.fraud_data?.aggregated?.success_rate > 40 ? 'text-amber-600' : 'text-red-600')">
-                                            {{ order.customer?.fraud_data?.aggregated?.success_rate }}% Score
+                                <div
+                                    v-if="
+                                        order.customer?.fraud_data?.aggregated
+                                    "
+                                    class="group relative space-y-1.5 bg-gray-50/50 p-2 rounded-xl border border-gray-100 hover:bg-white hover:shadow-md transition-all duration-300"
+                                >
+                                    <div
+                                        class="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter"
+                                    >
+                                        <span
+                                            :class="
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.success_rate >
+                                                70
+                                                    ? 'text-green-600'
+                                                    : order.customer?.fraud_data
+                                                            ?.aggregated
+                                                            ?.success_rate > 40
+                                                      ? 'text-amber-600'
+                                                      : 'text-red-600'
+                                            "
+                                        >
+                                            {{
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.success_rate
+                                            }}% Score
                                         </span>
-                                        <button 
-                                            @click="viewFraudDetails(order.customer.fraud_data)"
+                                        <button
+                                            @click="
+                                                viewFraudDetails(
+                                                    order.customer.fraud_data,
+                                                )
+                                            "
                                             class="p-1 rounded-md bg-white border border-gray-100 text-gray-500 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"
                                             title="View Details"
                                         >
                                             <Eye class="w-3 h-3" />
                                         </button>
                                     </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                        <div 
-                                            class="h-1.5 rounded-full transition-all duration-500" 
-                                            :class="getFraudProgressColor(order.customer?.fraud_data?.aggregated?.success_rate)"
-                                            :style="{ width: `${order.customer?.fraud_data?.aggregated?.success_rate}%` }"
+                                    <div
+                                        class="w-full bg-gray-200 rounded-full h-1.5"
+                                    >
+                                        <div
+                                            class="h-1.5 rounded-full transition-all duration-500"
+                                            :class="
+                                                getFraudProgressColor(
+                                                    order.customer?.fraud_data
+                                                        ?.aggregated
+                                                        ?.success_rate,
+                                                )
+                                            "
+                                            :style="{
+                                                width: `${order.customer?.fraud_data?.aggregated?.success_rate}%`,
+                                            }"
                                         ></div>
                                     </div>
-                                    <div class="flex justify-between text-[8px] text-gray-500 font-bold">
-                                        <span>S:{{ order.customer?.fraud_data?.aggregated?.total_success }}</span>
-                                        <span>C:{{ order.customer?.fraud_data?.aggregated?.total_cancel }}</span>
-                                        <span>T:{{ order.customer?.fraud_data?.aggregated?.total_orders }}</span>
+                                    <div
+                                        class="flex justify-between text-[8px] text-gray-500 font-bold"
+                                    >
+                                        <span
+                                            >S:{{
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.total_success
+                                            }}</span
+                                        >
+                                        <span
+                                            >C:{{
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.total_cancel
+                                            }}</span
+                                        >
+                                        <span
+                                            >T:{{
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.total_orders
+                                            }}</span
+                                        >
                                     </div>
                                 </div>
-                                <div v-else class="text-center text-[10px] text-gray-300 italic">No Data</div>
+                                <div
+                                    v-else
+                                    class="text-center text-[10px] text-gray-300 italic"
+                                >
+                                    No Data
+                                </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
                                 <div class="flex flex-col gap-2">
@@ -1474,24 +1765,45 @@ const getSourceSoftColorClass = (source) => {
                                         <div
                                             v-for="(item, index) in order.items"
                                             :key="item.id"
-                                            v-show="index < (showAllItems ? order.items.length : 2)"
+                                            v-show="
+                                                index <
+                                                (showAllItems
+                                                    ? order.items.length
+                                                    : 2)
+                                            "
                                             class="group relative flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-xl p-2.5 hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md transition-all duration-200"
                                         >
                                             <div class="relative flex-shrink-0">
                                                 <img
-                                                    :src="item.product.image || ''"
+                                                    :src="
+                                                        item.product.image || ''
+                                                    "
                                                     alt="Product Image"
                                                     class="w-14 h-14 object-cover rounded-lg border border-gray-300 shadow-sm"
                                                 />
-                                                <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shadow-md ring-2 ring-white">
+                                                <span
+                                                    class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shadow-md ring-2 ring-white"
+                                                >
                                                     {{ item.quantity }}
                                                 </span>
                                             </div>
 
-                                            <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                                                    <p class="text-[13px] font-bold text-gray-900 leading-tight group-hover:text-blue-700 transition-colors">
-                                                        {{ truncateText(item.product.name, 3) }}
+                                            <div
+                                                class="flex-1 min-w-0 flex flex-col justify-center"
+                                            >
+                                                <div
+                                                    class="flex flex-wrap items-center gap-1.5 mb-1"
+                                                >
+                                                    <p
+                                                        class="text-[13px] font-bold text-gray-900 leading-tight group-hover:text-blue-700 transition-colors"
+                                                    >
+                                                        {{
+                                                            truncateText(
+                                                                item.product
+                                                                    .name,
+                                                                3,
+                                                            )
+                                                        }}
                                                     </p>
                                                     <span
                                                         v-if="item.is_pre_order"
@@ -1501,34 +1813,79 @@ const getSourceSoftColorClass = (source) => {
                                                     </span>
                                                 </div>
 
-                                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                    <span class="text-[11px] font-bold text-blue-700 bg-blue-100/50 px-1.5 py-0.5 rounded">
+                                                <div
+                                                    class="flex flex-wrap items-center gap-x-2 gap-y-1"
+                                                >
+                                                    <span
+                                                        class="text-[11px] font-bold text-blue-700 bg-blue-100/50 px-1.5 py-0.5 rounded"
+                                                    >
                                                         ৳{{ item.price }}
                                                     </span>
-                                                    
-                                                    <div v-if="item.variation" class="flex items-center gap-1 text-[11px] text-gray-600 font-semibold bg-gray-200/50 px-1.5 py-0.5 rounded">
-                                                        <span v-for="(value, key, i) in item.variation.attributes" :key="key">
-                                                            {{ value }}{{ i < Object.keys(item.variation.attributes).length - 1 ? ', ' : '' }}
+
+                                                    <div
+                                                        v-if="item.variation"
+                                                        class="flex items-center gap-1 text-[11px] text-gray-600 font-semibold bg-gray-200/50 px-1.5 py-0.5 rounded"
+                                                    >
+                                                        <span
+                                                            v-for="(
+                                                                value, key, i
+                                                            ) in item.variation
+                                                                .attributes"
+                                                            :key="key"
+                                                        >
+                                                            {{ value
+                                                            }}{{
+                                                                i <
+                                                                Object.keys(
+                                                                    item
+                                                                        .variation
+                                                                        .attributes,
+                                                                ).length -
+                                                                    1
+                                                                    ? ", "
+                                                                    : ""
+                                                            }}
                                                         </span>
                                                     </div>
                                                 </div>
 
                                                 <!-- Status badges for partial delivery -->
                                                 <div
-                                                    v-if="order.status === 'partially_delivered' || order.status === 'returned' || item.returned_quantity > 0"
+                                                    v-if="
+                                                        order.status ===
+                                                            'partially_delivered' ||
+                                                        order.status ===
+                                                            'returned' ||
+                                                        item.returned_quantity >
+                                                            0
+                                                    "
                                                     class="flex gap-1.5 mt-2"
                                                 >
                                                     <span
-                                                        v-if="item.quantity - item.returned_quantity > 0"
+                                                        v-if="
+                                                            item.quantity -
+                                                                item.returned_quantity >
+                                                            0
+                                                        "
                                                         class="px-2 py-0.5 rounded-lg bg-emerald-600 text-white text-[10px] font-black shadow-sm"
                                                     >
-                                                        DELIVERED: {{ item.quantity - item.returned_quantity }}
+                                                        DELIVERED:
+                                                        {{
+                                                            item.quantity -
+                                                            item.returned_quantity
+                                                        }}
                                                     </span>
                                                     <span
-                                                        v-if="item.returned_quantity > 0"
+                                                        v-if="
+                                                            item.returned_quantity >
+                                                            0
+                                                        "
                                                         class="px-2 py-0.5 rounded-lg bg-rose-600 text-white text-[10px] font-black shadow-sm"
                                                     >
-                                                        RETURNED: {{ item.returned_quantity }}
+                                                        RETURNED:
+                                                        {{
+                                                            item.returned_quantity
+                                                        }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1536,62 +1893,130 @@ const getSourceSoftColorClass = (source) => {
                                     </div>
                                 </div>
 
-                                <div v-if="order.items.length > 2" class="mt-2.5 pl-1">
+                                <div
+                                    v-if="order.items.length > 2"
+                                    class="mt-2.5 pl-1"
+                                >
                                     <button
                                         @click="showAllItems = !showAllItems"
                                         class="inline-flex items-center gap-1.5 text-[12px] font-black text-white px-3 py-1.5 bg-gray-800 hover:bg-blue-600 rounded-lg shadow-sm transition-all active:scale-95"
                                     >
-                                        {{ showAllItems ? 'Show Less' : `+${order.items.length - 2} More Items` }}
-                                        <ChevronDown v-if="!showAllItems" class="w-3.5 h-3.5" />
+                                        {{
+                                            showAllItems
+                                                ? "Show Less"
+                                                : `+${order.items.length - 2} More Items`
+                                        }}
+                                        <ChevronDown
+                                            v-if="!showAllItems"
+                                            class="w-3.5 h-3.5"
+                                        />
                                         <ChevronUp v-else class="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             </td>
                             <td class="px-1 py-3 text-sm">
-                                <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-2.5 space-y-1.5">
+                                <div
+                                    class="bg-gray-50/50 border border-gray-100 rounded-xl p-2.5 space-y-1.5"
+                                >
                                     <!-- Total -->
-                                    <div class="flex items-center justify-between gap-3">
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</span>
-                                        <span class="text-sm font-black text-gray-900">৳{{ order.total }}</span>
+                                    <div
+                                        class="flex items-center justify-between gap-3"
+                                    >
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                                            >Total</span
+                                        >
+                                        <span
+                                            class="text-sm font-black text-gray-900"
+                                            >৳{{ order.total }}</span
+                                        >
                                     </div>
 
                                     <!-- Paid -->
-                                    <div v-if="order.status === 'partially_delivered' || order.paid_amount > 0" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Paid</span>
-                                        <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                                            <div class="w-1 h-1 rounded-full bg-emerald-500"></div>
+                                    <div
+                                        v-if="
+                                            order.status ===
+                                                'partially_delivered' ||
+                                            order.paid_amount > 0
+                                        "
+                                        class="flex items-center justify-between border-t border-gray-100 pt-1.5"
+                                    >
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                                            >Paid</span
+                                        >
+                                        <div
+                                            class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md"
+                                        >
+                                            <div
+                                                class="w-1 h-1 rounded-full bg-emerald-500"
+                                            ></div>
                                             ৳{{ order.paid_amount || 0 }}
                                         </div>
                                     </div>
 
                                     <!-- Return Charge -->
-                                    <div v-if="order.return_charge > 0" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Return</span>
-                                        <span class="text-[11px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md">
+                                    <div
+                                        v-if="order.return_charge > 0"
+                                        class="flex items-center justify-between border-t border-gray-100 pt-1.5"
+                                    >
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                                            >Return</span
+                                        >
+                                        <span
+                                            class="text-[11px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md"
+                                        >
                                             ৳{{ order.return_charge }}
                                         </span>
                                     </div>
 
                                     <!-- Transaction ID -->
-                                    <div v-if="order.transaction_id && order.has_pre_order" class="flex flex-col gap-1 border-t border-gray-100 pt-1.5 mt-1.5">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TrxID</span>
-                                            <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md break-all text-right max-w-[120px]">
+                                    <div
+                                        v-if="
+                                            order.transaction_id &&
+                                            order.has_pre_order
+                                        "
+                                        class="flex flex-col gap-1 border-t border-gray-100 pt-1.5 mt-1.5"
+                                    >
+                                        <div
+                                            class="flex items-center justify-between"
+                                        >
+                                            <span
+                                                class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                                                >TrxID</span
+                                            >
+                                            <span
+                                                class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md break-all text-right max-w-[120px]"
+                                            >
                                                 {{ order.transaction_id }}
                                             </span>
                                         </div>
                                         <!-- Already approved -->
-                                        <div v-if="order.paid_amount > 0" class="text-[9px] font-black w-full text-emerald-700 bg-emerald-50 border border-emerald-200 uppercase py-1 rounded-sm flex justify-center items-center gap-1">
-                                            ✓ Approved (৳{{ order.paid_amount }})
+                                        <div
+                                            v-if="order.paid_amount > 0"
+                                            class="text-[9px] font-black w-full text-emerald-700 bg-emerald-50 border border-emerald-200 uppercase py-1 rounded-sm flex justify-center items-center gap-1"
+                                        >
+                                            ✓ Approved (৳{{
+                                                order.paid_amount
+                                            }})
                                         </div>
                                         <!-- Rejected -->
-                                        <div v-else-if="order.payment_verification_status === 'rejected'" class="text-[9px] font-black w-full text-rose-700 bg-rose-50 border border-rose-200 uppercase py-1 rounded-sm flex justify-center items-center gap-1">
+                                        <div
+                                            v-else-if="
+                                                order.payment_verification_status ===
+                                                'rejected'
+                                            "
+                                            class="text-[9px] font-black w-full text-rose-700 bg-rose-50 border border-rose-200 uppercase py-1 rounded-sm flex justify-center items-center gap-1"
+                                        >
                                             ✗ Rejected
                                         </div>
                                         <!-- Pending verify -->
-                                        <button 
+                                        <button
                                             v-else
-                                            @click.stop="openPaymentModal(order)"
+                                            @click.stop="
+                                                openPaymentModal(order)
+                                            "
                                             class="text-[9px] font-black w-full text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors uppercase py-1 rounded-sm shadow-sm flex justify-center items-center gap-1"
                                         >
                                             <CreditCard class="w-2.5 h-2.5" />
@@ -1600,10 +2025,24 @@ const getSourceSoftColorClass = (source) => {
                                     </div>
 
                                     <!-- Due (Optional Visual) -->
-                                    <div v-if="order.total > (order.paid_amount || 0)" class="flex items-center justify-between border-t border-gray-100 pt-1.5">
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Due</span>
-                                        <span class="text-[11px] font-bold text-amber-600">
-                                            ৳{{ order.total - (order.paid_amount || 0) }}
+                                    <div
+                                        v-if="
+                                            order.total >
+                                            (order.paid_amount || 0)
+                                        "
+                                        class="flex items-center justify-between border-t border-gray-100 pt-1.5"
+                                    >
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+                                            >Due</span
+                                        >
+                                        <span
+                                            class="text-[11px] font-bold text-amber-600"
+                                        >
+                                            ৳{{
+                                                order.total -
+                                                (order.paid_amount || 0)
+                                            }}
                                         </span>
                                     </div>
                                 </div>
@@ -1642,12 +2081,22 @@ const getSourceSoftColorClass = (source) => {
                                     class="flex flex-col gap-1.5 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm group hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300"
                                 >
                                     <!-- Courier Badge -->
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-1.5 overflow-hidden">
-                                            <div class="p-1 rounded bg-blue-50 dark:bg-blue-900/30">
-                                                <Truck class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                    <div
+                                        class="flex items-center justify-between"
+                                    >
+                                        <div
+                                            class="flex items-center gap-1.5 overflow-hidden"
+                                        >
+                                            <div
+                                                class="p-1 rounded bg-blue-50 dark:bg-blue-900/30"
+                                            >
+                                                <Truck
+                                                    class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"
+                                                />
                                             </div>
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 truncate">
+                                            <span
+                                                class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 truncate"
+                                            >
                                                 {{ order.courier_name }}
                                             </span>
                                         </div>
@@ -1655,18 +2104,32 @@ const getSourceSoftColorClass = (source) => {
 
                                     <!-- Tracking ID -->
                                     <div class="flex flex-col">
-                                        <div class="text-[9px] text-gray-400 dark:text-gray-500 font-medium">CONSIGNMENT ID</div>
-                                        <div class="font-mono text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate leading-tight">
-                                            {{ order.tracking_number || 'PENDING' }}
+                                        <div
+                                            class="text-[9px] text-gray-400 dark:text-gray-500 font-medium"
+                                        >
+                                            CONSIGNMENT ID
+                                        </div>
+                                        <div
+                                            class="font-mono text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate leading-tight"
+                                        >
+                                            {{
+                                                order.tracking_number ||
+                                                "PENDING"
+                                            }}
                                         </div>
                                     </div>
 
                                     <!-- Action Link -->
                                     <a
-                                        v-if="order?.tracking_number && order?.tracking_number !== 'N/A'"
-                                        :href="order.courier_name === 'pathao'
-                                            ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}`
-                                            : `https://steadfast.com.bd/t/${order.tracking_number}`"
+                                        v-if="
+                                            order?.tracking_number &&
+                                            order?.tracking_number !== 'N/A'
+                                        "
+                                        :href="
+                                            order.courier_name === 'pathao'
+                                                ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}`
+                                                : `https://steadfast.com.bd/t/${order.tracking_number}`
+                                        "
                                         target="_blank"
                                         class="mt-1 flex items-center justify-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-[10px] font-bold rounded hover:bg-blue-500 hover:text-white dark:hover:bg-blue-600 transition-all duration-200 border border-blue-100 dark:border-blue-800/50"
                                     >
@@ -1674,7 +2137,10 @@ const getSourceSoftColorClass = (source) => {
                                         <Eye class="w-3 h-3" />
                                     </a>
                                 </div>
-                                <div v-else class="text-center italic text-gray-300 dark:text-gray-600 text-[10px]">
+                                <div
+                                    v-else
+                                    class="text-center italic text-gray-300 dark:text-gray-600 text-[10px]"
+                                >
                                     Not Shipped
                                 </div>
                             </td>
@@ -1769,7 +2235,9 @@ const getSourceSoftColorClass = (source) => {
 
                                             <button
                                                 @click="
-                                                    sendToSteadfastSingle(order);
+                                                    sendToSteadfastSingle(
+                                                        order,
+                                                    );
                                                     toggleActionMenu(order.id);
                                                 "
                                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2 transition-colors"
@@ -1858,18 +2326,28 @@ const getSourceSoftColorClass = (source) => {
             </div>
 
             <!-- Mobile Bulk Actions & Select All -->
-            <div class="md:hidden mb-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+            <div
+                class="md:hidden mb-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between"
+            >
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-xl border border-gray-200">
+                    <div
+                        class="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-xl border border-gray-200"
+                    >
                         <input
                             type="checkbox"
                             :checked="selectAll"
                             @change="toggleSelectAll"
                             class="rounded text-blue-500 w-5 h-5 border-gray-300 focus:ring-offset-0"
                         />
-                        <span class="text-xs font-black text-gray-700 uppercase tracking-tighter">Select All</span>
+                        <span
+                            class="text-xs font-black text-gray-700 uppercase tracking-tighter"
+                            >Select All</span
+                        >
                     </div>
-                    <span v-if="selectedOrders.length > 0" class="text-[10px] font-black bg-blue-600 text-white px-2 py-1 rounded-lg">
+                    <span
+                        v-if="selectedOrders.length > 0"
+                        class="text-[10px] font-black bg-blue-600 text-white px-2 py-1 rounded-lg"
+                    >
                         {{ selectedOrders.length }} SELECTED
                     </span>
                 </div>
@@ -1877,14 +2355,18 @@ const getSourceSoftColorClass = (source) => {
 
             <!-- Mobile Orders View -->
             <div class="md:hidden space-y-3">
-                <div 
-                    v-for="order in visibleOrders" 
+                <div
+                    v-for="order in visibleOrders"
                     :key="order.id"
                     class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300"
-                    :class="{ 'ring-2 ring-blue-500/20 shadow-md': expandedOrders.has(order.id) }"
+                    :class="{
+                        'ring-2 ring-blue-500/20 shadow-md': expandedOrders.has(
+                            order.id,
+                        ),
+                    }"
                 >
                     <!-- Compact Header (Always Visible) -->
-                    <div 
+                    <div
                         @click="toggleOrderExpand(order.id)"
                         class="p-3 flex items-center justify-between cursor-pointer active:bg-gray-50 bg-white"
                     >
@@ -1897,101 +2379,191 @@ const getSourceSoftColorClass = (source) => {
                                 class="rounded text-blue-500 w-5 h-5 border-gray-300 focus:ring-offset-0"
                             />
                             <div class="flex flex-col">
-                                <span class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tight w-fit">
+                                <span
+                                    class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tight w-fit"
+                                >
                                     {{ order.order_number }}
                                 </span>
                                 <span
                                     class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shadow-sm w-fit"
-                                    :class="getSourceColorClass(order.source || 'website')"
+                                    :class="
+                                        getSourceColorClass(
+                                            order.source || 'website',
+                                        )
+                                    "
                                 >
-                                    {{ (order.source || 'website').replace('_', ' ') }}
+                                    {{
+                                        (order.source || "website").replace(
+                                            "_",
+                                            " ",
+                                        )
+                                    }}
                                 </span>
-                                <span class="text-[11px] font-bold text-gray-900 mt-0.5">
+                                <span
+                                    class="text-[11px] font-bold text-gray-900 mt-0.5"
+                                >
                                     {{ order.customer.name }}
                                 </span>
                                 <!-- Mobile Fraud Score Badge -->
-                                <div v-if="order.customer?.fraud_data?.aggregated" class="mt-1 flex items-center gap-1.5">
-                                    <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200">
-                                        <span class="text-[8px] font-black text-gray-500 uppercase">Fraud</span>
-                                        <span class="text-[8px] font-black" :class="order.customer?.fraud_data?.aggregated?.success_rate > 70 ? 'text-green-600' : (order.customer?.fraud_data?.aggregated?.success_rate > 40 ? 'text-amber-600' : 'text-red-600')">
-                                            {{ order.customer?.fraud_data?.aggregated?.success_rate }}%
+                                <div
+                                    v-if="
+                                        order.customer?.fraud_data?.aggregated
+                                    "
+                                    class="mt-1 flex items-center gap-1.5"
+                                >
+                                    <div
+                                        class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200"
+                                    >
+                                        <span
+                                            class="text-[8px] font-black text-gray-500 uppercase"
+                                            >Fraud</span
+                                        >
+                                        <span
+                                            class="text-[8px] font-black"
+                                            :class="
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.success_rate >
+                                                70
+                                                    ? 'text-green-600'
+                                                    : order.customer?.fraud_data
+                                                            ?.aggregated
+                                                            ?.success_rate > 40
+                                                      ? 'text-amber-600'
+                                                      : 'text-red-600'
+                                            "
+                                        >
+                                            {{
+                                                order.customer?.fraud_data
+                                                    ?.aggregated?.success_rate
+                                            }}%
                                         </span>
-                                        <button 
-                                            @click.stop="viewFraudDetails(order.customer.fraud_data)"
+                                        <button
+                                            @click.stop="
+                                                viewFraudDetails(
+                                                    order.customer.fraud_data,
+                                                )
+                                            "
                                             class="ml-1 text-gray-400 hover:text-blue-600"
                                         >
                                             <Eye class="w-2.5 h-2.5" />
                                         </button>
                                     </div>
-                                    <div class="h-1 w-12 bg-gray-200 rounded-full overflow-hidden">
-                                        <div 
-                                            class="h-full rounded-full" 
-                                            :class="getFraudProgressColor(order.customer?.fraud_data?.aggregated?.success_rate)"
-                                            :style="{ width: `${order.customer?.fraud_data?.aggregated?.success_rate}%` }"
+                                    <div
+                                        class="h-1 w-12 bg-gray-200 rounded-full overflow-hidden"
+                                    >
+                                        <div
+                                            class="h-full rounded-full"
+                                            :class="
+                                                getFraudProgressColor(
+                                                    order.customer?.fraud_data
+                                                        ?.aggregated
+                                                        ?.success_rate,
+                                                )
+                                            "
+                                            :style="{
+                                                width: `${order.customer?.fraud_data?.aggregated?.success_rate}%`,
+                                            }"
                                         ></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center gap-2">
                             <div class="flex flex-col items-end gap-1">
-                                <span class="text-[12px] font-black text-gray-900">৳{{ order.total }}</span>
-                                <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                                <span
+                                    class="text-[12px] font-black text-gray-900"
+                                    >৳{{ order.total }}</span
+                                >
+                                <div
+                                    class="flex items-center gap-1.5 flex-wrap justify-end"
+                                >
                                     <!-- Payment Status -->
-                                    <span 
+                                    <span
                                         class="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded shadow-sm border"
-                                        :class="order.payment_status === 'paid' 
-                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
-                                            : 'bg-rose-50 text-rose-600 border-rose-200'"
+                                        :class="
+                                            order.payment_status === 'paid'
+                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                                                : 'bg-rose-50 text-rose-600 border-rose-200'
+                                        "
                                     >
                                         {{ order.payment_status }}
                                     </span>
                                     <!-- TrxID -->
-                                    <template v-if="order.transaction_id && order.has_pre_order">
+                                    <template
+                                        v-if="
+                                            order.transaction_id &&
+                                            order.has_pre_order
+                                        "
+                                    >
                                         <!-- Already approved -->
-                                        <span v-if="order.paid_amount > 0" class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                        <span
+                                            v-if="order.paid_amount > 0"
+                                            class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-emerald-50 text-emerald-700 border-emerald-200"
+                                        >
                                             ✓ Paid ৳{{ order.paid_amount }}
                                         </span>
                                         <!-- Rejected -->
-                                        <span v-else-if="order.payment_verification_status === 'rejected'" class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-rose-50 text-rose-700 border-rose-200">
+                                        <span
+                                            v-else-if="
+                                                order.payment_verification_status ===
+                                                'rejected'
+                                            "
+                                            class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-rose-50 text-rose-700 border-rose-200"
+                                        >
                                             ✗ Rejected
                                         </span>
                                         <!-- Pending verify button -->
                                         <button
                                             v-else
-                                            @click.stop="openPaymentModal(order)"
+                                            @click.stop="
+                                                openPaymentModal(order)
+                                            "
                                             class="flex items-center gap-1 text-[8px] font-black tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-indigo-100 text-indigo-700 border-indigo-200 active:scale-95 transition-all max-w-[85px]"
                                             title="Verify Transaction ID"
                                         >
-                                            <CreditCard class="w-2 h-2 shrink-0" />
-                                            <span class="truncate">{{ order.transaction_id }}</span>
+                                            <CreditCard
+                                                class="w-2 h-2 shrink-0"
+                                            />
+                                            <span class="truncate">{{
+                                                order.transaction_id
+                                            }}</span>
                                         </button>
                                     </template>
                                     <!-- Delivery Status -->
-                                    <span 
+                                    <span
                                         class="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded shadow-sm border bg-blue-50 text-blue-600 border-blue-200"
                                     >
-                                        {{ order.status.replace('_', ' ') }}
+                                        {{ order.status.replace("_", " ") }}
                                     </span>
                                 </div>
                             </div>
-                            <ChevronDown 
+                            <ChevronDown
                                 class="w-5 h-5 text-gray-400 transition-transform duration-300"
-                                :class="{ 'rotate-180': expandedOrders.has(order.id) }"
+                                :class="{
+                                    'rotate-180': expandedOrders.has(order.id),
+                                }"
                             />
                         </div>
                     </div>
 
                     <!-- Collapsible Section -->
-                    <div 
+                    <div
                         v-show="expandedOrders.has(order.id)"
                         class="border-t border-gray-50 bg-white"
                     >
                         <!-- Date & Status Bar -->
-                        <div class="px-4 py-2 bg-gray-50/50 flex items-center justify-between border-b border-gray-50">
+                        <div
+                            class="px-2 bg-gray-50/50 flex items-center justify-between border-b border-gray-50"
+                        >
                             <span class="text-[10px] text-gray-500 font-bold">
-                                {{ formatOrderDate(order.date) }} {{ new Date(order.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                                {{ formatOrderDate(order.date) }}
+                                <!-- {{
+                                    new Date(order.date).toLocaleTimeString(
+                                        [],
+                                        { hour: "2-digit", minute: "2-digit" },
+                                    )
+                                }} -->
                             </span>
                             <div class="w-28 scale-90 origin-right">
                                 <StatusDropdown
@@ -2003,111 +2575,260 @@ const getSourceSoftColorClass = (source) => {
                             </div>
                         </div>
 
-                        <!-- Customer Details -->
-                        <div class="px-4 py-3 flex items-start gap-3">
-                            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs shrink-0">
-                                {{ order.customer.name.charAt(0).toUpperCase() }}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <a :href="`tel:${order.customer.phone}`" class="flex items-center gap-1.5 text-blue-500 underline text-[12px] font-bold">
-                                    <Phone class="w-3.5 h-3.5" />
-                                    <span>{{ order.customer.phone }}</span>
-                                </a>
-                                <div class="flex items-start gap-1.5 mt-1 text-gray-500 text-[11px] font-medium leading-normal">
-                                    <MapPin class="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                                    <span class="line-clamp-2">{{ order.customer.address }}</span>
-                                    <div v-if="order.customer?.district && order.customer.district !== 'N/A'" class="mt-1 flex items-center gap-1 text-[10px] font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-fit">
-                                        {{ order.customer.district }}
-                                        <span v-if="order.customer?.thana && order.customer.thana !== 'N/A'"> • {{ order.customer.thana }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Courier Mini Card -->
-                            <div v-if="order.is_courier" class="bg-blue-50/80 px-2 py-1.5 rounded-xl flex flex-col items-center gap-1 border border-blue-100 min-w-[65px]">
-                                <Truck class="w-3.5 h-3.5 text-blue-600" />
-                                <span class="text-[8px] font-black text-blue-700 tracking-tighter line-clamp-1">{{ order.courier_name }}</span>
-                                <a 
-                                    v-if="order.tracking_number"
-                                    :href="order.courier_name === 'pathao' ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}` : `https://steadfast.com.bd/t/${order.tracking_number}`"
-                                    target="_blank"
-                                    class="text-[8px] font-black text-blue-600 border-t border-blue-200 pt-0.5 mt-0.5 tracking-tighter"
-                                >
-                                    TRACK
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Product Items -->
-                        <div class="px-4 py-3 space-y-2 bg-white">
-                            <div 
-                                v-for="item in order.items" 
-                                :key="item.id"
-                                class="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-gray-100"
-                            >
-                                <div class="relative shrink-0">
-                                    <img :src="item.product.image || ''" class="w-10 h-10 rounded-lg object-cover border border-white shadow-sm" />
-                                    <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[9px] font-bold text-white ring-1 ring-white">
-                                        {{ item.quantity }}
-                                    </span>
-                                </div>
+                        <div class="flex justify-between">
+                            <!-- Customer Details -->
+                            <div class="w-1/2 px-2 py-1 flex items-start gap-3">
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-[11px] font-bold text-gray-800 line-clamp-1">{{ item.product.name }}</h4>
-                                    <div class="text-[10px] text-blue-600 font-black mt-0.5">
-                                        ৳{{ item.price }}
-                                        <span v-if="item.variation" class="text-gray-400 font-normal ml-1 border-l border-gray-300 pl-1 uppercase">
-                                            <span v-for="(v, k, i) in item.variation.attributes" :key="k">
-                                                {{ v }}{{ i < Object.keys(item.variation.attributes).length - 1 ? ',' : '' }}
-                                            </span>
+                                    <h4 class="text-[11px] font-[600]">
+                                        {{ order.customer.name }}
+                                    </h4>
+                                    <a
+                                        :href="`tel:${order.customer.phone}`"
+                                        class="flex items-center gap-1.5 text-blue-500 underline text-[12px] font-bold"
+                                    >
+                                        <Phone class="w-3.5 h-3.5" />
+                                        <span>{{ order.customer.phone }}</span>
+                                    </a>
+                                    <div
+                                        class="flex items-start gap-1.5 mt-1 text-gray-500 text-[11px] font-medium leading-normal"
+                                    >
+                                        <MapPin
+                                            class="w-3.5 h-3.5 shrink-0 mt-0.5"
+                                        />
+                                        <span class="line-clamp-2">{{
+                                            order.customer.address
+                                        }}</span>
+                                    </div>
+                                    <div
+                                        v-if="
+                                            order.customer?.district &&
+                                            order.customer.district !== 'N/A'
+                                        "
+                                        class="mt-1 flex items-center gap-1 text-[10px] font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded w-fit"
+                                    >
+                                        {{ order.customer.district }}
+                                        <span
+                                            v-if="
+                                                order.customer?.thana &&
+                                                order.customer.thana !== 'N/A'
+                                            "
+                                        >
+                                            • {{ order.customer.thana }}</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Items -->
+                            <div class="w-1/2 px-2 py-1 space-y-2 bg-white">
+                                <div
+                                    v-for="item in order.items"
+                                    :key="item.id"
+                                    class="flex items-center gap-3 bg-gray-50/50 rounded-xl border border-gray-100"
+                                >
+                                    <div class="relative shrink-0">
+                                        <img
+                                            :src="item.product.image || ''"
+                                            class="w-10 h-10 rounded-lg object-cover border border-white shadow-sm"
+                                        />
+                                        <span
+                                            class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[9px] font-bold text-white ring-1 ring-white"
+                                        >
+                                            {{ item.quantity }}
                                         </span>
                                     </div>
-                                    <!-- Status badges (Mobile Mini) -->
-                                    <div v-if="order.status === 'partially_delivered' || order.status === 'returned' || item.returned_quantity > 0" class="flex gap-1 mt-1">
-                                        <span v-if="item.quantity - item.returned_quantity > 0" class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[8px] font-black">
-                                            ✓ {{ item.quantity - item.returned_quantity }} DEL
-                                        </span>
-                                        <span v-if="item.returned_quantity > 0" class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[8px] font-black">
-                                            ↺ {{ item.returned_quantity }} RET
-                                        </span>
+                                    <div class="flex-1 min-w-0">
+                                        <h4
+                                            class="text-[11px] font-bold text-gray-800 line-clamp-1"
+                                        >
+                                            {{ item.product.name }}
+                                        </h4>
+                                        <div
+                                            class="text-[10px] text-blue-600 font-black mt-0.5"
+                                        >
+                                            ৳{{ item.price }}
+                                            <span
+                                                v-if="item.variation"
+                                                class="text-gray-400 font-normal ml-1 border-l border-gray-300 pl-1 uppercase"
+                                            >
+                                                <span
+                                                    v-for="(v, k, i) in item
+                                                        .variation.attributes"
+                                                    :key="k"
+                                                >
+                                                    {{ v
+                                                    }}{{
+                                                        i <
+                                                        Object.keys(
+                                                            item.variation
+                                                                .attributes,
+                                                        ).length -
+                                                            1
+                                                            ? ","
+                                                            : ""
+                                                    }}
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <!-- Status badges (Mobile Mini) -->
+                                        <div
+                                            v-if="
+                                                order.status ===
+                                                    'partially_delivered' ||
+                                                order.status === 'returned' ||
+                                                item.returned_quantity > 0
+                                            "
+                                            class="flex gap-1 mt-1"
+                                        >
+                                            <span
+                                                v-if="
+                                                    item.quantity -
+                                                        item.returned_quantity >
+                                                    0
+                                                "
+                                                class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[8px] font-black"
+                                            >
+                                                ✓
+                                                {{
+                                                    item.quantity -
+                                                    item.returned_quantity
+                                                }}
+                                                DEL
+                                            </span>
+                                            <span
+                                                v-if="
+                                                    item.returned_quantity > 0
+                                                "
+                                                class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[8px] font-black"
+                                            >
+                                                ↺
+                                                {{ item.returned_quantity }} RET
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Actions Bar -->
-                        <div class="px-4 py-3 bg-gray-50/80 flex items-center justify-between border-t border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">STATUS:</span>
-                                <div class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-white border border-gray-200 text-blue-700 shadow-sm">
+                        <div
+                            class="px-4 py-3 bg-gray-50/80 flex items-center justify-end border-t border-gray-100"
+                        >
+                            <!-- <div class="flex items-center gap-2">
+                                <span
+                                    class="text-[9px] font-black text-gray-400 uppercase tracking-widest"
+                                    >STATUS:</span
+                                >
+                                <div
+                                    class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-white border border-gray-200 text-blue-700 shadow-sm"
+                                >
                                     {{ order.payment_status }}
                                 </div>
+                            </div> -->
+
+                            <!-- Courier Mini Card -->
+                            <div
+                                v-if="order.is_courier"
+                                class="flex items-center justify-between gap-2 min-w-[120px] bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-md border"
+                            >
+                                <!-- Courier Name -->
+                                <span
+                                    class="text-[11px] font-semibold text-gray-700 dark:text-gray-200 truncate capitalize"
+                                >
+                                    {{ order.courier_name }}
+                                </span>
+
+                                <!-- Track Button -->
+                                <a
+                                    v-if="order.tracking_number"
+                                    :href="
+                                        order.courier_name === 'pathao'
+                                            ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}`
+                                            : `https://steadfast.com.bd/t/${order.tracking_number}`
+                                    "
+                                    target="_blank"
+                                    class="text-[10px] font-bold px-2 py-[2px] rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+                                >
+                                    Track
+                                </a>
                             </div>
 
                             <div class="relative">
-                                <button 
+                                <button
                                     @click.stop="toggleActionMenu(order.id)"
                                     class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-gray-200 shadow-sm text-[11px] font-black text-gray-700 active:scale-95 transition-all"
                                 >
                                     OPTIONS
                                     <MoreVertical class="w-3.5 h-3.5" />
                                 </button>
-                                
-                                <div v-if="activeActionMenu === order.id" class="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 py-1">
-                                    <button @click="checkFraud(order?.customer?.phone); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2">
-                                        <User class="w-4 h-4 text-orange-500" /> Fraud Check
+
+                                <div
+                                    v-if="activeActionMenu === order.id"
+                                    class="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 py-1"
+                                >
+                                    <button
+                                        @click="
+                                            checkFraud(order?.customer?.phone);
+                                            toggleActionMenu(order.id);
+                                        "
+                                        class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+                                    >
+                                        <User class="w-4 h-4 text-orange-500" />
+                                        Fraud Check
                                     </button>
-                                    <button v-if="order.transaction_id" @click="openPaymentModal(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-indigo-50 flex items-center gap-2 border-t border-gray-50">
-                                        <CreditCard class="w-4 h-4 text-indigo-500" /> Verify Payment
+                                    <button
+                                        v-if="order.transaction_id"
+                                        @click="
+                                            openPaymentModal(order);
+                                            toggleActionMenu(order.id);
+                                        "
+                                        class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-indigo-50 flex items-center gap-2 border-t border-gray-50"
+                                    >
+                                        <CreditCard
+                                            class="w-4 h-4 text-indigo-500"
+                                        />
+                                        Verify Payment
                                     </button>
-                                    <button @click="sendToPathao(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
-                                        <Truck class="w-4 h-4 text-emerald-500" /> Pathao
+                                    <button
+                                        @click="
+                                            sendToPathao(order);
+                                            toggleActionMenu(order.id);
+                                        "
+                                        class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50"
+                                    >
+                                        <Truck
+                                            class="w-4 h-4 text-emerald-500"
+                                        />
+                                        Pathao
                                     </button>
-                                    <button @click="sendToSteadfastSingle(order); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
-                                        <Truck class="w-4 h-4 text-blue-500" /> Steadfast
+                                    <button
+                                        @click="
+                                            sendToSteadfastSingle(order);
+                                            toggleActionMenu(order.id);
+                                        "
+                                        class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50"
+                                    >
+                                        <Truck class="w-4 h-4 text-blue-500" />
+                                        Steadfast
                                     </button>
-                                    <Link :href="route('admin.orders.edit', order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50">
-                                        <SquarePen class="w-4 h-4 text-amber-500" /> Edit Order
+                                    <Link
+                                        :href="
+                                            route('admin.orders.edit', order.id)
+                                        "
+                                        class="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-50"
+                                    >
+                                        <SquarePen
+                                            class="w-4 h-4 text-amber-500"
+                                        />
+                                        Edit Order
                                     </Link>
-                                    <button @click="openDeleteModal(order.id); toggleActionMenu(order.id)" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-50">
+                                    <button
+                                        @click="
+                                            openDeleteModal(order.id);
+                                            toggleActionMenu(order.id);
+                                        "
+                                        class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-50"
+                                    >
                                         <Trash2Icon class="w-4 h-4" /> Delete
                                     </button>
                                 </div>
@@ -2117,7 +2838,10 @@ const getSourceSoftColorClass = (source) => {
                 </div>
             </div>
 
-            <div v-if="visibleOrders.length === 0" class="md:hidden py-10 text-center text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300">
+            <div
+                v-if="visibleOrders.length === 0"
+                class="md:hidden py-10 text-center text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300"
+            >
                 No orders found matching your filters.
             </div>
 

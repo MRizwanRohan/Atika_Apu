@@ -1,6 +1,6 @@
 <script setup>
 import { defineProps, ref, computed, onMounted } from "vue";
-import { Head } from "@inertiajs/vue3";
+import { Head, Link } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import VueApexCharts from "vue3-apexcharts";
 import OrderMap from "@/Components/Order/OrderMap.vue";
@@ -36,19 +36,6 @@ const dailyOrdersOptions = computed(() => ({
         sparkline: {
             enabled: false,
         },
-        animations: {
-            enabled: true,
-            easing: "easeinout",
-            speed: 800,
-            animateGradually: {
-                enabled: true,
-                delay: 150,
-            },
-            dynamicAnimation: {
-                enabled: true,
-                speed: 350,
-            },
-        },
     },
     dataLabels: {
         enabled: false,
@@ -67,16 +54,6 @@ const dailyOrdersOptions = computed(() => ({
             stops: [0, 90, 100],
         },
     },
-    grid: {
-        borderColor: "#f1f1f1",
-        strokeDashArray: 5,
-        padding: {
-            top: 0,
-            right: 20,
-            bottom: 0,
-            left: 20,
-        },
-    },
     xaxis: {
         categories: currentChartData.value.map((item) => item.date),
         axisBorder: {
@@ -85,21 +62,9 @@ const dailyOrdersOptions = computed(() => ({
         axisTicks: {
             show: false,
         },
-        labels: {
-            style: {
-                colors: "#6B7280",
-                fontSize: "12px",
-                fontFamily: "Inter, sans-serif",
-            },
-        },
     },
     yaxis: {
         labels: {
-            style: {
-                colors: "#6B7280",
-                fontSize: "12px",
-                fontFamily: "Inter, sans-serif",
-            },
             formatter: function (value) {
                 return value.toFixed(0);
             },
@@ -107,29 +72,12 @@ const dailyOrdersOptions = computed(() => ({
     },
     tooltip: {
         enabled: true,
-        style: {
-            fontSize: "12px",
-            fontFamily: "Inter, sans-serif",
-        },
         y: {
             formatter: function (value, { seriesIndex }) {
                 return seriesIndex === 0
                     ? value + " orders"
                     : "৳" + value.toFixed(2);
             },
-        },
-    },
-    legend: {
-        position: "top",
-        horizontalAlign: "right",
-        fontSize: "12px",
-        fontFamily: "Inter, sans-serif",
-        markers: {
-            radius: 12,
-        },
-        itemMargin: {
-            horizontal: 10,
-            vertical: 5,
         },
     },
 }));
@@ -147,542 +95,194 @@ const dailyOrdersSeries = computed(() => [
     },
 ]);
 
-// Order status chart options
-const orderStatusOptions = computed(() => ({
-    chart: {
-        type: "donut",
-        height: 300,
-        animations: {
-            enabled: true,
-            easing: "easeinout",
-            speed: 800,
-        },
-    },
-    colors: [
-        "#F59E0B",
-        "#6366F1",
-        "#10B981",
-        "#EF4444",
-        "#8B5CF6",
-        "#EC4899",
-        "#14B8A6",
-        "#F97316",
-        "#6B7280",
-    ],
-    labels: props.data.orderStatusData.map((item) => item.name),
-    legend: {
-        position: "bottom",
-        fontSize: "12px",
-        fontFamily: "Inter, sans-serif",
-        markers: {
-            radius: 12,
-        },
-        itemMargin: {
-            horizontal: 10,
-            vertical: 5,
-        },
-    },
-    plotOptions: {
-        pie: {
-            donut: {
-                size: "65%",
-                labels: {
-                    show: true,
-                    name: {
-                        show: true,
-                        fontSize: "14px",
-                        fontFamily: "Inter, sans-serif",
-                        color: "#6B7280",
-                    },
-                    value: {
-                        show: true,
-                        fontSize: "20px",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: 600,
-                        color: "#111827",
-                        formatter: function (val) {
-                            return val;
-                        },
-                    },
-                    total: {
-                        show: true,
-                        showAlways: true,
-                        label: "Total Orders",
-                        fontSize: "14px",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: 400,
-                        color: "#6B7280",
-                        formatter: function () {
-                            return props.data.orderStatusData.reduce(
-                                (sum, item) => sum + item.value,
-                                0
-                            );
-                        },
-                    },
-                },
-            },
-        },
-    },
-    dataLabels: {
-        enabled: false,
-    },
-    tooltip: {
-        enabled: true,
-        style: {
-            fontSize: "12px",
-            fontFamily: "Inter, sans-serif",
-        },
-        y: {
-            formatter: function (val) {
-                return val + " orders";
-            },
-        },
-    },
-}));
-
-const orderStatusSeries = computed(() =>
-    props.data.orderStatusData.map((item) => item.value)
-);
-
-// Payment status chart options
-const paymentStatusOptions = computed(() => ({
-    chart: {
-        type: "donut",
-        height: 300,
-        animations: {
-            enabled: true,
-            easing: "easeinout",
-            speed: 800,
-        },
-    },
-    colors: ["#EF4444", "#10B981", "#6366F1"],
-    labels: props.data.paymentStatusData.map((item) => item.name),
-    legend: {
-        position: "bottom",
-        fontSize: "12px",
-        fontFamily: "Inter, sans-serif",
-        markers: {
-            radius: 12,
-        },
-        itemMargin: {
-            horizontal: 10,
-            vertical: 5,
-        },
-    },
-    plotOptions: {
-        pie: {
-            donut: {
-                size: "65%",
-                labels: {
-                    show: true,
-                    name: {
-                        show: true,
-                        fontSize: "14px",
-                        fontFamily: "Inter, sans-serif",
-                        color: "#6B7280",
-                    },
-                    value: {
-                        show: true,
-                        fontSize: "20px",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: 600,
-                        color: "#111827",
-                        formatter: function (val) {
-                            return val;
-                        },
-                    },
-                    total: {
-                        show: true,
-                        showAlways: true,
-                        label: "Total",
-                        fontSize: "14px",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: 400,
-                        color: "#6B7280",
-                        formatter: function () {
-                            return props.data.paymentStatusData.reduce(
-                                (sum, item) => sum + item.value,
-                                0
-                            );
-                        },
-                    },
-                },
-            },
-        },
-    },
-    dataLabels: {
-        enabled: false,
-    },
-    tooltip: {
-        enabled: true,
-        style: {
-            fontSize: "12px",
-            fontFamily: "Inter, sans-serif",
-        },
-        y: {
-            formatter: function (val) {
-                return val;
-            },
-        },
-    },
-}));
-
-const paymentStatusSeries = computed(() =>
-    props.data.paymentStatusData.map((item) => item.value)
-);
-
-// Define the statuses and color mapping to ensure consistent ordering and colorful cards
-const statusOrder = [
-    'pending',
-    'processing',
-    'cancelled',
-    'shipped',
-    'delivered',
-    'returned',
-    'incomplete',
-    'on_hold',
-    'confirmed',
-];
-
-const statusColor = {
-    pending: 'from-yellow-400 to-yellow-300 text-gray-900',
-    processing: 'from-indigo-500 to-indigo-400 text-white',
-    cancelled: 'from-red-500 to-red-400 text-white',
-    shipped: 'from-sky-500 to-sky-400 text-white',
-    delivered: 'from-green-500 to-emerald-400 text-white',
-    returned: 'from-pink-500 to-pink-400 text-white',
-    incomplete: 'from-gray-400 to-gray-300 text-gray-900',
-    on_hold: 'from-amber-500 to-amber-400 text-white',
-    confirmed: 'from-purple-500 to-violet-400 text-white',
+// Helper for currency formatting
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-BD', {
+        style: 'currency',
+        currency: 'BDT',
+        minimumFractionDigits: 0,
+    }).format(value).replace('BDT', '৳');
 };
 
-const normalizeKey = (str) => (str || '').toLowerCase().replace(/\s+/g, '_').replace(/[^\w_]/g, '');
-
-const deliveryStatusList = computed(() => {
-    const map = (props.data.deliverySalesData || []).reduce((acc, item) => {
-        acc[normalizeKey(item.name)] = item;
-        return acc;
-    }, {});
-
-    return statusOrder.map((key) => {
-        const item = map[key] || { name: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), orders: 0, sales: 0 };
-        return { ...item, key };
-    });
+// Top selling filtering
+const topSellingPeriod = ref('month');
+const currentTopSelling = computed(() => {
+    if (!props.data.topSelling) return [];
+    return props.data.topSelling[topSellingPeriod.value] || [];
 });
 
-// Product performance chart options
-const productPerformanceOptions = computed(() => ({
-    chart: {
-        type: "bar",
-        height: 300,
-        toolbar: {
-            show: false,
-        },
-        animations: {
-            enabled: true,
-            easing: "easeinout",
-            speed: 800,
-        },
-    },
-    plotOptions: {
-        bar: {
-            horizontal: true,
-            barHeight: "70%",
-            borderRadius: 4,
-            distributed: false,
-        },
-    },
-    colors: ["#EF4444", "#F59E0B", "#6366F1"],
-    dataLabels: {
-        enabled: true,
-        formatter: function (val) {
-            return val + " sales";
-        },
-        style: {
-            fontSize: "12px",
-            fontFamily: "Inter, sans-serif",
-            colors: ["#fff"],
-        },
-        offsetX: 0,
-        dropShadow: {
-            enabled: false,
-        },
-    },
-    xaxis: {
-        categories: props.data.productPerformanceData.map((item) => item.name),
-        axisBorder: {
-            show: false,
-        },
-        axisTicks: {
-            show: false,
-        },
-        labels: {
-            style: {
-                colors: "#6B7280",
-                fontSize: "12px",
-                fontFamily: "Inter, sans-serif",
-            },
-        },
-    },
-    yaxis: {
-        labels: {
-            style: {
-                colors: "#6B7280",
-                fontSize: "12px",
-                fontFamily: "Inter, sans-serif",
-            },
-        },
-    },
-    grid: {
-        borderColor: "#f1f1f1",
-        strokeDashArray: 5,
-        padding: {
-            top: 0,
-            right: 20,
-            bottom: 0,
-            left: 20,
-        },
-    },
-    tooltip: {
-        enabled: true,
-        style: {
-            fontSize: "12px",
-            fontFamily: "Inter, sans-serif",
-        },
-    },
-}));
-
-const productPerformanceSeries = computed(() => [
-    {
-        name: "Sales",
-        data: props.data.productPerformanceData.map((item) =>
-            parseInt(item.sales)
-        ),
-    },
-]);
-
-// Active tab for recent orders
-const activeTab = ref("all");
+// Calculate progress bar max for current period
+const maxSold = computed(() => {
+    if (currentTopSelling.value.length === 0) return 1;
+    return Math.max(...currentTopSelling.value.map(p => p.total_sold)) || 1;
+});
 </script>
 
 <template>
     <Head title="Dashboard" />
     <AdminLayout>
-        <div class="mx-auto">
-            <div class="flex flex-col space-y-6">
-                <!-- Header -->
-                <div
-                    class="flex flex-col md:flex-row md:items-center md:justify-between"
-                >
+        <div class="bg-[#f8fafc] min-h-screen">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-2xl font-bold text-[#0f172a]">Overview</h1>
+            </div>
+
+            <!-- Summary Summary Row -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <!-- Sales Today -->
+                <div class="bg-[#0f172a] text-white p-6 rounded-2xl shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
                     <div>
-                        <h1
-                            class="text-2xl font-bold text-gray-900 dark:text-gray-100"
-                        >
-                            Dashboard Overview
-                        </h1>
-                        <div class="w-32 h-1 rounded-full bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 mt-3 mb-2"></div>
-                        <p
-                            class="mt-1 text-sm text-gray-500 dark:text-gray-400"
-                        >
-                            Monitor your store performance and key metrics
-                        </p>
+                        <p class="text-white/70 text-sm font-medium">Sales Today</p>
+                        <h3 class="text-2xl font-bold">{{ formatCurrency(data.summary.salesToday.value) }}</h3>
                     </div>
                 </div>
 
-                <!-- Summary Cards -->
-                <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-                >
-                    <div
-                        v-for="(card, index) in data.summaryCards"
-                        :key="index"
-                        :class="{
-                            'rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md overflow-hidden bg-gradient-to-r from-indigo-500 to-indigo-400 text-white': index === 0,
-                            'rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md overflow-hidden bg-gradient-to-r from-green-500 to-emerald-400 text-white': index === 1,
-                            'rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md overflow-hidden bg-gradient-to-r from-purple-600 to-violet-500 text-white': index === 2,
-                            'rounded-xl shadow-sm p-6 transition-all duration-300 hover:shadow-md overflow-hidden bg-gradient-to-r from-amber-400 to-amber-300 text-gray-900': index === 3,
-                        }"
-                    >
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-lg bg-white/10">
-                                <svg
-                                    class="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        v-if="index === 0"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                                    ></path>
-                                    <path
-                                        v-if="index === 1"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 a0 11-18 0 9 9 0 0118 0z"
-                                    ></path>
-                                    <path
-                                        v-if="index === 2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                    ></path>
-                                    <path
-                                        v-if="index === 3"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0"
-                                    ></path>
-                                </svg>
+                <!-- Orders -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-[#e0f2fe] rounded-xl flex items-center justify-center text-[#0ea5e9]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-gray-500 text-sm font-medium">Orders</p>
+                            <span class="w-2 h-2 bg-[#0ea5e9] rounded-full"></span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a]">{{ data.summary.ordersToday.count }}</h3>
+                    </div>
+                </div>
+
+                <!-- Pre-Orders -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-[#fff7ed] rounded-xl flex items-center justify-center text-[#f97316]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-gray-500 text-sm font-medium">Pre-Orders</p>
+                            <span class="w-2 h-2 bg-[#f97316] rounded-full"></span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a]">{{ data.summary.preOrders.count }}</h3>
+                    </div>
+                </div>
+
+                <!-- Requests -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-[#f5f3ff] rounded-xl flex items-center justify-center text-[#8b5cf6]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-gray-500 text-sm font-medium">Requests</p>
+                            <span class="w-2 h-2 bg-[#8b5cf6] rounded-full"></span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[#0f172a]">{{ data.summary.requests.count }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Top Selling -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-[#0f172a]">Top Selling</h2>
+                        <select v-model="topSellingPeriod" class="border-none bg-gray-50 rounded-lg text-sm font-medium text-gray-600 focus:ring-0">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                            <option value="overall">Overall</option>
+                        </select>
+                    </div>
+                    <div class="space-y-6">
+                        <div v-for="(product, index) in currentTopSelling" :key="product.id" class="flex items-center">
+                            <div class="w-8 text-lg font-bold" :class="index === 0 ? 'text-[#f97316]' : 'text-[#38bdf8]'">
+                                {{ index + 1 }}
                             </div>
-                            <div class="ml-4">
-                                <h3
-                                    class="text-sm font-medium opacity-90"
-                                >
-                                    {{ card.title }}
-                                </h3>
-                                <p
-                                    class="text-2xl font-semibold mt-1"
-                                >
-                                    {{ card.value }}
-                                </p>
+                            <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 overflow-hidden mr-4">
+                                <img :src="product.feature_image_url" alt="" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-bold text-[#0f172a] line-clamp-1">
+                                        {{ product.name }}
+                                        <span v-if="product.is_pre_order" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                            Pre-Order
+                                        </span>
+                                    </h4>
+                                    <span class="text-sm font-bold text-gray-500">{{ product.total_sold }} Sold</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-1000" 
+                                         :style="{ width: (product.total_sold / maxSold) * 100 + '%' }"
+                                         :class="index === 0 ? 'bg-[#0f172a]' : 'bg-[#0ea5e9]'">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-4 flex items-center justify-between">
-                            <div class="text-xs opacity-90 flex items-center">
-                                <span :class="card.change >= 0 ? 'text-green-200' : 'text-red-200'">
-                                    <svg v-if="card.change >= 0" class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                                    <svg v-else class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    {{ Math.abs(card.change) }}%
-                                </span>
-                                <span class="ml-2 opacity-90">vs last period</span>
-                            </div>
-                            <div class="text-xs opacity-80">&nbsp;</div>
+                        <div v-if="currentTopSelling.length === 0" class="text-center py-8 text-gray-400">
+                            No sales data for this period
                         </div>
                     </div>
                 </div>
 
-                <!-- Delivery Status Row -->
-                <!-- <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div
-                        v-for="(d, i) in deliveryStatusList"
-                        :key="i"
-                        :class="['rounded-xl p-4 shadow-sm overflow-hidden', `bg-gradient-to-r ${statusColor[d.key] || 'from-gray-100 to-gray-50 text-gray-900'}`]"
-                    >
-                        <div class="flex items-center justify-between">
-                            <div :class="statusColor[d.key] && statusColor[d.key].includes('text-gray-900') ? 'text-gray-900' : 'text-white'">
-                                <div class="text-xs opacity-90 mb-1">{{ d.name }}</div>
-                                <div class="text-lg font-semibold">{{ d.orders }} orders</div>
-                                <div class="text-sm opacity-80">৳{{ Number(d.sales).toFixed(2) }} sales</div>
+                <!-- Low Stock Alerts -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <h2 class="text-xl font-bold text-[#0f172a] mb-6">Low Stock Alerts</h2>
+                    <div class="space-y-4">
+                        <div v-for="product in data.lowStock" :key="product.id" class="flex items-center p-4 border border-gray-50 rounded-xl hover:bg-gray-50 transition-colors">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 overflow-hidden mr-4">
+                                <img :src="product.feature_image_url" alt="" class="w-full h-full object-cover">
                             </div>
-                            <div>
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm" :class="statusColor[d.key] && statusColor[d.key].includes('text-gray-900') ? 'text-gray-900' : 'text-white'">
-                                    {{ d.key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) }}
-                                </span>
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-[#0f172a]">
+                                    {{ product.name }}
+                                    <span v-if="product.is_pre_order" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                        Pre-Order
+                                    </span>
+                                </h4>
+                                <p class="text-sm text-gray-400">Stock: {{ product.stock }} items left</p>
                             </div>
-                        </div>
-                    </div>
-                </div> -->
-
-                <!-- Charts Row 1 -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Daily Orders & Revenue Chart -->
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 lg:col-span-2"
-                    >
-                        <div class="flex items-center justify-between mb-6">
-                            <h3
-                                class="text-lg font-semibold text-gray-900 dark:text-gray-100"
-                            >
-                                Sales Analytics
-                            </h3>
-                            <div class="flex space-x-2">
-                                <button
-                                    @click="salesPeriod = 'week'"
-                                    :class="salesPeriod === 'week' 
-                                        ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200' 
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'"
-                                    class="px-3 py-1 text-xs font-medium rounded-full transition-colors"
-                                >
-                                    Week
-                                </button>
-                                <button
-                                    @click="salesPeriod = 'month'"
-                                    :class="salesPeriod === 'month' 
-                                        ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200' 
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'"
-                                    class="px-3 py-1 text-xs font-medium rounded-full transition-colors"
-                                >
-                                    Month
-                                </button>
+                            <div class="bg-red-50 text-red-500 px-3 py-1 rounded-full text-xs font-bold">
+                                {{ product.stock }} Left
                             </div>
                         </div>
-                        <VueApexCharts
-                            height="350"
-                            :options="dailyOrdersOptions"
-                            :series="dailyOrdersSeries"
-                        />
-                    </div>
-
-                    <!-- Product Performance Chart -->
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6"
-                    >
-                        <div class="flex items-center justify-between mb-6">
-                            <h3
-                                class="text-lg font-semibold text-gray-900 dark:text-gray-100"
-                            >
-                                Top Products
-                            </h3>
+                        <div v-if="data.lowStock.length === 0" class="text-center py-8 text-gray-400">
+                            No low stock alerts
                         </div>
-                        <VueApexCharts
-                            height="300"
-                            :options="productPerformanceOptions"
-                            :series="productPerformanceSeries"
-                        />
                     </div>
                 </div>
 
-                <!-- Charts Row 2 -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6"
-                    >
-                        <h3
-                            class="text-lg font-semibold mb-6 text-gray-900 dark:text-gray-100"
-                        >
-                            Order Status
-                        </h3>
-                        <VueApexCharts
-                            height="300"
-                            :options="orderStatusOptions"
-                            :series="orderStatusSeries"
-                        />
+                <!-- Analytics Graph (Keeping it but styling it) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mt-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-[#0f172a]">Sales Analytics</h2>
+                        <div class="flex space-x-2">
+                            <button @click="salesPeriod = 'week'" 
+                                    :class="salesPeriod === 'week' ? 'bg-[#0f172a] text-white' : 'bg-gray-100 text-gray-500'"
+                                    class="px-4 py-1 rounded-lg text-sm font-medium transition-all">
+                                Week
+                            </button>
+                            <button @click="salesPeriod = 'month'"
+                                    :class="salesPeriod === 'month' ? 'bg-[#0f172a] text-white' : 'bg-gray-100 text-gray-500'"
+                                    class="px-4 py-1 rounded-lg text-sm font-medium transition-all">
+                                Month
+                            </button>
+                        </div>
                     </div>
-
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6"
-                    >
-                        <h3
-                            class="text-lg font-semibold mb-6 text-gray-900 dark:text-gray-100"
-                        >
-                            Payment Status
-                        </h3>
-                        <VueApexCharts
-                            height="300"
-                            :options="paymentStatusOptions"
-                            :series="paymentStatusSeries"
-                        />
-                    </div>
+                    <VueApexCharts height="350" :options="dailyOrdersOptions" :series="dailyOrdersSeries" />
                 </div>
-
             </div>
         </div>
     </AdminLayout>

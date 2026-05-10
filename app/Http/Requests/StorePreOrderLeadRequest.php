@@ -22,12 +22,13 @@ class StorePreOrderLeadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'product_interest' => 'required|string|max:255',
-            'message' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 2MB max
+            'product_interest' => 'required|string|max:500',
+            'reference_link' => 'nullable|string|max:1000',
+            'message' => 'nullable|string|max:2000',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
         ];
     }
 }

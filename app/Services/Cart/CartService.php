@@ -126,7 +126,7 @@ class CartService
             'quantity' => $data['quantity'],
             'price' => $itemPrice,
             'options' => $data['options'] ?? null,
-            'is_pre_order' => $product->is_pre_order,
+            'is_pre_order' => $allowInfinite,
         ];
 
         // Add item to cart

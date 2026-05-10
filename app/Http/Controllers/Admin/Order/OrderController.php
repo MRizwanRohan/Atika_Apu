@@ -57,6 +57,7 @@ class OrderController extends Controller
             'min_total' => $request->input('min_total'),
             'max_total' => $request->input('max_total'),
             'source' => $request->input('source'),
+            'is_pre_order' => $request->input('is_pre_order'),
         ];
 
         $perPage = (int) $request->input('per_page', 10);

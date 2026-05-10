@@ -439,6 +439,14 @@ public function getPaginatedOrders(
         if (!empty($filters['max_total'])) {
             $query->where('total', '<=', $filters['max_total']);
         }
+
+        // Filter by pre-order
+        if (isset($filters['is_pre_order']) && $filters['is_pre_order'] !== '' && $filters['is_pre_order'] !== null) {
+            $value = filter_var($filters['is_pre_order'], FILTER_VALIDATE_BOOLEAN);
+            $query->whereHas('items', function ($q) use ($value) {
+                $q->where('is_pre_order', $value);
+            });
+        }
     }
 
     /**

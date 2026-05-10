@@ -16,7 +16,8 @@ import {
     PhX,
     PhHeart,
     PhGift,
-    PhLightning,
+    PhCube,
+    PhShoppingCartSimple
 } from "@phosphor-icons/vue";
 
 const props = defineProps({
@@ -110,8 +111,8 @@ const cleantopnotice = (html) => {
                         :href="route('pre-order-lead.form')"
                         class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <PhLightning class="w-4 h-4 group-hover:scale-110 transition-transform"  />
-                        <span>Request Product</span>
+                        <PhCube class="w-4 h-4 group-hover:scale-110 transition-transform"  />
+                        <span>Pre Order</span>
                     </Link>
 
                     <Link
@@ -256,7 +257,7 @@ const cleantopnotice = (html) => {
                             class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
                         >
                             <div class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all">
-                                <PhShoppingBag class="w-5 h-5"  />
+                                <PhShoppingCartSimple class="w-5 h-5"  />
                                 <span
                                     class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
                                 >
@@ -302,7 +303,7 @@ const cleantopnotice = (html) => {
                             class="relative p-1 -mr-1 text-gray-900 transition-transform active:scale-95"
                             aria-label="Cart"
                         >
-                            <PhShoppingBag class="w-7 h-7"  />
+                            <PhShoppingCartSimple class="w-7 h-7"  />
                             <span
                                 v-if="cartCount > 0"
                                 class="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"

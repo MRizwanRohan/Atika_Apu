@@ -47,7 +47,7 @@ const swiperBreakpoints = {
 </script>
 
 <template>
-    <section class="py-4 lg:py-10 bg-white">
+    <section class="py-2 lg:py-10 bg-white">
         <div class="container mx-auto px-2">
             <!-- Section Header -->
             <div class="text-center hidden lg:block mb-10">

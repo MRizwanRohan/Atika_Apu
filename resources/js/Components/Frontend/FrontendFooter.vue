@@ -34,6 +34,7 @@ const facebookIframe = computed(() => {
     return html
         .replace(/width=["']\d+["']/gi, 'width="100%"')
         .replace(/height=["']\d+["']/gi, 'height="100%"')
+        .replace(/<iframe/gi, '<iframe allow="unload"')
         .replace(/(style=["'])([^"']*)(["'])/gi, (match, prefix, style, suffix) => {
             const cleaned = `${style}; width:100% !important; height:100% !important;`;
             return `${prefix}${cleaned}${suffix}`;

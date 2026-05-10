@@ -152,16 +152,13 @@ const handleVariationChange = (payload) => {
     }
 };
 
-const activeTab = ref("specs");
-const specsSection = ref(null);
-const descriptionSection = ref(null);
-const warrantySection = ref(null);
-const reviewsSection = ref(null);
-let sectionsObserver = null;
-
-// Height of the fixed header (provided by user). Used to offset scroll positions so
-// anchored sections are not hidden beneath the header.
-const HEADER_OFFSET = 152;
+const hasDescription = computed(() => {
+    const desc = props.product?.description;
+    if (!desc) return false;
+    // Strip tags and entities to see if there's real content
+    const text = desc.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, "").trim();
+    return text.length > 0;
+});
 
 const hasSpecification = computed(() => {
     return (
@@ -171,73 +168,21 @@ const hasSpecification = computed(() => {
 });
 
 const hasWarranty = computed(() => {
-    return !!props.product.warranty; // simplistic check, assumes warranty field exists
+    return !!props.product.warranty;
 });
 
-const scrollToSection = async (key) => {
-    // wait for DOM to be settled
-    await nextTick();
-    const elMap = {
-        specs: specsSection,
-        description: descriptionSection,
-        warranty: warrantySection,
-        reviews: reviewsSection,
-    };
-    const elRef = elMap[key];
-    if (!elRef || !elRef.value) return;
+const activeTab = ref(hasDescription.value ? "description" : "");
 
-    // Compute absolute top and subtract the fixed header height so the section
-    // is fully visible below the header.
-    const rect = elRef.value.getBoundingClientRect();
-    const absoluteTop = rect.top + window.scrollY;
-    const target = Math.max(0, absoluteTop - HEADER_OFFSET - 12); // 12px breathing room
-
-    window.scrollTo({ top: target, behavior: "smooth" });
-
-    // update active tab immediately so UI responds while scrolling
+const setActiveTab = (key) => {
     activeTab.value = key;
 };
 
 onMounted(() => {
-    const observeTargets = [
-        { key: "specs", ref: specsSection },
-        { key: "description", ref: descriptionSection },
-        { key: "warranty", ref: warrantySection },
-        { key: "reviews", ref: reviewsSection },
-    ];
-
-    sectionsObserver = new IntersectionObserver(
-        (entries) => {
-            // pick the entry with highest intersectionRatio that's visible
-            const visible = entries
-                .filter((e) => e.isIntersecting)
-                .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-            if (visible.length > 0) {
-                const id = visible[0].target.getAttribute("data-section");
-                if (id) activeTab.value = id;
-            }
-        },
-        // rootMargin pushes the intersection area down by HEADER_OFFSET so that a
-        // section is considered "visible" only when it's scrolled into view below
-        // the fixed header. The bottom margin (-40%) helps pick the section that's
-        // roughly centered in the viewport for better active-tab accuracy.
-        {
-            root: null,
-            rootMargin: `-${HEADER_OFFSET + 8}px 0px -40% 0px`,
-            threshold: [0, 0.25, 0.5, 0.75],
-        },
-    );
-
-    observeTargets.forEach((s) => {
-        if (s.ref && s.ref.value) {
-            s.ref.value.setAttribute("data-section", s.key);
-            sectionsObserver.observe(s.ref.value);
-        }
-    });
+    // Scroll logic removed in favor of tabs
 });
 
 onBeforeUnmount(() => {
-    if (sectionsObserver) sectionsObserver.disconnect();
+    // Observers removed
 });const isPreOrderMode = computed(() => {
     return props.product.stock <= 0 && props.product.is_pre_order;
 });
@@ -271,7 +216,7 @@ onBeforeUnmount(() => {
                         <ProductInfo
                             :product="product"
                             @variation-change="handleVariationChange"
-                            @scroll-to-description="scrollToSection('description')"
+                            @scroll-to-description="setActiveTab('description')"
                             :settings="settings"
                         />
                     </div>
@@ -288,10 +233,23 @@ onBeforeUnmount(() => {
                                 role="tablist"
                                 aria-label="Product sections"
                             >
+
+                                <button
+                                    v-if="hasDescription"
+                                    @click.prevent="setActiveTab('description')"
+                                    class="pb-4 text-[11px] md:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
+                                    :class="[
+                                        activeTab === 'description'
+                                            ? 'border-black text-black'
+                                            : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300',
+                                    ]"
+                                >
+                                    Description
+                                </button>
                                 <button
                                     v-if="hasSpecification"
-                                    @click.prevent="scrollToSection('specs')"
-                                    class="pb-4 text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
+                                    @click.prevent="setActiveTab('specs')"
+                                    class="pb-4 text-[11px] md:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
                                     :class="[
                                         activeTab === 'specs'
                                             ? 'border-black text-black'
@@ -302,21 +260,8 @@ onBeforeUnmount(() => {
                                 </button>
 
                                 <button
-                                    v-if="product.description"
-                                    @click.prevent="scrollToSection('description')"
-                                    class="pb-4 text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
-                                    :class="[
-                                        activeTab === 'description'
-                                            ? 'border-black text-black'
-                                            : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300',
-                                    ]"
-                                >
-                                    Description
-                                </button>
-
-                                <button
-                                    @click.prevent="scrollToSection('reviews')"
-                                    class="pb-4 text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
+                                    @click.prevent="setActiveTab('reviews')"
+                                    class="pb-4 text-[11px] md:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2"
                                     :class="[
                                         activeTab === 'reviews'
                                             ? 'border-black text-black'
@@ -328,75 +273,75 @@ onBeforeUnmount(() => {
                             </nav>
                         </div>
 
-                        <!-- Specifications -->
-                        <section
-                            v-if="hasSpecification"
-                            ref="specsSection"
-                            id="specs"
-                            class="mb-16 scroll-mt-28"
-                        >
-                            <h2
-                                class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
+                        <div class="transition-all duration-300">
+                            <!-- Specifications -->
+                            <section
+                                v-if="hasSpecification && activeTab === 'specs'"
+                                id="specs"
+                                class="mb-16"
                             >
-                                Specifications
-                            </h2>
+                                <h2
+                                    class="text-lg md:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
+                                >
+                                    Specifications
+                                </h2>
 
-                            <div
-                                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                <div
+                                    class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                >
+                                    <table class="w-full text-sm text-left">
+                                        <tbody class="divide-y divide-gray-100">
+                                            <tr
+                                                v-for="(
+                                                    row, idx
+                                                ) in product.specification"
+                                                :key="idx"
+                                                class="group hover:bg-gray-50 transition-colors"
+                                            >
+                                                <td
+                                                    class="px-6 py-4 w-1/3 text-gray-500 font-medium bg-gray-50/50 group-hover:bg-gray-50"
+                                                >
+                                                    {{ row.title }}
+                                                </td>
+                                                <td
+                                                    class="px-6 py-4 font-semibold text-gray-900"
+                                                >
+                                                    {{ row.value }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+
+                            <!-- Description -->
+                            <section
+                                v-if="hasDescription && activeTab === 'description'"
+                                id="description"
+                                class="mb-16"
                             >
-                                <table class="w-full text-sm text-left">
-                                    <tbody class="divide-y divide-gray-100">
-                                        <tr
-                                            v-for="(
-                                                row, idx
-                                            ) in product.specification"
-                                            :key="idx"
-                                            class="group hover:bg-gray-50 transition-colors"
-                                        >
-                                            <td
-                                                class="px-6 py-4 w-1/3 text-gray-500 font-medium bg-gray-50/50 group-hover:bg-gray-50"
-                                            >
-                                                {{ row.title }}
-                                            </td>
-                                            <td
-                                                class="px-6 py-4 font-semibold text-gray-900"
-                                            >
-                                                {{ row.value }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </section>
+                                <h2 class="text-lg md:text-2xl font-bold mb-6">Description</h2>
+                                <div
+                                    class="prose prose-sm max-w-none text-gray-600 leading-relaxed bg-white p-8 rounded-2xl border border-gray-100"
+                                    v-html="product.description"
+                                ></div>
+                            </section>
 
-                        <!-- Description -->
-                        <section
-                            v-if="product.description"
-                            ref="descriptionSection"
-                            id="description"
-                            class="mb-16 scroll-mt-28"
-                        >
-                            <h2 class="text-2xl font-bold mb-6">Description</h2>
-                            <div
-                                class="prose prose-sm max-w-none text-gray-600 leading-relaxed bg-white p-8 rounded-2xl border border-gray-100"
-                                v-html="product.description"
-                            ></div>
-                        </section>
-
-                        <!-- Reviews (anchor target) -->
-                        <section
-                            ref="reviewsSection"
-                            id="reviews"
-                            class="mb-16 scroll-mt-28"
-                        >
-                            <h2 class="text-2xl font-bold mb-6">Customer Reviews</h2>
-                            <ProductReviews
-                                :product-id="product.id"
-                                :reviews="reviews"
-                                :review-stats="reviewStats"
-                                :can-review="canReview"
-                            />
-                        </section>
+                            <!-- Reviews -->
+                            <section
+                                v-if="activeTab === 'reviews'"
+                                id="reviews"
+                                class="mb-16"
+                            >
+                                <h2 class="text-lg md:text-2xl font-bold mb-6">Customer Reviews</h2>
+                                <ProductReviews
+                                    :product-id="product.id"
+                                    :reviews="reviews"
+                                    :review-stats="reviewStats"
+                                    :can-review="canReview"
+                                />
+                            </section>
+                        </div>
                     </div>
 
 

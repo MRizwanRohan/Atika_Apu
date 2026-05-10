@@ -110,7 +110,7 @@ onUnmounted(() => {
 <template>
     <section
         v-if="productswithVideo && productswithVideo.length > 0"
-        class="py-12 bg-white overflow-hidden"
+        class="py-2 bg-white overflow-hidden"
     >
     <!-- <pre>{{ productswithVideo }}</pre> -->
         <div class="container mx-auto px-4">
@@ -241,7 +241,7 @@ onUnmounted(() => {
                                             class="inline-block bg-gray-900 text-white px-2.5 py-1 rounded mt-2 font-bold text-xs"
                                         >
                                             <span v-if="productswithVideo[currentIndex].product.type === 'variable'">Starts at </span>
-                                            ${{ getDisplayPrice(productswithVideo[currentIndex].product) }}
+                                            ৳{{ getDisplayPrice(productswithVideo[currentIndex].product) }}
                                         </div>
                                     </div>
                                 </div>

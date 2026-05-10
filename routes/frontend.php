@@ -9,7 +9,7 @@ use App\Http\Controllers\Frontend\User\UserDashboardController;
 use App\Http\Controllers\Frontend\Product\ProductController;
 use App\Http\Controllers\Frontend\Cart\CartController;
 use App\Http\Controllers\Frontend\Order\OrderController;
-use App\Http\Controllers\Frontend\Review\ReviewController; 
+use App\Http\Controllers\Frontend\Review\ReviewController;
 use App\Http\Controllers\Frontend\Wishlist\WishlistController;
 use App\Http\Controllers\Frontend\Compare\CompareController;
 use App\Http\Controllers\Frontend\Pages\PagesController;
@@ -85,7 +85,7 @@ Route::prefix('order')->name('order.')->group(function () {
 Route::prefix('reviews')->name('reviews.')->group(function () {
     Route::post('/store', [ReviewController::class, 'store'])
         ->name('store');
-    
+
     Route::get('/can-review/{productId}', [ReviewController::class, 'canReview'])
         ->name('can-review');
 });
@@ -116,11 +116,11 @@ Route::middleware(['guest', 'throttle:10,1'])->group(function () {
     // User Login Routes
     Route::get('/login', [UserAuthController::class, 'create'])->name('login');
     Route::post('/login', [UserAuthController::class, 'store']);
-    
+
     // User Register Routes
     Route::get('/register', [UserRegisterController::class, 'create'])->name('register');
     Route::post('/register', [UserRegisterController::class, 'store']);
-    
+
     // Admin Login Routes
     Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
     Route::post('/admin/login', [AdminAuthController::class, 'store']);
@@ -135,8 +135,14 @@ Route::middleware(['guest', 'throttle:10,1'])->group(function () {
 
 Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [UserDashboardController::class, 'editProfile'])->name('profile.edit');
     Route::put('/profile', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/password', [UserDashboardController::class, 'editPassword'])->name('password.edit');
     Route::put('/password', [UserDashboardController::class, 'updatePassword'])->name('password.update');
+    Route::get('/orders', [UserDashboardController::class, 'orders'])->name('orders');
+    Route::get('/reviews', [UserDashboardController::class, 'reviews'])->name('reviews');
+    Route::get('/pre-orders', [UserDashboardController::class, 'preOrders'])->name('pre-orders');
+    Route::get('/incomplete-orders', [UserDashboardController::class, 'incompleteOrders'])->name('incomplete-orders');
 });
 
 // Logout Route (for both admin and user)

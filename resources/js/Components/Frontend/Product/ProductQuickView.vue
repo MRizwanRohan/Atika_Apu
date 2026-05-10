@@ -9,7 +9,7 @@ import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 const props = defineProps({
     product: {
         type: Object,
-        required: true,
+        default: null,
     },
     show: {
         type: Boolean,
@@ -31,6 +31,7 @@ const imageLoadStates = ref([]);
 
 // Product images
 const productImages = computed(() => {
+    if (!props.product) return [];
     const images = [];
     if (props.product.feature_image) {
         images.push(props.product.feature_image);
@@ -109,6 +110,7 @@ const getMatchingVariation = () => {
 const selectedVariation = computed(() => getMatchingVariation());
 
 const pricing = computed(() => {
+    if (!props.product) return { main: 0, cross: null, discountValue: 0, discountType: null };
     const selected = selectedVariation.value;
     if (selected) {
         let main = parseFloat(selected.price || 0);
@@ -184,6 +186,7 @@ const pricing = computed(() => {
 
 // Calculate total stock for variable products
 const totalStock = computed(() => {
+    if (!props.product) return 0;
     if (props.product.type === "variable" && props.product.variations) {
         return props.product.variations.reduce((sum, variation) => {
             return sum + (variation.stock || 0);
@@ -194,6 +197,7 @@ const totalStock = computed(() => {
 
 // Current stock based on selection
 const currentStock = computed(() => {
+    if (!props.product) return 0;
     if (props.product.type === "variable") {
         const variation = getMatchingVariation();
         // If variation is selected, show its stock, otherwise show total stock
@@ -207,16 +211,24 @@ const currentStock = computed(() => {
 
 // Stock display message
 const stockMessage = computed(() => {
+    if (!props.product) return "";
     if (currentStock.value > 0) {
         if (props.product.type === "variable" && !getMatchingVariation()) {
             return `Total Stock: ${currentStock.value} available`;
         }
         return `In Stock (${currentStock.value} available)`;
     }
+    if (props.product.is_pre_order) return "Pre-Order Product";
     return "Out of Stock";
 });
 
+const isPreOrderMode = computed(() => {
+    if (!props.product) return false;
+    return props.product.is_pre_order && currentStock.value <= 0;
+});
+
 const canAddToCart = computed(() => {
+    if (!props.product) return false;
     if (props.product.type !== "variable") return props.product.stock > 0 || props.product.is_pre_order;
 
     const requiredAttrs = availableAttributes.value.map((a) => a.key);
@@ -243,6 +255,7 @@ const performAddToCart = (redirectToCheckout = false) => {
         quantity: quantity.value,
         variationId: variationId,
         productOptions: {},
+        openSidebar: !redirectToCheckout,
         onSuccess: () => {
             isAddingToCart.value = false;
             emit("close");
@@ -355,28 +368,29 @@ onUnmounted(() => {
             >
                 <!-- Header -->
                 <div
-                    class="flex items-center justify-between p-4 md:p-6 border-b bg-gray-50"
+                    class="flex items-center justify-between p-3 md:p-6 border-b bg-gray-50"
                 >
                     <h2
-                        class="text-lg md:text-xl font-bold text-gray-900 uppercase tracking-wide"
+                        class="text-base md:text-xl font-bold text-gray-900 uppercase tracking-wide"
                     >
                         Select Options
                     </h2>
                     <button
                         @click="$emit('close')"
-                        class="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                        class="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
                     >
-                        <X :size="24" />
+                        <X :size="20" class="md:hidden" />
+                        <X :size="24" class="hidden md:block" />
                     </button>
                 </div>
 
                 <!-- Main Content Area: Images (Left) + Details (Right) -->
-                <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
                     <!-- Left Side: Horizontally Scrollable Images (Mobile) / Vertically Scrollable (Desktop) -->
                     <div
-                        class="md:w-1/2 bg-gray-50 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto p-4 md:p-6 scrollbar-hide"
+                        class="md:w-1/2 bg-gray-50 md:overflow-y-auto p-3 md:p-6 scrollbar-hide flex-shrink-0"
                     >
-                        <div class="flex md:flex-col gap-3 md:space-y-0">
+                        <div class="grid grid-cols-3 md:flex md:flex-col gap-2 md:space-y-3">
                             <Transition
                                 v-for="(image, index) in productImages"
                                 :key="index"
@@ -385,7 +399,7 @@ onUnmounted(() => {
                             >
                                 <div
                                     v-if="imageLoadStates[index]"
-                                    class="relative flex-shrink-0 w-[280px] md:w-full aspect-[3/4] rounded-lg overflow-hidden bg-white shadow-md cursor-pointer border-2 transition-all hover:shadow-lg"
+                                    class="relative flex-shrink-0 w-full aspect-square md:aspect-[3/4] rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer border-2 transition-all hover:shadow-lg"
                                     :class="
                                         currentImageIndex === index
                                             ? 'border-primary ring-2 ring-primary/30'
@@ -398,7 +412,7 @@ onUnmounted(() => {
                                         :alt="`${product.name} ${index + 1}`"
                                         class="w-full h-full object-cover transition-all duration-300"
                                         :class="
-                                            currentStock <= 0
+                                            currentStock <= 0 && !product.is_pre_order
                                                 ? 'blur-sm grayscale'
                                                 : ''
                                         "
@@ -420,10 +434,10 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <!-- Right Side: Product Details (Scrollable) -->
-                    <div class="md:w-1/2 flex flex-col overflow-hidden">
-                        <div class="flex-1 overflow-y-auto p-4 md:p-6">
-                            <div class="space-y-4">
+                    <!-- Right Side: Product Details (Scrollable on desktop) -->
+                    <div class="md:w-1/2 flex flex-col">
+                        <div class="p-2 md:p-4 md:flex-1 md:overflow-y-auto">
+                            <div class="space-y-2">
                                 <!-- Product Name -->
                                 <h2
                                     class="text-xl md:text-2xl font-bold text-gray-900 uppercase"
@@ -434,15 +448,15 @@ onUnmounted(() => {
                                 <!-- Price -->
                                 <div class="flex items-baseline gap-3">
                                     <span
-                                        class="text-2xl md:text-3xl font-bold text-gray-900"
+                                        class="text-xl md:text-3xl font-bold text-gray-900"
                                     >
-                                        ${{ formatPrice(pricing.main) }}
+                                        ৳{{ formatPrice(pricing.main) }}
                                     </span>
                                     <span
                                         v-if="pricing.cross"
-                                        class="text-lg text-gray-400 line-through"
+                                        class="text-base text-gray-400 line-through"
                                     >
-                                        ${{ formatPrice(pricing.cross) }}
+                                        ৳{{ formatPrice(pricing.cross) }}
                                     </span>
                                 </div>
 
@@ -457,12 +471,12 @@ onUnmounted(() => {
                                 <!-- Attributes Selection -->
                                 <div
                                     v-if="availableAttributes.length > 0"
-                                    class="space-y-4 pt-2"
+                                    class="space-y-2 pt-2"
                                 >
                                     <div
                                         v-for="attr in availableAttributes"
                                         :key="attr.key"
-                                        class="space-y-3"
+                                        class="space-y-2"
                                     >
                                         <div
                                             class="flex justify-between items-center"
@@ -512,46 +526,46 @@ onUnmounted(() => {
                                 </div>
 
                                 <!-- Quantity Selector -->
-                                <div class="pt-4">
+                                <div class="pt-2 md:pt-4">
                                     <div
-                                        class="flex items-center border border-gray-300"
+                                        class="flex items-center border border-gray-300 h-10 md:h-12"
                                     >
                                         <button
                                             @click="
                                                 quantity > 1 ? quantity-- : null
                                             "
-                                            class="w-12 h-12 flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                                            class="w-10 md:w-12 h-full flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50"
                                             :disabled="quantity <= 1"
                                         >
-                                            <Minus :size="16" />
+                                            <Minus :size="14" />
                                         </button>
                                         <span
-                                            class="flex-1 text-center font-medium text-gray-900"
+                                            class="flex-1 text-center font-medium text-gray-900 text-sm md:text-base"
                                         >
                                             {{ quantity }}
                                         </span>
                                         <button
                                             @click="quantity++"
-                                            class="w-12 h-12 flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-colors"
+                                            class="w-10 md:w-12 h-full flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-colors"
                                         >
-                                            <Plus :size="16" />
+                                            <Plus :size="14" />
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Action Buttons -->
-                                <div class="space-y-3 pt-4">
+                                <div class="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 pt-2 md:pt-4">
                                     <button
                                         @click="performAddToCart"
                                         :disabled="
                                             !canAddToCart || isAddingToCart
                                         "
-                                        class="w-full bg-white border-2 border-gray-900 text-gray-900 font-bold py-3 md:py-4 hover:bg-gray-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300"
+                                        class="w-full bg-white border-2 border-gray-900 text-gray-900 font-bold py-2.5 md:py-4 text-xs md:text-base hover:bg-gray-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300"
                                     >
                                         <span v-if="isAddingToCart"
                                             >Adding...</span
                                         >
-                                        <span v-else>{{ currentStock <= 0 && product.is_pre_order ? 'PRE-ORDER' : 'ADD TO CART' }}</span>
+                                        <span v-else>{{ isPreOrderMode ? 'PRE-ORDER' : 'ADD TO CART' }}</span>
                                     </button>
 
                                     <button
@@ -559,9 +573,9 @@ onUnmounted(() => {
                                         :disabled="
                                             !canAddToCart || isAddingToCart
                                         "
-                                        class="w-full bg-gray-900 text-white font-bold py-3 md:py-4 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                        class="w-full bg-gray-900 text-white font-bold py-2.5 md:py-4 text-xs md:text-base hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                     >
-                                        BUY IT NOW
+                                        BUY NOW
                                     </button>
 
                                 </div>
@@ -576,9 +590,18 @@ onUnmounted(() => {
                                                 : 'text-red-700'
                                         "
                                     >
-                                        {{ currentStock > 0 ? "✓" : "✗" }}
+                                        {{ currentStock > 0 || product.is_pre_order ? "✓" : "✗" }}
                                         {{ stockMessage }}
                                     </span>
+                                </div>
+
+                                <!-- Pre-Order Details -->
+                                <div v-if="isPreOrderMode" class="bg-violet-50 border border-violet-100 rounded-xl p-4 space-y-1">
+                                    <p class="text-violet-900 font-bold text-sm uppercase">Pre-Order Details</p>
+                                    <p class="text-violet-700 text-xs leading-relaxed">
+                                        • 20-30 days delivery time<br>
+                                        • 50% advance payment (৳{{ formatPrice(pricing.main * 0.5) }})
+                                    </p>
                                 </div>
                             </div>
                         </div>

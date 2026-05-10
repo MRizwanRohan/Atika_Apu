@@ -11,6 +11,7 @@ class PreOrderLead extends Model
         'email',
         'phone',
         'product_interest',
+        'reference_link',
         'message',
         'image_path',
         'status',

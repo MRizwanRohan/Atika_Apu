@@ -411,6 +411,7 @@ class OrderService implements OrderInterface
                 'unit_price' => $price,
                 'discount_type' => !empty($itemData['discount_type']) ? $itemData['discount_type'] : null,
                 'discount_amount' => (!empty($itemData['discount_amount']) && $itemData['discount_amount'] > 0) ? $itemData['discount_amount'] : 0,
+                'is_pre_order' => $product->is_pre_order && (($productVariation ? $productVariation->stock : $product->stock) <= 0),
                 'additional_data' => $itemData
             ];
         }
@@ -525,7 +526,7 @@ class OrderService implements OrderInterface
             'final_price' => $finalPrice,
             'coupon_code' => $itemData['additional_data']['coupon_code'] ?? null,
             'options' => $itemData['additional_data']['options'] ?? null,
-            'is_pre_order' => $product->is_pre_order
+            'is_pre_order' => $itemData['is_pre_order'] ?? $product->is_pre_order
         ]);
     }
 
@@ -710,6 +711,7 @@ class OrderService implements OrderInterface
             'max_total' => $params['filters']['max_total'] ?? null,
             'source' => $params['filters']['source'] ?? null,
             'delivery_status' => $params['filters']['delivery_status'] ?? null,
+            'is_pre_order' => $params['filters']['is_pre_order'] ?? null,
         ];
 
         return $this->orderRepository->getPaginatedOrders(

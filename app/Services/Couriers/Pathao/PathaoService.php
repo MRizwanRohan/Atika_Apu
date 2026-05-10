@@ -168,12 +168,14 @@ class PathaoService
 
         $itemDescription = $itemDescription ?: 'Cloth items';
 
+        $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
+
         $payload = [
             'store_id' => $settings->StoreId,
             'merchant_order_id' => $order->order_number,
             'recipient_name' => $order->customer_name ?? 'Unknown Customer',
             'recipient_phone' => $order->customer_phone ?? '01887573015',
-            'recipient_address' => $order->shipping_address ?? 'Default Address',
+            'recipient_address' => $address,
             'delivery_type' => 48,
             'item_type' => 2,
             'special_instruction' => $specialInstruction,
@@ -202,6 +204,7 @@ class PathaoService
         // Update the order with consignment_id and other fields
         $order->update([
             'tracking_number' => $responseData['consignment_id'] ?? $order->tracking_number,
+            'consignment_id' => $responseData['consignment_id'] ?? $order->consignment_id,
             'is_courier' => true,
             'courier_name' => 'pathao',
             'city_id' => $validated['recipient_city'] ?? $order->city_id,
@@ -227,58 +230,36 @@ class PathaoService
             throw new \Exception('Courier settings not found', 404);
         }
 
-        $ordersPayload = [];
+        $successCount = 0;
+        $failedCount = 0;
+        $errors = [];
+
         foreach ($validated['orders'] as $orderData) {
-            $order = Order::with(['items.product', 'items.productVariation'])->find($orderData['orderId']);
+            try {
+                $response = $this->createShipment(
+                    ['orderId' => $orderData['orderId']], 
+                    $orderData['specialInstruction'] ?? 'Need to Delivery before 5 PM'
+                );
 
-            if (!$order) {
-                throw new \Exception("Order ID {$orderData['orderId']} not found", 404);
-            }
-
-            $itemQuantity = $order->items->sum('quantity');
-            $itemWeight = $order->items->sum(function ($item) {
-                return $item->quantity * 0.5;
-            });
-
-            $itemDescription = $order->items->map(function ($item) {
-                return "{$item->product->name} (Qty: {$item->quantity})";
-            })->implode(', ');
-
-            $itemDescription = $itemDescription ?: 'Cloth items';
-
-            $ordersPayload[] = [
-                'store_id' => $settings->StoreId,
-                'merchant_order_id' => $order->order_number,
-                'recipient_name' => $order->customer_name ?? 'Unknown Customer',
-                'recipient_phone' => $order->customer_phone ?? '01887573015',
-                'recipient_address' => $order->shipping_address ?? 'Default Address',
-                'delivery_type' => 48,
-                'item_type' => 2,
-                'special_instruction' => $orderData['specialInstruction'] ?? 'Need to Delivery before 5 PM',
-                'item_quantity' => $itemQuantity,
-                'item_weight' => $itemWeight,
-                'amount_to_collect' => (float) ($order->total - ($order->paid_amount ?? 0)),
-                'item_description' => $itemDescription,
-            ];
-        }
-
-        $payload = ['orders' => $ordersPayload];
-
-        $response = $this->makeRequest('POST', '/aladdin/api/v1/orders/bulk', $payload);
-
-        if (isset($response['code']) && $response['code'] === 202) {
-            foreach ($validated['orders'] as $orderData) {
-                $order = Order::find($orderData['orderId']);
-                if ($order) {
-                    $order->update([
-                        'is_courier' => true,
-                        'courier_name' => 'pathao',
-                    ]);
-                    event(new OrderUpdated($order->fresh()));
+                if (isset($response['code']) && $response['code'] === 200) {
+                    $successCount++;
+                } else {
+                    $failedCount++;
+                    $errors[] = "Order #{$orderData['orderId']}: " . ($response['message'] ?? 'Unknown error');
                 }
+            } catch (\Exception $e) {
+                $failedCount++;
+                $errors[] = "Order #{$orderData['orderId']}: " . $e->getMessage();
+                Log::error("Bulk Pathao shipment error for Order #{$orderData['orderId']}: " . $e->getMessage());
             }
         }
 
-        return $response;
+        return [
+            'code' => $successCount > 0 ? 200 : 400,
+            'message' => "Bulk operation completed. Success: $successCount, Failed: $failedCount",
+            'success_count' => $successCount,
+            'failed_count' => $failedCount,
+            'errors' => $errors
+        ];
     }
 }

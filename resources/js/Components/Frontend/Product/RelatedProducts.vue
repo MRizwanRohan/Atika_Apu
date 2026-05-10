@@ -22,7 +22,7 @@ const modules = [Navigation, Autoplay];
 <template>
     <div
         v-if="products && products.length"
-        class="mt-16 border-t border-gray-200 pt-16"
+        class="mt-2 pt-2"
     >
         <div class="flex items-center justify-between mb-8">
             <h3 class="text-xl lg:text-2xl font-bold text-gray-900">Similar Products</h3>

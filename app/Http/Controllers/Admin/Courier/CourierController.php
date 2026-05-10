@@ -60,7 +60,7 @@ class CourierController extends Controller
     {
         try {
             $rules = [];
-            
+
             // Pathao validation rules
             if ($request->hasAny(['client_id', 'client_secret', 'username', 'password', 'is_enabled', 'StoreId', 'pathao_webhook_enabled'])) {
                 $rules = array_merge($rules, [
@@ -85,7 +85,7 @@ class CourierController extends Controller
             }
 
             if (empty($rules)) {
-                 return redirect()->back()->with(['error' => 'No settings provided']);
+                return redirect()->back()->with(['error' => 'No settings provided']);
             }
 
             $validated = $request->validate($rules);
@@ -96,9 +96,9 @@ class CourierController extends Controller
                 // Check if Pathao credentials changed to force a new token
                 if (isset($validated['client_id'])) {
                     $credentialsChanged = ($settings->client_id !== $validated['client_id']) ||
-                                         ($settings->client_secret !== $validated['client_secret']) ||
-                                         ($settings->username !== $validated['username']) ||
-                                         ($settings->password !== $validated['password']);
+                        ($settings->client_secret !== $validated['client_secret']) ||
+                        ($settings->username !== $validated['username']) ||
+                        ($settings->password !== $validated['password']);
 
                     if ($credentialsChanged) {
                         $validated['access_token'] = null;
@@ -152,7 +152,7 @@ class CourierController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    
+
 
 
     /**
@@ -200,6 +200,7 @@ class CourierController extends Controller
         }
     }
 
+
     /**
      * Create a bulk courier shipment with Pathao
      */
@@ -213,9 +214,9 @@ class CourierController extends Controller
 
             $response = $this->pathaoService->createBulkShipment($validated);
 
-            if (isset($response['code']) && $response['code'] === 202) {
+            if (isset($response['code']) && $response['code'] === 200) {
                 return redirect()->back()->with('flash', [
-                    'message' => $response['message'] ?? 'Bulk order creation request accepted',
+                    'message' => $response['message'] ?? 'Bulk order creation request completed',
                     'type' => 'success'
                 ]);
             }

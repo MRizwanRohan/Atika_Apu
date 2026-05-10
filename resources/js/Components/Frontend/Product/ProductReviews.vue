@@ -50,7 +50,7 @@ const loadMoreReviews = () => {
     <div class="mt-12 border-t pt-8">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">
+            <h2 class="text-lg md:text-2xl font-bold text-gray-900">
                 Customer Reviews ({{ reviewStats.total_reviews }})
             </h2>
             

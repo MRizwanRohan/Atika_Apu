@@ -1,6 +1,6 @@
 <template>
   <AdminLayout>
-    <div class="container mx-auto px-4 py-8">
+    <div class="w-full mx-auto px-4 py-8">
       <div class="bg-white rounded-lg shadow-md">
         <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
@@ -63,12 +63,12 @@
                       <div class="flex-shrink-0 h-10 w-10">
                         <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                           <span class="text-sm font-medium text-gray-700">
-                            {{ lead.name.charAt(0).toUpperCase() }}
+                            {{ lead.name ? lead.name.charAt(0).toUpperCase() : '?' }}
                           </span>
                         </div>
                       </div>
                       <div class="ml-4">
-                        <div class="text-sm font-medium text-gray-900">{{ lead.name }}</div>
+                        <div class="text-sm font-medium text-gray-900">{{ lead.name || 'Anonymous' }}</div>
                         <div class="text-sm text-gray-500">ID: {{ lead.id }}</div>
                       </div>
                     </div>

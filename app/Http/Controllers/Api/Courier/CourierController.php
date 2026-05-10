@@ -33,11 +33,13 @@ class CourierController extends Controller
             }
 
             $order = Order::findOrFail($id);
+            $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
+
             $courierData = [
                 'invoice' => $order->order_number,
                 'recipient_name' => $order->customer_name,
                 'recipient_phone' => $order->customer_phone,
-                'recipient_address' => $order->shipping_address,
+                'recipient_address' => $address,
                 'cod_amount' => (float) ($order->total - ($order->paid_amount ?? 0)),
                 'recipient_email' => $order->customer_email,
                 'note' => $order->customer_notes ?? 'Handle with care',
@@ -127,11 +129,13 @@ class CourierController extends Controller
             try {
                 $order = Order::findOrFail($orderId);
 
+                $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
+
                 $courierData = [
                     'invoice' => $order->order_number,
                     'recipient_name' => $order->customer_name,
                     'recipient_phone' => $order->customer_phone,
-                    'recipient_address' => $order->shipping_address,
+                    'recipient_address' => $address,
                     'cod_amount' => (float) ($order->total - ($order->paid_amount ?? 0)),
                     'recipient_email' => $order->customer_email,
                     'note' => $order->customer_notes ?? 'Handle with care',

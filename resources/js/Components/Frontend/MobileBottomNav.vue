@@ -7,7 +7,7 @@ import {
     PhArrowsLeftRight, 
     PhTruck, 
     PhUser, 
-    PhLightning 
+    PhCube 
 } from "@phosphor-icons/vue";
 
 defineProps({
@@ -52,8 +52,8 @@ defineProps({
                 class="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-primary transition-colors"
                 :class="{ 'text-primary': $page.url === '/pre-order-lead' }"
             >
-                <PhLightning class="w-6 h-6"  />
-                <span class="text-[10px] font-medium">Request</span>
+                <PhCube class="w-6 h-6"  />
+                <span class="text-[10px] font-medium">Pre Order</span>
             </Link>
 
             <Link

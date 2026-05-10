@@ -7,6 +7,7 @@ use App\Models\Order;
 // carbon
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,54 +17,65 @@ class DashboardController extends Controller
     public function index()
     {
         // Summary Metrics
-        $totalSales = Order::sum('total');
-        $deliveredSales = Order::sum('paid_amount');
-        $totalOrders = Order::count();
-        $totalCustomers = User::count();
-        $pendingOrders = Order::where('status', 'pending')->count();
+        $salesToday = Order::whereDate('created_at', Carbon::today())
+            ->where('status', '!=', 'incomplete')
+            ->sum('total');
 
-        // Compute simple period-over-period changes (use 7-day windows for sales/orders, 30-day for customers)
-        $now = Carbon::now();
+        $ordersToday = Order::whereDate('created_at', Carbon::today())
+            ->where('status', '!=', 'incomplete')
+            ->count();
 
-        // Sales change (last 7 days vs previous 7 days)
-        $salesCurrentStart = $now->copy()->subDays(6)->startOfDay();
-        $salesCurrentEnd = $now->copy()->endOfDay();
-        $salesPrevStart = $now->copy()->subDays(13)->startOfDay();
-        $salesPrevEnd = $now->copy()->subDays(7)->endOfDay();
+        $preOrdersCount = Order::whereHas('items', function ($query) {
+            $query->where('is_pre_order', true);
+        })->where('status', '!=', 'cancelled')->count();
 
-        $salesCurrent = Order::whereBetween('created_at', [$salesCurrentStart, $salesCurrentEnd])->sum('total');
-        $salesPrevious = Order::whereBetween('created_at', [$salesPrevStart, $salesPrevEnd])->sum('total');
-        $salesChange = $this->percentChange($salesCurrent, $salesPrevious);
+        $requestsCount = \App\Models\PreOrderLead::count();
 
-        // Delivered sales change (last 7 days vs previous 7 days)
-        $deliveredCurrent = Order::where('status', 'delivered')->whereBetween('created_at', [$salesCurrentStart, $salesCurrentEnd])->sum('total');
-        $deliveredPrevious = Order::where('status', 'delivered')->whereBetween('created_at', [$salesPrevStart, $salesPrevEnd])->sum('total');
-        $deliveredChange = $this->percentChange($deliveredCurrent, $deliveredPrevious);
+        // Helper function for top selling products
+        $getTopSelling = function ($startDate = null) {
+            $query = Product::select('products.id', 'products.name', 'products.feature_image', 'products.is_pre_order')
+                ->join('order_items', 'products.id', '=', 'order_items.product_id')
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->where('orders.status', '!=', 'cancelled')
+                ->where('orders.status', '!=', 'incomplete');
 
-        // Orders change (last 7 days vs previous 7 days)
-        $ordersCurrent = Order::whereBetween('created_at', [$salesCurrentStart, $salesCurrentEnd])->count();
-        $ordersPrevious = Order::whereBetween('created_at', [$salesPrevStart, $salesPrevEnd])->count();
-        $ordersChange = $this->percentChange($ordersCurrent, $ordersPrevious);
+            if ($startDate) {
+                $query->where('orders.created_at', '>=', $startDate);
+            }
 
-        // Customers change (last 30 days vs previous 30 days)
-        $custNow = Carbon::now();
-        $custCurrentStart = $custNow->copy()->subDays(29)->startOfDay();
-        $custCurrentEnd = $custNow->copy()->endOfDay();
-        $custPrevStart = $custNow->copy()->subDays(59)->startOfDay();
-        $custPrevEnd = $custNow->copy()->subDays(30)->endOfDay();
+            return $query->selectRaw('SUM(order_items.quantity) as total_sold')
+                ->groupBy('products.id', 'products.name', 'products.feature_image', 'products.is_pre_order')
+                ->orderByDesc('total_sold')
+                ->take(5)
+                ->get()
+                ->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'feature_image_url' => $product->feature_image_url,
+                        'total_sold' => (int) $product->total_sold,
+                        'is_pre_order' => (bool) $product->is_pre_order,
+                    ];
+                });
+        };
 
-        $customersCurrent = User::whereBetween('created_at', [$custCurrentStart, $custCurrentEnd])->count();
-        $customersPrevious = User::whereBetween('created_at', [$custPrevStart, $custPrevEnd])->count();
-        $customersChange = $this->percentChange($customersCurrent, $customersPrevious);
+        $topSelling = [
+            'today' => $getTopSelling(Carbon::today()),
+            'week' => $getTopSelling(Carbon::now()->startOfWeek()),
+            'month' => $getTopSelling(Carbon::now()->startOfMonth()),
+            'year' => $getTopSelling(Carbon::now()->startOfYear()),
+            'overall' => $getTopSelling(null),
+        ];
 
-        // Pending orders change (last 7 days pending vs previous 7 days pending)
-        $pendingCurrent = Order::whereBetween('created_at', [$salesCurrentStart, $salesCurrentEnd])->where('status', 'pending')->count();
-        $pendingPrevious = Order::whereBetween('created_at', [$salesPrevStart, $salesPrevEnd])->where('status', 'pending')->count();
-        $pendingChange = $this->percentChange($pendingCurrent, $pendingPrevious);
+        // Low Stock Alerts
+        $lowStockProducts = Product::where('stock', '<', 10)
+            ->where('status', 'Published')
+            ->orderBy('stock', 'asc')
+            ->take(5)
+            ->get();
 
         // Chart + Performance Data
         $dailyOrdersData = $this->getDailyOrdersData();
-        $productPerformanceData = $this->getProductPerformanceData();
         $orderStatusData = $this->getOrderStatusData();
         $paymentStatusData = $this->getPaymentStatusData();
 
@@ -71,7 +83,6 @@ class DashboardController extends Controller
         $recentOrders = Order::with([
             'customer',
             'items.product',
-            'items.productVariation.variationAttributes.attribute.values'
         ])
             ->latest()
             ->take(10)
@@ -79,23 +90,38 @@ class DashboardController extends Controller
 
 
         $data = [
-            'summaryCards' => [
-                // ['title' => 'Total Sales', 'value' => '৳' . number_format($totalSales, 2), 'change' => $salesChange],
-                ['title' => 'Delivered Sales', 'value' => '৳' . number_format($deliveredSales, 2), 'change' => $deliveredChange],
-                ['title' => 'Total Orders', 'value' => $totalOrders, 'change' => $ordersChange],
-                ['title' => 'Total Customers', 'value' => $totalCustomers, 'change' => $customersChange],
-                ['title' => 'Pending Orders', 'value' => $pendingOrders, 'change' => $pendingChange],
+            'summary' => [
+                'salesToday' => [
+                    'title' => 'Sales Today',
+                    'value' => $salesToday,
+                    'count' => null,
+                ],
+                'ordersToday' => [
+                    'title' => 'Orders',
+                    'value' => null,
+                    'count' => $ordersToday,
+                ],
+                'preOrders' => [
+                    'title' => 'Pre-Orders',
+                    'value' => null,
+                    'count' => $preOrdersCount,
+                ],
+                'requests' => [
+                    'title' => 'Requests',
+                    'value' => null,
+                    'count' => $requestsCount,
+                ],
             ],
+            'topSelling' => $topSelling,
+            'lowStock' => $lowStockProducts,
             'dailyOrdersData' => $dailyOrdersData,
             'monthlyOrdersData' => $this->getMonthlyOrdersData(),
-            'productPerformanceData' => $productPerformanceData,
             'orderStatusData' => $orderStatusData,
             'paymentStatusData' => $paymentStatusData,
             'deliverySalesData' => $this->getDeliverySalesData(),
             'recentOrders' => $recentOrders,
         ];
 
-        //return $data;
         return Inertia::render('Admin/Dashboard/Index', [
             'data' => $data,
         ]);
@@ -240,4 +266,4 @@ class DashboardController extends Controller
 
 
 
-    }
+}
