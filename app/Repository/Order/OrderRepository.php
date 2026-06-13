@@ -250,11 +250,11 @@ public function getPaginatedOrders(
     protected function calculateDuplicatePercentage($order): int
     {
         $duplicatePercentage = 0;
-        if (!empty($order->customer_phone)) {
+        if (!empty($order->customer_phone) && $order->status !== 'incomplete') {
             $previousOrder = \App\Models\Order::select('id', 'created_at')
                 ->where('customer_phone', $order->customer_phone)
+                ->where('status', $order->status)
                 ->where('id', '!=', $order->id)
-                ->where('status', '!=', 'incomplete') // Ignore abandoned/incomplete orders
                 ->where('created_at', '<=', $order->created_at)
                 ->orderBy('created_at', 'desc')
                 ->first();
