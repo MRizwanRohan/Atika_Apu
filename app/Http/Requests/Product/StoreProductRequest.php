@@ -96,8 +96,22 @@ class StoreProductRequest extends FormRequest
             'variations.*.stock' => 'required_if:type,variable|integer|min:0',
             'variations.*.image_path' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:6000',
             'variations.*.attributes' => 'required_if:type,variable|array|min:1',
-            'variations.*.attributes.*.attribute_value_id' => 'required_if:type,variable|integer|exists:attribute_values,id',
+            'variations.*.attributes.*.attribute_value_id' => [
+                'required_if:type,variable',
+                function ($attribute, $value, $fail) {
+                    if (is_string($value) && strpos($value, 'temp_val_') === 0) {
+                        return;
+                    }
+                    if (!filter_var($value, FILTER_VALIDATE_INT) || !\Illuminate\Support\Facades\DB::table('attribute_values')->where('id', $value)->exists()) {
+                        $fail('The selected attribute value is invalid.');
+                    }
+                }
+            ],
             'variations.*.previous_price' => 'nullable|numeric|min:0',
+            'custom_attributes' => 'nullable|array',
+            'custom_attributes.*.name' => 'required|string|max:255',
+            'custom_attributes.*.values' => 'required|array|min:1',
+            'custom_attributes.*.values.*.value' => 'required|string|max:255',
         ];
     }
 

@@ -31,6 +31,7 @@ import {
     LayoutDashboard,
     Search,
     ChevronDown,
+    Trash,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -169,9 +170,10 @@ const filteredCategories = computed(() => {
 
 const removedVariations = ref(new Set());
 const selectedAttributesMap = ref({});
+const allAttributes = ref([]);
 
 const selectedAttributes = computed(() => {
-    return props.attributeValues.map((attr) => ({
+    return allAttributes.value.map((attr) => ({
         attribute_name: attr.attribute_name,
         values: selectedAttributesMap.value[attr.attribute_name] || [],
     }));
@@ -180,7 +182,21 @@ const selectedAttributes = computed(() => {
 watch(
     () => props.attributeValues,
     (newVal) => {
-        newVal.forEach((attr) => {
+        // We merge with our local custom attributes (those having product_id or temp_id)
+        const customAttrs = allAttributes.value.filter(
+            (attr) => attr.product_id !== null && attr.product_id !== undefined
+        );
+        
+        const merged = JSON.parse(JSON.stringify(newVal || []));
+        customAttrs.forEach((customAttr) => {
+            if (!merged.some((a) => a.attribute_name === customAttr.attribute_name)) {
+                merged.push(customAttr);
+            }
+        });
+
+        allAttributes.value = merged;
+
+        allAttributes.value.forEach((attr) => {
             if (!selectedAttributesMap.value[attr.attribute_name]) {
                 selectedAttributesMap.value[attr.attribute_name] = [];
             }
@@ -188,6 +204,120 @@ watch(
     },
     { immediate: true, deep: true },
 );
+
+// Custom Attributes state and functions
+const showAddCustomAttributeModal = ref(false);
+const newCustomAttrName = ref("");
+const newCustomAttrValuesText = ref("");
+const newValueInputs = ref({});
+
+const addCustomAttribute = () => {
+    const name = newCustomAttrName.value.trim();
+    if (!name) {
+        toast.error("Attribute name cannot be empty");
+        return;
+    }
+    
+    const nameUpper = name.toUpperCase();
+    const exists = allAttributes.value.some(
+        (attr) => attr.attribute_name.toUpperCase() === nameUpper
+    );
+    if (exists) {
+        toast.error("An attribute with this name already exists");
+        return;
+    }
+
+    const vals = newCustomAttrValuesText.value
+        .split(",")
+        .map((v) => v.trim())
+        .filter((v) => v.length > 0);
+    
+    if (vals.length === 0) {
+        toast.error("Please provide at least one value");
+        return;
+    }
+
+    const tempAttrId = "temp_attr_" + Date.now();
+    const newAttrValues = vals.map((v, index) => ({
+        id: null,
+        temp_id: `temp_val_${tempAttrId}_${index}`,
+        value: v,
+        color: null,
+    }));
+
+    const newAttr = {
+        id: null,
+        temp_id: tempAttrId,
+        attribute_name: name,
+        product_id: props.product?.id || "new_product",
+        values: newAttrValues,
+    };
+
+    allAttributes.value.push(newAttr);
+    newValueInputs.value[name] = "";
+    
+    // Automatically select all values
+    selectedAttributesMap.value[name] = newAttrValues.map((v) => v.temp_id);
+
+    newCustomAttrName.value = "";
+    newCustomAttrValuesText.value = "";
+    showAddCustomAttributeModal.value = false;
+    toast.success(`Custom attribute "${name}" added`);
+};
+
+const removeCustomAttribute = (attr) => {
+    if (confirm(`Are you sure you want to remove "${attr.attribute_name}"?`)) {
+        allAttributes.value = allAttributes.value.filter(
+            (a) => a.attribute_name !== attr.attribute_name
+        );
+        delete selectedAttributesMap.value[attr.attribute_name];
+        delete newValueInputs.value[attr.attribute_name];
+        toast.success(`Removed "${attr.attribute_name}"`);
+    }
+};
+
+const addValueToCustomAttribute = (attr) => {
+    const valText = (newValueInputs.value[attr.attribute_name] || "").trim();
+    if (!valText) return;
+
+    const exists = attr.values.some(
+        (v) => v.value.toUpperCase() === valText.toUpperCase()
+    );
+    if (exists) {
+        toast.error("This value already exists");
+        return;
+    }
+
+    const tempValId = `temp_val_${attr.id || attr.temp_id}_${Date.now()}`;
+    const newValue = {
+        id: null,
+        temp_id: tempValId,
+        value: valText,
+        color: null,
+    };
+
+    attr.values.push(newValue);
+    newValueInputs.value[attr.attribute_name] = "";
+
+    const current = selectedAttributesMap.value[attr.attribute_name] || [];
+    selectedAttributesMap.value[attr.attribute_name] = [...current, tempValId];
+    toast.success(`Added value "${valText}"`);
+};
+
+const deleteValueFromCustomAttribute = (attr, val) => {
+    if (confirm(`Remove option "${val.value}"?`)) {
+        const valIdToCompare = val.id || val.temp_id;
+        attr.values = attr.values.filter(
+            (v) => (v.id || v.temp_id) !== valIdToCompare
+        );
+        const current = selectedAttributesMap.value[attr.attribute_name] || [];
+        selectedAttributesMap.value[attr.attribute_name] = current.filter(
+            (id) => id !== valIdToCompare
+        );
+        toast.success(`Removed option "${val.value}"`);
+    }
+};
+
 
 const form = useForm({
     _method: isEditMode.value ? "PUT" : "POST",
@@ -314,7 +444,7 @@ const initializeVariationsFromProduct = () => {
         });
     });
 
-    props.attributeValues.forEach((attr) => {
+    allAttributes.value.forEach((attr) => {
         selectedAttributesMap.value[attr.attribute_name] =
             attributeValuesByName[attr.attribute_name] || [];
     });
@@ -323,11 +453,11 @@ const initializeVariationsFromProduct = () => {
         const normalizedAttributes = variation.attributes.map((attr) => {
             const attributeName = attr.value?.attribute?.name || "Unknown";
             const attributeValueId = attr.attribute_value_id;
-            const attributeGroup = props.attributeValues.find(
+            const attributeGroup = allAttributes.value.find(
                 (a) => a.attribute_name === attributeName,
             );
             const attributeValueLabel =
-                attributeGroup?.values.find((v) => v.id === attributeValueId)
+                attributeGroup?.values.find((v) => (v.id === attributeValueId || (v.temp_id && v.temp_id === attributeValueId)))
                     ?.value ||
                 attr.value?.value ||
                 "Unknown";
@@ -435,9 +565,9 @@ const attributeCombinations = computed(() => {
                 attribute_name: attr.attribute_name,
                 attribute_value_id: valueId,
                 attribute_value_label:
-                    props.attributeValues
+                    allAttributes.value
                         .find((a) => a.attribute_name === attr.attribute_name)
-                        ?.values.find((v) => v.id === valueId)?.value || "",
+                        ?.values.find((v) => (v.id === valueId || (v.temp_id && v.temp_id === valueId)))?.value || "",
             }));
         });
     const combinations = generateCombinations(selectedArrays);
@@ -618,6 +748,19 @@ const submit = () => {
                     ? 0
                     : Number(data.stock);
 
+        const custom_attributes = allAttributes.value
+            .filter((attr) => attr.product_id !== null && attr.product_id !== undefined)
+            .map((attr) => ({
+                id: attr.id || null,
+                name: attr.attribute_name,
+                values: attr.values.map((val) => ({
+                    id: val.id || null,
+                    temp_id: val.temp_id || null,
+                    value: val.value,
+                    color: val.color || null,
+                })),
+            }));
+
         return {
             ...data,
             stock: isNaN(normalizedStock) ? 0 : normalizedStock,
@@ -626,6 +769,7 @@ const submit = () => {
                     ? 0
                     : Number(data.fake_sold_count),
             variations: normalizedVariations,
+            custom_attributes,
         };
     });
 
@@ -1416,7 +1560,7 @@ const scrollTo = (id) => {
                         </div>
 
                         <div
-                            v-if="attributeValues.length === 0"
+                            v-if="allAttributes.length === 0"
                             class="p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200"
                         >
                             <p
@@ -1427,60 +1571,160 @@ const scrollTo = (id) => {
                         </div>
                         <div v-else class="space-y-3">
                             <div
-                                v-for="attr in attributeValues"
+                                v-for="attr in allAttributes"
                                 :key="attr.attribute_name"
                                 class="p-3 bg-gray-50 rounded-xl border border-gray-100"
                             >
-                                <h3
-                                    class="text-[9px] font-[600] text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2"
-                                >
-                                    <Grip class="w-3 h-3" />
-                                    {{ attr.attribute_name }}
-                                </h3>
-                                <div class="flex flex-wrap gap-1.5">
-                                    <button
-                                        v-for="val in attr.values"
-                                        :key="val.id"
-                                        @click.prevent="
-                                            () => {
-                                                const current =
-                                                    selectedAttributesMap[
-                                                        attr.attribute_name
-                                                    ] || [];
-                                                if (current.includes(val.id)) {
-                                                    selectedAttributesMap[
-                                                        attr.attribute_name
-                                                    ] = current.filter(
-                                                        (id) => id !== val.id,
-                                                    );
-                                                } else {
-                                                    selectedAttributesMap[
-                                                        attr.attribute_name
-                                                    ] = [...current, val.id];
-                                                }
-                                            }
-                                        "
-                                        :class="[
-                                            selectedAttributesMap[
-                                                attr.attribute_name
-                                            ]?.includes(val.id)
-                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                                : 'bg-white text-gray-700 border border-gray-200 hover:border-indigo-600',
-                                        ]"
-                                        class="px-2.5 py-1.5 rounded-lg text-[10px] font-[600] uppercase tracking-tight transition-all flex items-center gap-1.5"
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3
+                                        class="text-[9px] font-[600] text-gray-500 uppercase tracking-widest flex items-center gap-2"
                                     >
-                                        <Check
-                                            v-if="
+                                        <Grip class="w-3 h-3" />
+                                        {{ attr.attribute_name }}
+                                        <span v-if="attr.product_id" class="text-[8px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-[700] uppercase">Product Specific</span>
+                                    </h3>
+                                    <button 
+                                        v-if="attr.product_id" 
+                                        type="button" 
+                                        @click="removeCustomAttribute(attr)"
+                                        class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                        title="Remove Custom Attribute"
+                                    >
+                                        <Trash class="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                
+                                <div class="flex flex-wrap gap-1.5 items-center">
+                                    <div
+                                        v-for="val in attr.values"
+                                        :key="val.id || val.temp_id"
+                                        class="relative group"
+                                    >
+                                        <button
+                                            @click.prevent="
+                                                () => {
+                                                    const valId = val.id || val.temp_id;
+                                                    const current =
+                                                        selectedAttributesMap[
+                                                            attr.attribute_name
+                                                        ] || [];
+                                                    if (current.includes(valId)) {
+                                                        selectedAttributesMap[
+                                                            attr.attribute_name
+                                                        ] = current.filter(
+                                                            (id) => id !== valId,
+                                                        );
+                                                    } else {
+                                                        selectedAttributesMap[
+                                                            attr.attribute_name
+                                                        ] = [...current, valId];
+                                                    }
+                                                }
+                                            "
+                                            :class="[
                                                 selectedAttributesMap[
                                                     attr.attribute_name
-                                                ]?.includes(val.id)
-                                            "
-                                            class="w-3 h-3"
+                                                ]?.includes(val.id || val.temp_id)
+                                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                                    : 'bg-white text-gray-700 border border-gray-200 hover:border-indigo-600',
+                                                attr.product_id ? 'pr-6' : ''
+                                            ]"
+                                            class="px-2.5 py-1.5 rounded-lg text-[10px] font-[600] uppercase tracking-tight transition-all flex items-center gap-1.5"
+                                        >
+                                            <Check
+                                                v-if="
+                                                    selectedAttributesMap[
+                                                        attr.attribute_name
+                                                    ]?.includes(val.id || val.temp_id)
+                                                "
+                                                class="w-3 h-3"
+                                            />
+                                            {{ val.value }}
+                                        </button>
+                                        <!-- Inline value delete button for custom attributes -->
+                                        <button 
+                                            v-if="attr.product_id"
+                                            type="button" 
+                                            @click.stop="deleteValueFromCustomAttribute(attr, val)"
+                                            class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-red-500 transition-colors hover:scale-110 px-0.5"
+                                            title="Delete Value"
+                                        >
+                                            <XIcon class="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Inline Value Add input for custom attributes -->
+                                    <div v-if="attr.product_id" class="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
+                                        <input 
+                                            v-model="newValueInputs[attr.attribute_name]"
+                                            type="text" 
+                                            placeholder="Add Option" 
+                                            class="px-2 py-1 bg-transparent text-[9px] font-semibold outline-none w-20 uppercase"
+                                            @keyup.enter.prevent="addValueToCustomAttribute(attr)"
                                         />
-                                        {{ val.value }}
+                                        <button 
+                                            type="button"
+                                            @click.prevent="addValueToCustomAttribute(attr)"
+                                            class="px-1.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded text-[9px] font-bold transition-all"
+                                        >
+                                            <PlusIcon class="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Custom Attribute UI Control -->
+                        <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
+                            <div v-if="showAddCustomAttributeModal" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-3">
+                                <h4 class="text-[10px] font-bold text-gray-900 uppercase tracking-wider">New Custom Attribute</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1">Name</label>
+                                        <input 
+                                            v-model="newCustomAttrName" 
+                                            type="text" 
+                                            placeholder="e.g. Length, Bundle" 
+                                            class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:border-indigo-600 outline-none uppercase font-semibold"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1">Values (comma separated)</label>
+                                        <input 
+                                            v-model="newCustomAttrValuesText" 
+                                            type="text" 
+                                            placeholder="e.g. 1m, 2m, 3m" 
+                                            class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:border-indigo-600 outline-none uppercase font-semibold"
+                                            @keyup.enter.prevent="addCustomAttribute"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button 
+                                        type="button" 
+                                        @click="showAddCustomAttributeModal = false" 
+                                        class="px-3 py-1.5 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        @click="addCustomAttribute" 
+                                        class="px-3 py-1.5 text-[10px] font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all"
+                                    >
+                                        Add Attribute
                                     </button>
                                 </div>
                             </div>
+                            <button 
+                                v-else
+                                type="button" 
+                                @click="showAddCustomAttributeModal = true" 
+                                class="flex items-center gap-1.5 px-3 py-2 text-xs font-[600] text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-100"
+                            >
+                                <PlusIcon class="w-3.5 h-3.5" />
+                                Add Custom Attribute
+                            </button>
                         </div>
                     </div>
                 </section>

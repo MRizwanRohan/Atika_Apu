@@ -112,7 +112,7 @@ class ProductController extends Controller
     public function create()
     {
         try {
-            $attributeValues = $this->productService->getAllAttributes();
+            $attributeValues = $this->productService->getAllAttributesForProduct();
             $categories = $this->productService->getAllCategories();
             $brands = $this->productService->getAllBrands();
 
@@ -204,7 +204,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         try {
-            $attributeValues = $this->productService->getAllAttributes();
+            $attributeValues = $this->productService->getAllAttributesForProduct($product->id);
             $categories = $this->productService->getAllCategories();
             $brands = $this->productService->getAllBrands();
 

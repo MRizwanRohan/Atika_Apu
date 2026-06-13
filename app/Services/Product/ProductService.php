@@ -229,7 +229,10 @@ class ProductService
   public function getAllAttributes()
   {
     return Cache::remember('attributes.all', 3600, function () {
-      $attributeValues = AttributeValue::with('attribute')
+      $attributeValues = AttributeValue::whereHas('attribute', function ($q) {
+          $q->whereNull('product_id');
+        })
+        ->with('attribute')
         ->get()
         ->groupBy('attribute.name')
         ->map(function ($values, $attributeName) {
@@ -248,6 +251,37 @@ class ProductService
 
       return $attributeValues;
     });
+  }
+
+  public function getAllAttributesForProduct($productId = null)
+  {
+    $query = Attribute::with(['values' => function($q) {
+        $q->orderBy('value', 'asc');
+    }]);
+
+    if ($productId) {
+        $query->where(function($q) use ($productId) {
+            $q->whereNull('product_id')
+              ->orWhere('product_id', $productId);
+        });
+    } else {
+        $query->whereNull('product_id');
+    }
+
+    return $query->get()->map(function ($attribute) {
+        return [
+            'id' => $attribute->id,
+            'attribute_name' => $attribute->name,
+            'product_id' => $attribute->product_id,
+            'values' => $attribute->values->map(function ($value) {
+                return [
+                    'id' => $value->id,
+                    'value' => $value->value,
+                    'color' => $value->color,
+                ];
+            })->sortBy('value')->values(),
+        ];
+    })->sortBy('attribute_name')->values();
   }
 
   /**
@@ -634,27 +668,129 @@ class ProductService
 
 
 
+  private function processCustomAttributes($product, $customAttributes)
+  {
+    $tempValueIdMap = [];
+    $activeAttributeIds = [];
+
+    foreach ($customAttributes as $attrData) {
+      $attributeName = strtoupper(trim($attrData['name']));
+
+      // 1. Find or create custom Attribute
+      if (!empty($attrData['id'])) {
+        $attribute = Attribute::where('product_id', $product->id)->findOrFail($attrData['id']);
+        $attribute->update(['name' => $attributeName]);
+      } else {
+        $attribute = Attribute::create([
+          'name' => $attributeName,
+          'product_id' => $product->id,
+        ]);
+      }
+      $activeAttributeIds[] = $attribute->id;
+
+      $activeValueIds = [];
+      // 2. Process Values for this custom attribute
+      if (isset($attrData['values']) && is_array($attrData['values'])) {
+        foreach ($attrData['values'] as $valData) {
+          $valueText = strtoupper(trim($valData['value']));
+
+          if (!empty($valData['id'])) {
+            // Keep / update existing value
+            $value = AttributeValue::withTrashed()
+              ->where('attribute_id', $attribute->id)
+              ->findOrFail($valData['id']);
+
+            if ($value->trashed()) {
+              $value->restore();
+            }
+
+            $value->update([
+              'value' => $valueText,
+              'color' => $valData['color'] ?? null,
+            ]);
+            $activeValueIds[] = $value->id;
+          } else {
+            // Create new value (could have been soft deleted previously)
+            $value = AttributeValue::withTrashed()
+              ->where('attribute_id', $attribute->id)
+              ->where('value', $valueText)
+              ->first();
+
+            if ($value) {
+              if ($value->trashed()) {
+                $value->restore();
+              }
+              $value->update(['color' => $valData['color'] ?? null]);
+            } else {
+              $value = AttributeValue::create([
+                'attribute_id' => $attribute->id,
+                'value' => $valueText,
+                'color' => $valData['color'] ?? null,
+              ]);
+            }
+
+            $activeValueIds[] = $value->id;
+
+            // Map frontend temp_id to real database id for variations mapping
+            if (!empty($valData['temp_id'])) {
+              $tempValueIdMap[$valData['temp_id']] = $value->id;
+            }
+          }
+        }
+      }
+
+      // Soft delete custom attribute values that were removed in UI
+      AttributeValue::where('attribute_id', $attribute->id)
+        ->whereNotIn('id', $activeValueIds)
+        ->delete();
+    }
+
+    // Soft delete custom attributes that were removed completely from the product
+    Attribute::where('product_id', $product->id)
+      ->whereNotIn('id', $activeAttributeIds)
+      ->delete();
+
+    // Flush cache
+    Cache::forget('attributes.all');
+
+    return $tempValueIdMap;
+  }
+
   private function storeProductVariations($product, $request)
   {
-    foreach ($request->variations as $index => $variationData) {
-      $variationImagePath = $request->hasFile("variations.$index.image_path")
-        ? ImageHelper::uploadImage($request->file("variations.$index.image_path"), 'storage/variations')
-        : null;
+    $tempValueIdMap = [];
+    if ($request->has('custom_attributes')) {
+      $tempValueIdMap = $this->processCustomAttributes($product, $request->custom_attributes);
+    }
 
-      $variation = ProductVariation::create([
-        'product_id' => $product->id,
-        'price' => $variationData['price'],
-        // Accept previous_price when provided
-        'previous_price' => $variationData['previous_price'] ?? null,
-        'stock' => $variationData['stock'] ?? 0,
-        'image_path' => $variationImagePath,
-      ]);
+    if ($request->has('variations')) {
+      foreach ($request->variations as $index => $variationData) {
+        $variationImagePath = $request->hasFile("variations.$index.image_path")
+          ? ImageHelper::uploadImage($request->file("variations.$index.image_path"), 'storage/variations')
+          : null;
 
-      foreach ($variationData['attributes'] as $attributeData) {
-        VariationAttribute::create([
-          'product_variation_id' => $variation->id,
-          'attribute_value_id' => $attributeData['attribute_value_id'],
+        $variation = ProductVariation::create([
+          'product_id' => $product->id,
+          'price' => $variationData['price'],
+          // Accept previous_price when provided
+          'previous_price' => $variationData['previous_price'] ?? null,
+          'stock' => $variationData['stock'] ?? 0,
+          'image_path' => $variationImagePath,
         ]);
+
+        if (isset($variationData['attributes'])) {
+          foreach ($variationData['attributes'] as $attributeData) {
+            $valueId = $attributeData['attribute_value_id'];
+            if (isset($tempValueIdMap[$valueId])) {
+              $valueId = $tempValueIdMap[$valueId];
+            }
+
+            VariationAttribute::create([
+              'product_variation_id' => $variation->id,
+              'attribute_value_id' => $valueId,
+            ]);
+          }
+        }
       }
     }
   }
@@ -872,6 +1008,11 @@ class ProductService
 
   private function updateProductVariations($product, $request)
   {
+    $tempValueIdMap = [];
+    if ($request->has('custom_attributes')) {
+      $tempValueIdMap = $this->processCustomAttributes($product, $request->custom_attributes);
+    }
+
     // Get existing variations as a collection indexed by ID for easy lookup
     $existingVariations = $product->variations->keyBy('id')->toArray();
     $updatedVariationIds = [];
@@ -880,6 +1021,18 @@ class ProductService
     if ($request->has('variations')) {
       foreach ($request->variations as $index => $variationData) {
         $variationId = $variationData['id'] ?? null;
+
+        // Map temp value IDs if any
+        $mappedAttributes = [];
+        if (isset($variationData['attributes']) && is_array($variationData['attributes'])) {
+          foreach ($variationData['attributes'] as $attrData) {
+            $valueId = $attrData['attribute_value_id'];
+            if (isset($tempValueIdMap[$valueId])) {
+              $valueId = $tempValueIdMap[$valueId];
+            }
+            $mappedAttributes[] = $valueId;
+          }
+        }
 
         if ($variationId && isset($existingVariations[$variationId])) {
           // Update existing variation
@@ -903,14 +1056,17 @@ class ProductService
             'image_path' => $variationImagePath,
           ]);
 
-          // Update attributes
-          if (isset($variationData['attributes'])) {
-            // Delete old attributes and create new ones
-            $variation->attributes()->delete();
-            foreach ($variationData['attributes'] as $attributeData) {
+          // Sync variation attributes instead of deleting all
+          $currentValueIds = $variation->attributes()->pluck('attribute_value_id')->toArray();
+          
+          // Delete missing ones
+          $variation->attributes()->whereNotIn('attribute_value_id', $mappedAttributes)->delete();
+          // Add new ones
+          foreach ($mappedAttributes as $valueId) {
+            if (!in_array($valueId, $currentValueIds)) {
               VariationAttribute::create([
                 'product_variation_id' => $variation->id,
-                'attribute_value_id' => $attributeData['attribute_value_id'],
+                'attribute_value_id' => $valueId,
               ]);
             }
           }
@@ -930,13 +1086,11 @@ class ProductService
             'image_path' => $variationImagePath,
           ]);
 
-          if (isset($variationData['attributes'])) {
-            foreach ($variationData['attributes'] as $attributeData) {
-              VariationAttribute::create([
-                'product_variation_id' => $variation->id,
-                'attribute_value_id' => $attributeData['attribute_value_id'],
-              ]);
-            }
+          foreach ($mappedAttributes as $valueId) {
+            VariationAttribute::create([
+              'product_variation_id' => $variation->id,
+              'attribute_value_id' => $valueId,
+            ]);
           }
 
           $updatedVariationIds[] = $variation->id;
