@@ -66,14 +66,20 @@ const toggleLike = () => {
 
 const getDisplayPrice = (product) => {
     if (!product) return 0;
-    
-    if (product.type === 'variable' && product.variations && product.variations.length > 0) {
-        const prices = product.variations.map(v => parseFloat(v.price)).filter(p => !isNaN(p));
+
+    if (
+        product.type === "variable" &&
+        product.variations &&
+        product.variations.length > 0
+    ) {
+        const prices = product.variations
+            .map((v) => parseFloat(v.price))
+            .filter((p) => !isNaN(p));
         if (prices.length > 0) {
             return Math.min(...prices);
         }
     }
-    
+
     return product.price;
 };
 
@@ -112,7 +118,7 @@ onUnmounted(() => {
         v-if="productswithVideo && productswithVideo.length > 0"
         class="py-2 bg-white overflow-hidden"
     >
-    <!-- <pre>{{ productswithVideo }}</pre> -->
+        <!-- <pre>{{ productswithVideo }}</pre> -->
         <div class="container mx-auto px-4">
             <!-- Grid Structure (Desktop) / Horizontal Scroll (Mobile) -->
             <div
@@ -151,7 +157,7 @@ onUnmounted(() => {
         >
             <div
                 v-if="isModalOpen"
-                class="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center backdrop-blur-sm p-4 md:p-8"
+                class="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 md:p-8"
             >
                 <!-- Close Button -->
                 <button
@@ -162,8 +168,9 @@ onUnmounted(() => {
                 </button>
 
                 <!-- Main Container - Full Flex Layout -->
-                <div class="relative w-full h-full flex items-center justify-center max-w-7xl">
-                    
+                <div
+                    class="relative w-full h-full flex items-center justify-center max-w-7xl"
+                >
                     <!-- Left Arrow Button -->
                     <button
                         v-if="productswithVideo.length > 1"
@@ -204,7 +211,7 @@ onUnmounted(() => {
                         <!-- Mute Toggle -->
                         <button
                             @click="toggleMute"
-                            class="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm z-20 transition-all hover:scale-110"
+                            class="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 text-white z-20 transition-all hover:scale-110"
                         >
                             <Volume2 v-if="!isMuted" :size="22" />
                             <VolumeX v-else :size="22" />
@@ -221,8 +228,8 @@ onUnmounted(() => {
                                     >
                                         <img
                                             :src="
-                                                productswithVideo[currentIndex].product
-                                                    .feature_image
+                                                productswithVideo[currentIndex]
+                                                    .product.feature_image
                                             "
                                             alt="Product"
                                             class="w-full h-full object-cover"
@@ -233,21 +240,41 @@ onUnmounted(() => {
                                             class="text-gray-900 font-semibold text-sm leading-tight line-clamp-2"
                                         >
                                             {{
-                                                productswithVideo[currentIndex].product
-                                                    .name
+                                                productswithVideo[currentIndex]
+                                                    .product.name
                                             }}
                                         </h4>
                                         <div
                                             class="inline-block bg-gray-900 text-white px-2.5 py-1 rounded mt-2 font-bold text-xs"
                                         >
-                                            <span v-if="productswithVideo[currentIndex].product.type === 'variable'">Starts at </span>
-                                            ৳{{ getDisplayPrice(productswithVideo[currentIndex].product) }}
+                                            <span
+                                                v-if="
+                                                    productswithVideo[
+                                                        currentIndex
+                                                    ].product.type ===
+                                                    'variable'
+                                                "
+                                                >Starts at
+                                            </span>
+                                            ৳{{
+                                                getDisplayPrice(
+                                                    productswithVideo[
+                                                        currentIndex
+                                                    ].product,
+                                                )
+                                            }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <Link
-                                    :href="route('product.details', productswithVideo[currentIndex].product.slug)"
+                                    :href="
+                                        route(
+                                            'product.details',
+                                            productswithVideo[currentIndex]
+                                                .product.slug,
+                                        )
+                                    "
                                     class="w-full bg-gray-900 hover:bg-black text-white text-center py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-colors"
                                 >
                                     SHOP NOW
@@ -268,7 +295,7 @@ onUnmounted(() => {
                     <!-- Right Preview -->
                     <div
                         v-if="productswithVideo.length > 1"
-                        class="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 mr-24 h-[70vh] w-[330px] cursor-pointer group overflow-hidden rounded-2xl shadow-2xl transition-transform z-[-1] "
+                        class="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 mr-24 h-[70vh] w-[330px] cursor-pointer group overflow-hidden rounded-2xl shadow-2xl transition-transform z-[-1]"
                     >
                         <video
                             :src="productswithVideo[getNextIndex()].video"
@@ -280,7 +307,9 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Mobile Navigation Arrows -->
-                    <div class="md:hidden absolute bottom-32 left-0 right-0 flex justify-between px-4 z-20">
+                    <div
+                        class="md:hidden absolute bottom-32 left-0 right-0 flex justify-between px-4 z-20"
+                    >
                         <button
                             @click="prevVideo"
                             class="bg-white rounded-full p-2 hover:bg-gray-200 transition-all"

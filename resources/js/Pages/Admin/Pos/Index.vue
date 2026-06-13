@@ -66,7 +66,7 @@ const categories = computed(() => {
     if (!props.products?.data) return [];
     const cats = [
         ...new Set(
-            props.products.data.map((p) => p.category?.name).filter(Boolean)
+            props.products.data.map((p) => p.category?.name).filter(Boolean),
         ),
     ];
     return cats;
@@ -127,113 +127,123 @@ const filteredUsers = computed(() => {
                 .includes(userSearchQuery.value.toLowerCase()) ||
             user.phone_number
                 ?.toLowerCase()
-                .includes(userSearchQuery.value.toLowerCase())
+                .includes(userSearchQuery.value.toLowerCase()),
     );
 });
 
 // Extract unique attributes from current product variations
 const productAttributes = computed(() => {
-  if (!currentProduct.value?.variations) return [];
+    if (!currentProduct.value?.variations) return [];
 
-  const attributeMap = new Map();
+    const attributeMap = new Map();
 
-  currentProduct.value.variations.forEach(variation => {
-    variation.attributes?.forEach(attr => {
-      const attrName = attr.value?.attribute?.name;
-      const attrValue = attr.value?.value;
-      const attrValueId = attr.value?.id;
-      const attrImage = attr.value?.image; // If attribute has image (like color swatches)
+    currentProduct.value.variations.forEach((variation) => {
+        variation.attributes?.forEach((attr) => {
+            const attrName = attr.value?.attribute?.name;
+            const attrValue = attr.value?.value;
+            const attrValueId = attr.value?.id;
+            const attrImage = attr.value?.image; // If attribute has image (like color swatches)
 
-      if (attrName && attrValue) {
-        if (!attributeMap.has(attrName)) {
-          attributeMap.set(attrName, {
-            name: attrName,
-            attributeId: attr.value?.attribute?.id,
-            values: new Map()
-          });
-        }
+            if (attrName && attrValue) {
+                if (!attributeMap.has(attrName)) {
+                    attributeMap.set(attrName, {
+                        name: attrName,
+                        attributeId: attr.value?.attribute?.id,
+                        values: new Map(),
+                    });
+                }
 
-        if (!attributeMap.get(attrName).values.has(attrValueId)) {
-          attributeMap.get(attrName).values.set(attrValueId, {
-            id: attrValueId,
-            value: attrValue,
-            image: attrImage
-          });
-        }
-      }
+                if (!attributeMap.get(attrName).values.has(attrValueId)) {
+                    attributeMap.get(attrName).values.set(attrValueId, {
+                        id: attrValueId,
+                        value: attrValue,
+                        image: attrImage,
+                    });
+                }
+            }
+        });
     });
-  });
 
-  // Convert to array format
-  return Array.from(attributeMap.values()).map(attr => ({
-    name: attr.name,
-    attributeId: attr.attributeId,
-    values: Array.from(attr.values.values())
-  }));
+    // Convert to array format
+    return Array.from(attributeMap.values()).map((attr) => ({
+        name: attr.name,
+        attributeId: attr.attributeId,
+        values: Array.from(attr.values.values()),
+    }));
 });
 
 // Find matching variation based on selected attributes
 const matchedVariation = computed(() => {
-  if (!currentProduct.value?.variations || !productAttributes.value.length) return null;
+    if (!currentProduct.value?.variations || !productAttributes.value.length)
+        return null;
 
-  // Check if all attributes are selected
-  const allSelected = productAttributes.value.every(attr =>
-    selectedAttributeValues.value[attr.name] !== undefined
-  );
+    // Check if all attributes are selected
+    const allSelected = productAttributes.value.every(
+        (attr) => selectedAttributeValues.value[attr.name] !== undefined,
+    );
 
-  if (!allSelected) return null;
+    if (!allSelected) return null;
 
-  // Find variation that matches all selected attribute values
-  const matched = currentProduct.value.variations.find(variation => {
-    return productAttributes.value.every(attr => {
-      const selectedValueId = selectedAttributeValues.value[attr.name];
-      return variation.attributes?.some(
-        vAttr => vAttr.value?.attribute?.name === attr.name && vAttr.value?.id === selectedValueId
-      );
+    // Find variation that matches all selected attribute values
+    const matched = currentProduct.value.variations.find((variation) => {
+        return productAttributes.value.every((attr) => {
+            const selectedValueId = selectedAttributeValues.value[attr.name];
+            return variation.attributes?.some(
+                (vAttr) =>
+                    vAttr.value?.attribute?.name === attr.name &&
+                    vAttr.value?.id === selectedValueId,
+            );
+        });
     });
-  });
 
-  // Debug logging
-  if (matched) {
-    console.log('🔍 Matched Variation Found:', {
-      variation_id: matched.id,
-      variation_price: matched.price,
-      variation_price_type: typeof matched.price,
-      product_price: currentProduct.value.price,
-      product_price_type: typeof currentProduct.value.price,
-      total_price: (matched.price || 0) + (currentProduct.value.price || 0),
-      raw_variation: matched,
-      raw_product: currentProduct.value
-    });
-  }
+    // Debug logging
+    if (matched) {
+        console.log("🔍 Matched Variation Found:", {
+            variation_id: matched.id,
+            variation_price: matched.price,
+            variation_price_type: typeof matched.price,
+            product_price: currentProduct.value.price,
+            product_price_type: typeof currentProduct.value.price,
+            total_price:
+                (matched.price || 0) + (currentProduct.value.price || 0),
+            raw_variation: matched,
+            raw_product: currentProduct.value,
+        });
+    }
 
-  return matched;
+    return matched;
 });
 
 // Check if an attribute value is available based on current selections
 const isAttributeValueAvailable = (attrName, valueId) => {
-  if (!currentProduct.value?.variations) return false;
+    if (!currentProduct.value?.variations) return false;
 
-  // Get other selected attributes (excluding current one)
-  const otherSelections = { ...selectedAttributeValues.value };
-  delete otherSelections[attrName];
+    // Get other selected attributes (excluding current one)
+    const otherSelections = { ...selectedAttributeValues.value };
+    delete otherSelections[attrName];
 
-  // Find if any variation exists with this value and all other selected values
-  return currentProduct.value.variations.some(variation => {
-    // Check if this variation has the value we're checking
-    const hasThisValue = variation.attributes?.some(
-      attr => attr.value?.attribute?.name === attrName && attr.value?.id === valueId
-    );
+    // Find if any variation exists with this value and all other selected values
+    return currentProduct.value.variations.some((variation) => {
+        // Check if this variation has the value we're checking
+        const hasThisValue = variation.attributes?.some(
+            (attr) =>
+                attr.value?.attribute?.name === attrName &&
+                attr.value?.id === valueId,
+        );
 
-    if (!hasThisValue) return false;
+        if (!hasThisValue) return false;
 
-    // Check if this variation matches all other selected attributes
-    return Object.entries(otherSelections).every(([otherAttrName, otherValueId]) => {
-      return variation.attributes?.some(
-        attr => attr.value?.attribute?.name === otherAttrName && attr.value?.id === otherValueId
-      );
+        // Check if this variation matches all other selected attributes
+        return Object.entries(otherSelections).every(
+            ([otherAttrName, otherValueId]) => {
+                return variation.attributes?.some(
+                    (attr) =>
+                        attr.value?.attribute?.name === otherAttrName &&
+                        attr.value?.id === otherValueId,
+                );
+            },
+        );
     });
-  });
 };
 
 // Methods
@@ -257,7 +267,7 @@ const handleSearch = () => {
             onError: () => {
                 loading.value = false;
             },
-        }
+        },
     );
 };
 
@@ -282,7 +292,7 @@ const changePage = (page) => {
                 onError: () => {
                     loading.value = false;
                 },
-            }
+            },
         );
     }
 };
@@ -308,7 +318,7 @@ const changePerPage = (newPerPage) => {
             onError: () => {
                 loading.value = false;
             },
-        }
+        },
     );
 };
 
@@ -332,7 +342,7 @@ const handleCategoryChange = () => {
             onError: () => {
                 loading.value = false;
             },
-        }
+        },
     );
 };
 
@@ -346,7 +356,7 @@ const fetchCartData = async () => {
             cartData.value = null;
             if (response.data.error_code !== "CART_NOT_FOUND") {
                 toast.error(
-                    response.data.message || "Failed to fetch cart data"
+                    response.data.message || "Failed to fetch cart data",
                 );
             }
         }
@@ -364,39 +374,39 @@ const fetchCartData = async () => {
 };
 
 const openVariationModal = (product) => {
-  console.log('🚀 Opening Variation Modal:', {
-    product_id: product.id,
-    product_name: product.name,
-    product_price: product.price,
-    product_price_type: typeof product.price,
-    product_type: product.type,
-    variations_count: product.variations?.length,
-    first_variation: product.variations?.[0],
-    all_variations: product.variations
-  });
+    console.log("🚀 Opening Variation Modal:", {
+        product_id: product.id,
+        product_name: product.name,
+        product_price: product.price,
+        product_price_type: typeof product.price,
+        product_type: product.type,
+        variations_count: product.variations?.length,
+        first_variation: product.variations?.[0],
+        all_variations: product.variations,
+    });
 
-  if (product.type === 'variable' && product.variations.length > 0) {
-    currentProduct.value = product;
-    selectedAttributeValues.value = {}; // Reset selections
-    showVariationModal.value = true;
-  } else {
-    addToCart(product);
-  }
+    if (product.type === "variable" && product.variations.length > 0) {
+        currentProduct.value = product;
+        selectedAttributeValues.value = {}; // Reset selections
+        showVariationModal.value = true;
+    } else {
+        addToCart(product);
+    }
 };
 
 // Select an attribute value
 const selectAttributeValue = (attrName, valueId) => {
-  selectedAttributeValues.value = {
-    ...selectedAttributeValues.value,
-    [attrName]: valueId
-  };
+    selectedAttributeValues.value = {
+        ...selectedAttributeValues.value,
+        [attrName]: valueId,
+    };
 };
 
 // Add matched variation to cart
 const addMatchedVariationToCart = () => {
-  if (matchedVariation.value) {
-    addToCart(currentProduct.value, matchedVariation.value);
-  }
+    if (matchedVariation.value) {
+        addToCart(currentProduct.value, matchedVariation.value);
+    }
 };
 
 const addToCart = async (product, variation = null) => {
@@ -415,7 +425,7 @@ const addToCart = async (product, variation = null) => {
             await fetchCartData();
             showVariationModal.value = false;
             toast.success(
-                response.data.message || "Item added to cart successfully"
+                response.data.message || "Item added to cart successfully",
             );
         } else {
             toast.error(response.data.message || "Failed to add item to cart");
@@ -423,7 +433,7 @@ const addToCart = async (product, variation = null) => {
     } catch (error) {
         console.error("Error adding to cart:", error);
         toast.error(
-            error.response?.data?.message || "Failed to add item to cart"
+            error.response?.data?.message || "Failed to add item to cart",
         );
     } finally {
         cartLoading.value = false;
@@ -444,7 +454,7 @@ const updateQuantity = async (item, increment) => {
         if (response.data.success) {
             await fetchCartData();
             toast.success(
-                response.data.message || "Quantity updated successfully"
+                response.data.message || "Quantity updated successfully",
             );
         } else {
             toast.error(response.data.message || "Failed to update quantity");
@@ -452,7 +462,7 @@ const updateQuantity = async (item, increment) => {
     } catch (error) {
         console.error("Error updating quantity:", error);
         toast.error(
-            error.response?.data?.message || "Failed to update quantity"
+            error.response?.data?.message || "Failed to update quantity",
         );
     } finally {
         cartLoading.value = false;
@@ -492,17 +502,17 @@ const removeFromCart = async (item) => {
             }
 
             toast.success(
-                response.data.message || "Item removed from cart successfully"
+                response.data.message || "Item removed from cart successfully",
             );
         } else {
             toast.error(
-                response.data.message || "Failed to remove item from cart"
+                response.data.message || "Failed to remove item from cart",
             );
         }
     } catch (error) {
         console.error("Error removing from cart:", error);
         toast.error(
-            error.response?.data?.message || "Failed to remove item from cart"
+            error.response?.data?.message || "Failed to remove item from cart",
         );
     } finally {
         cartLoading.value = false;
@@ -522,13 +532,13 @@ const formatPrice = (price) => {
 
 const getProductFromCart = (cartItem) => {
     const product = props.products?.data?.find(
-        (p) => p.id === cartItem.product_id
+        (p) => p.id === cartItem.product_id,
     );
     if (!product) return null;
 
     if (cartItem.variation_id) {
         const variation = product.variations?.find(
-            (v) => v.id === cartItem.variation_id
+            (v) => v.id === cartItem.variation_id,
         );
         return {
             ...product,
@@ -554,7 +564,10 @@ const selectUser = async (user) => {
 // Modified clearUserSelection to reset to Walk-in Customer
 const clearUserSelection = async () => {
     const walkInCustomer = props.users.find(
-        (user) => user.email === "walkin_customer@gmail.com" || user.email === "working_customer@gmail.com" || user.id === 7
+        (user) =>
+            user.email === "walkin_customer@gmail.com" ||
+            user.email === "working_customer@gmail.com" ||
+            user.id === 7,
     );
 
     if (walkInCustomer) {
@@ -602,7 +615,7 @@ const createUser = async () => {
                     phone_number: newUser.value.phone_number,
                 };
                 toast.warn(
-                    "User created, but ID not retrieved. Please refresh the page."
+                    "User created, but ID not retrieved. Please refresh the page.",
                 );
             }
 
@@ -656,7 +669,7 @@ const handleCheckout = async () => {
             discountValue > base
         ) {
             toast.error(
-                "Discount cannot exceed total amount of ৳" + formatPrice(base)
+                "Discount cannot exceed total amount of ৳" + formatPrice(base),
             );
             cartLoading.value = false;
             return;
@@ -682,7 +695,7 @@ const handleCheckout = async () => {
             area: shippingForm.value.area,
             payment_method: shippingForm.value.payment_method,
             payment_status: shippingForm.value.payment_status,
-            source: shippingForm.value.source || 'website',
+            source: shippingForm.value.source || "website",
             items: items,
             // POS discount values
             pos_discount: shippingForm.value.pos_discount || 0,
@@ -725,11 +738,11 @@ watch(
                 shippingForm.value.pos_discount = base;
                 toast.error(
                     "Discount cannot exceed total amount of ৳" +
-                        formatPrice(base)
+                        formatPrice(base),
                 );
             }
         }
-    }
+    },
 );
 
 // Watch for search changes with debounce
@@ -754,7 +767,10 @@ watch(userId, () => {
 // Mount
 onMounted(async () => {
     const walkInCustomer = props.users.find(
-        (user) => user.email === "walkin_customer@gmail.com" || user.email === "working_customer@gmail.com" || user.id === 7
+        (user) =>
+            user.email === "walkin_customer@gmail.com" ||
+            user.email === "working_customer@gmail.com" ||
+            user.id === 7,
     );
 
     if (walkInCustomer) {
@@ -793,19 +809,19 @@ onMounted(async () => {
         <div class="min-h-screen bg-gray-50">
             <!-- Header -->
             <div class="bg-white shadow-sm border-b">
-                <div class="px-2 py-4">
+                <div class="px-2 py-2">
                     <div class="flex items-center justify-between">
-                        <h1 class="text-2xl font-bold text-gray-900">
+                        <h1 class="text-sm font-medium text-gray-900">
                             Point of Sale
                         </h1>
-                        <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-1">
                             <div
-                                class="px-3 py-1 rounded-full text-sm font-medium border border-gray-200 text-gray-700 bg-white"
+                                class="px-2 py-0.5 rounded-full text-[10px] font-medium border border-gray-200 text-gray-700 bg-white"
                             >
                                 {{ cartItemsCount }} items
                             </div>
                             <div
-                                class="px-3 py-1 rounded-full text-sm font-medium border border-gray-200 text-gray-700 bg-white"
+                                class="px-2 py-0.5 rounded-full text-[10px] font-medium border border-gray-200 text-gray-700 bg-white"
                             >
                                 ৳{{ formatPrice(cartTotal) }}
                             </div>
@@ -816,30 +832,30 @@ onMounted(async () => {
 
             <div class="flex flex-col lg:flex-row h-full">
                 <!-- Products Section -->
-                <div class="w-full xl:w-2/3 p-3">
+                <div class="w-full xl:w-2/3 p-1">
                     <!-- Search and Filters -->
-                    <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+                    <div class="bg-white rounded-lg shadow-sm border p-2 mb-2">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4 flex-1">
+                            <div class="flex items-center space-x-2 flex-1">
                                 <div class="flex-1 relative">
                                     <input
                                         v-model="searchQuery"
                                         type="text"
                                         placeholder="Search products by name or code..."
-                                        class="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full pl-4 pr-4 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
                             </div>
 
                             <!-- Per Page Selector -->
-                            <div class="ml-4 flex items-center space-x-2">
-                                <label class="text-sm text-gray-600"
+                            <div class="ml-2 flex items-center space-x-1">
+                                <label class="text-xs text-gray-600"
                                     >Show:</label
                                 >
                                 <select
                                     :value="perPage"
                                     @change="changePerPage($event.target.value)"
-                                    class="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="px-2 py-0.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 >
                                     <option value="10">10</option>
                                     <option value="25">25</option>
@@ -853,12 +869,12 @@ onMounted(async () => {
                     <!-- Products Grid -->
                     <div class="bg-white rounded-lg shadow-sm border">
                         <div
-                            class="p-4 border-b flex justify-between items-center"
+                            class="p-2 border-b flex justify-between items-center"
                         >
-                            <h2 class="text-lg font-semibold text-slate-900">
+                            <h2 class="text-sm font-medium text-slate-900">
                                 Products
                             </h2>
-                            <div class="text-sm text-slate-500">
+                            <div class="text-[10px] text-slate-500">
                                 Showing {{ paginationInfo.from }}-{{
                                     paginationInfo.to
                                 }}
@@ -876,7 +892,7 @@ onMounted(async () => {
 
                         <div
                             v-else
-                            class="p-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                            class="p-2 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2"
                         >
                             <div
                                 v-for="product in filteredProducts"
@@ -889,18 +905,18 @@ onMounted(async () => {
                                     class="aspect-square object-cover"
                                     v-if="product.feature_image"
                                 />
-                                <div class="p-4">
+                                <div class="p-2">
                                     <div
-                                        class="flex items-start justify-between mb-2"
+                                        class="flex items-start justify-between mb-1"
                                     >
                                         <div>
                                             <h3
-                                                class="font-medium text-[12px] text-gray-900"
+                                                class="font-normal text-[11px] text-gray-900 truncate"
                                             >
                                                 {{ product.name }}
                                             </h3>
                                             <p
-                                                class="text-sm text-gray-500 mt-1"
+                                                class="text-[10px] text-gray-500 mt-0.5"
                                             >
                                                 {{
                                                     product.category?.name ||
@@ -909,18 +925,13 @@ onMounted(async () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <!-- <div
-                                        class="text-sm font-semibold text-gray-900"
-                                    >
-                                        ৳{{ formatPrice(product.price) }}
-                                    </div> -->
 
                                     <div
-                                        class="mt-4 flex flex-col gap-2 items-center justify-between"
+                                        class="mt-2 flex flex-col gap-1 items-center justify-between"
                                     >
                                         <span
                                             v-if="product.is_pre_order"
-                                            class="bg-blue-50 text-blue-700 border-blue-200 text-xs font-medium px-2 py-1 rounded-full border"
+                                            class="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-medium px-1 py-0.5 rounded-full border"
                                         >
                                             Pre-Order
                                         </span>
@@ -935,7 +946,7 @@ onMounted(async () => {
                                                 'bg-red-50 text-red-700 border-red-200':
                                                     product.stock === 0,
                                             }"
-                                            class="text-xs font-medium px-2 py-1 rounded-full border"
+                                            class="text-[10px] font-medium px-1 py-0.5 rounded-full border"
                                         >
                                             {{ product.stock }} in stock
                                         </span>
@@ -946,29 +957,29 @@ onMounted(async () => {
                                                     !product.is_pre_order) ||
                                                 cartLoading
                                             "
-                                            class="px-2 py-1 rounded-lg text-sm font-medium transition-colors"
+                                            class="px-2 py-0.5 rounded-lg text-[10px] font-medium transition-colors w-full"
                                             :class="[
                                                 product.stock === 0 &&
                                                 !product.is_pre_order
                                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                                     : cartLoading
-                                                    ? 'bg-gray-100 text-gray-500'
-                                                    : 'bg-gray-900 text-white hover:bg-gray-800',
+                                                      ? 'bg-gray-100 text-gray-500'
+                                                      : 'bg-gray-900 text-white hover:bg-gray-800',
                                             ]"
                                         >
                                             {{
                                                 cartLoading
                                                     ? "Adding..."
                                                     : product.stock === 0 &&
-                                                      !product.is_pre_order
-                                                    ? "Out of Stock"
-                                                    : product.type ===
-                                                          "variable" &&
-                                                      product.variations &&
-                                                      product.variations.length >
-                                                          0
-                                                    ? "Select Options"
-                                                    : "Add to Cart"
+                                                        !product.is_pre_order
+                                                      ? "Out of Stock"
+                                                      : product.type ===
+                                                              "variable" &&
+                                                          product.variations &&
+                                                          product.variations
+                                                              .length > 0
+                                                        ? "Select Options"
+                                                        : "Add to Cart"
                                             }}
                                         </button>
                                     </div>
@@ -978,7 +989,7 @@ onMounted(async () => {
 
                         <!-- Pagination -->
                         <div
-                            class="bg-white px-4 py-3 border-t border-gray-200 sm:px-2"
+                            class="bg-white px-2 py-1 border-t border-gray-200"
                         >
                             <div class="flex items-center justify-between">
                                 <div
@@ -987,27 +998,27 @@ onMounted(async () => {
                                     <button
                                         @click="
                                             changePage(
-                                                paginationInfo.current_page - 1
+                                                paginationInfo.current_page - 1,
                                             )
                                         "
                                         :disabled="
                                             paginationInfo.current_page <= 1
                                         "
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        class="relative inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Previous
                                     </button>
                                     <button
                                         @click="
                                             changePage(
-                                                paginationInfo.current_page + 1
+                                                paginationInfo.current_page + 1,
                                             )
                                         "
                                         :disabled="
                                             paginationInfo.current_page >=
                                             paginationInfo.last_page
                                         "
-                                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        class="ml-3 relative inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Next
                                     </button>
@@ -1016,7 +1027,7 @@ onMounted(async () => {
                                     class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
                                 >
                                     <div>
-                                        <p class="text-sm text-gray-700">
+                                        <p class="text-[10px] text-gray-700">
                                             Showing
                                             <span class="font-medium">{{
                                                 paginationInfo.from
@@ -1041,14 +1052,14 @@ onMounted(async () => {
                                                 @click="
                                                     changePage(
                                                         paginationInfo.current_page -
-                                                            1
+                                                            1,
                                                     )
                                                 "
                                                 :disabled="
                                                     paginationInfo.current_page <=
                                                     1
                                                 "
-                                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                class="relative inline-flex items-center px-1.5 py-1 rounded-l-md border border-gray-300 bg-white text-[10px] font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 Previous
                                             </button>
@@ -1057,7 +1068,7 @@ onMounted(async () => {
                                                     {
                                                         length: paginationInfo.last_page,
                                                     },
-                                                    (_, i) => i + 1
+                                                    (_, i) => i + 1,
                                                 )"
                                                 :key="page"
                                             >
@@ -1069,7 +1080,7 @@ onMounted(async () => {
                                                                 5 ||
                                                         Math.abs(
                                                             page -
-                                                                paginationInfo.current_page
+                                                                paginationInfo.current_page,
                                                         ) <= 2
                                                     "
                                                     @click="changePage(page)"
@@ -1079,7 +1090,7 @@ onMounted(async () => {
                                                             ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
                                                             : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                                                     "
-                                                    class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                                                    class="relative inline-flex items-center px-2 py-1 border text-[10px] font-medium"
                                                 >
                                                     {{ page }}
                                                 </button>
@@ -1095,7 +1106,7 @@ onMounted(async () => {
                                                                 paginationInfo.last_page -
                                                                     7)
                                                     "
-                                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                                                    class="relative inline-flex items-center px-2 py-1 border border-gray-300 bg-white text-[10px] font-medium text-gray-700"
                                                 >
                                                     ...
                                                 </span>
@@ -1104,14 +1115,14 @@ onMounted(async () => {
                                                 @click="
                                                     changePage(
                                                         paginationInfo.current_page +
-                                                            1
+                                                            1,
                                                     )
                                                 "
                                                 :disabled="
                                                     paginationInfo.current_page >=
                                                     paginationInfo.last_page
                                                 "
-                                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                class="relative inline-flex items-center px-1.5 py-1 rounded-r-md border border-gray-300 bg-white text-[10px] font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 Next
                                             </button>
@@ -1140,25 +1151,25 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <div class="p-4 border-b">
+                    <div class="p-2 border-b">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">
+                            <h2 class="text-sm font-medium text-gray-900">
                                 Shopping Cart
                             </h2>
                         </div>
                     </div>
 
                     <!-- User Selection -->
-                    <div class="p-4 border-b">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2">
+                    <div class="p-2 border-b">
+                        <h3 class="text-xs font-medium text-gray-700 mb-1">
                             Select Customer
                         </h3>
                         <div class="relative">
                             <input
                                 v-model="userSearchQuery"
                                 type="text"
-                                placeholder="Search users by name, phone or email..."
-                                class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Search by name, phone or email..."
+                                class="w-full pl-4 pr-10 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                             />
                             <button
                                 v-if="selectedUser"
@@ -1188,16 +1199,16 @@ onMounted(async () => {
                         </div>
                         <button
                             @click="showUserModal = true"
-                            class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                            class="mt-1 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-2 rounded-lg text-xs transition-colors"
                         >
                             Create New User
                         </button>
                     </div>
 
                     <!-- Shipping Details -->
-                    <div class="p-4 border-b bg-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-medium text-gray-700">
+                    <div class="p-2 border-b bg-white">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="text-xs font-medium text-gray-700">
                                 Shipping Details
                             </h3>
                         </div>
@@ -1211,7 +1222,7 @@ onMounted(async () => {
                                 <input
                                     v-model="shippingForm.customer_name"
                                     type="text"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 />
                             </div>
 
@@ -1222,7 +1233,7 @@ onMounted(async () => {
                                 <input
                                     v-model="shippingForm.customer_phone"
                                     type="text"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 />
                             </div>
 
@@ -1232,7 +1243,7 @@ onMounted(async () => {
                                 >
                                 <select
                                     v-model="shippingForm.area"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                     <option value="inside_dhaka">
                                         Inside Dhaka
@@ -1249,7 +1260,7 @@ onMounted(async () => {
                                 >
                                 <select
                                     v-model="shippingForm.payment_method"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                     <option value="cod">
                                         Cash on Delivery
@@ -1267,7 +1278,7 @@ onMounted(async () => {
                                 >
                                 <select
                                     v-model="shippingForm.payment_status"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                     <option value="unpaid">Unpaid</option>
                                     <option value="paid">Paid</option>
@@ -1282,12 +1293,14 @@ onMounted(async () => {
                                 >
                                 <select
                                     v-model="shippingForm.source"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 >
                                     <option value="website">Website</option>
                                     <option value="facebook">Facebook</option>
                                     <option value="whatsapp">WhatsApp</option>
-                                    <option value="phone_call">Phone Call</option>
+                                    <option value="phone_call">
+                                        Phone Call
+                                    </option>
                                     <option value="telegram">Telegram</option>
                                     <option value="tiktok">TikTok</option>
                                     <option value="manual">Manual</option>
@@ -1303,7 +1316,7 @@ onMounted(async () => {
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 />
                             </div>
 
@@ -1314,17 +1327,17 @@ onMounted(async () => {
                                 <input
                                     v-model="shippingForm.shipping_address"
                                     type="text"
-                                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                    class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                 />
                             </div>
                         </div>
 
                         <!-- Discount Settings (Always Editable) -->
                         <div
-                            class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                            class="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200"
                         >
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-medium text-gray-700">
+                            <div class="flex items-center justify-between mb-1">
+                                <h3 class="text-xs font-medium text-gray-700">
                                     Discount Settings
                                 </h3>
                                 <div class="text-xs text-gray-500">
@@ -1352,7 +1365,7 @@ onMounted(async () => {
                                                       0)
                                         "
                                         step="0.01"
-                                        class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                        class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                         :class="{
                                             'border-red-500':
                                                 shippingForm.discount_type ===
@@ -1362,7 +1375,7 @@ onMounted(async () => {
                                                         (shippingForm.shipping_cost ||
                                                             0),
                                         }"
-                                        placeholder="Enter discount amount"
+                                        placeholder="Discount"
                                     />
                                 </div>
                                 <div class="w-32">
@@ -1372,7 +1385,7 @@ onMounted(async () => {
                                     >
                                     <select
                                         v-model="shippingForm.discount_type"
-                                        class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                        class="w-full px-2 py-1 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                                     >
                                         <option value="fixed">Fixed</option>
                                         <option value="percentage">
@@ -1399,7 +1412,7 @@ onMounted(async () => {
                                           formatPrice(
                                               cartTotal +
                                                   (shippingForm.shipping_cost ||
-                                                      0)
+                                                      0),
                                           ) +
                                           ")"
                                 }}
@@ -1419,24 +1432,24 @@ onMounted(async () => {
                             <p>Your cart is empty</p>
                         </div>
 
-                        <div v-else class="p-4 space-y-4">
+                        <div v-else class="p-2 space-y-1">
                             <div
                                 v-for="item in cartItems"
                                 :key="item.id"
-                                class="bg-gray-50 rounded-lg p-4"
+                                class="bg-gray-50 rounded-lg p-2"
                             >
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
-                                        <div class="flex items-center mb-2">
+                                        <div class="flex items-center mb-1">
                                             <img
                                                 :src="item.product_image"
                                                 :alt="item.product_name"
-                                                class="w-10 h-10 rounded object-cover mr-3"
+                                                class="w-8 h-8 rounded object-cover mr-2"
                                                 v-if="item.product_image"
                                             />
                                             <div>
                                                 <h3
-                                                    class="font-medium text-gray-900 text-sm"
+                                                    class="font-medium text-gray-900 text-xs"
                                                 >
                                                     {{ item.product_name }}
                                                 </h3>
@@ -1446,10 +1459,10 @@ onMounted(async () => {
                                                 >
                                                     <span
                                                         v-for="attr in getProductFromCart(
-                                                            item
+                                                            item,
                                                         )?.attributes || []"
                                                         :key="attr.name"
-                                                        class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded mr-1"
+                                                        class="inline-block bg-gray-200 text-gray-700 text-[9px] px-1 py-0.5 rounded mr-1"
                                                     >
                                                         {{ attr.name }}:
                                                         {{ attr.value }}
@@ -1460,14 +1473,14 @@ onMounted(async () => {
                                                     class="mt-1"
                                                 >
                                                     <span
-                                                        class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                                                        class="inline-block bg-blue-100 text-blue-800 text-[9px] px-1 py-0.5 rounded"
                                                     >
                                                         Pre-Order
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-sm text-gray-500">
+                                        <p class="text-[10px] text-gray-500">
                                             ৳{{ formatPrice(item.price) }} each
                                         </p>
                                     </div>
@@ -1490,23 +1503,23 @@ onMounted(async () => {
                                                 cartLoading ||
                                                 item.quantity <= 1
                                             "
-                                            class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center"
+                                            class="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center text-xs"
                                         >
                                             -
                                         </button>
                                         <span
-                                            class="w-8 text-center font-medium"
+                                            class="w-6 text-center font-medium text-xs"
                                             >{{ item.quantity }}</span
                                         >
                                         <button
                                             @click="incrementQuantity(item)"
                                             :disabled="cartLoading"
-                                            class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center"
+                                            class="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 flex items-center justify-center text-xs"
                                         >
                                             +
                                         </button>
                                     </div>
-                                    <div class="font-medium text-gray-900">
+                                    <div class="font-medium text-gray-900 text-xs">
                                         ৳{{ formatPrice(item.subtotal) }}
                                     </div>
                                 </div>
@@ -1519,13 +1532,13 @@ onMounted(async () => {
                         v-if="cartItems.length > 0"
                         class="border-t p-5 bg-gray-50"
                     >
-                        <div class="bg-white rounded-lg shadow-sm p-4">
-                            <div class="mb-3 text-sm text-gray-600">
+                        <div class="bg-white rounded-lg shadow-sm p-2">
+                            <div class="mb-1 text-[10px] text-gray-600 uppercase tracking-wider">
                                 Order summary
                             </div>
                             <div class="space-y-3">
                                 <div
-                                    class="flex justify-between text-sm text-gray-700"
+                                    class="flex justify-between text-xs text-gray-700"
                                 >
                                     <span>Items ({{ cartItemsCount }})</span>
                                     <span class="font-medium"
@@ -1533,23 +1546,23 @@ onMounted(async () => {
                                     >
                                 </div>
                                 <div
-                                    class="flex justify-between text-sm text-gray-700"
+                                    class="flex justify-between text-xs text-gray-700"
                                 >
                                     <span>Shipping</span>
                                     <span class="font-medium"
                                         >৳{{
                                             formatPrice(
-                                                shippingForm.shipping_cost
+                                                shippingForm.shipping_cost,
                                             )
                                         }}</span
                                     >
                                 </div>
                                 <div
-                                    class="flex justify-between text-sm text-gray-700"
+                                    class="flex justify-between text-xs text-gray-700"
                                 >
                                     <span
                                         >Discount
-                                        <span class="text-xs text-gray-500"
+                                        <span class="text-[10px] text-gray-500"
                                             >({{
                                                 shippingForm.discount_type ===
                                                 "percentage"
@@ -1557,7 +1570,7 @@ onMounted(async () => {
                                                       "%"
                                                     : "৳" +
                                                       formatPrice(
-                                                          shippingForm.pos_discount
+                                                          shippingForm.pos_discount,
                                                       )
                                             }})</span
                                         ></span
@@ -1569,14 +1582,14 @@ onMounted(async () => {
                                     >
                                 </div>
                                 <div
-                                    class="border-t pt-3 flex items-center justify-between"
+                                    class="border-t pt-2 flex items-center justify-between"
                                 >
                                     <span
-                                        class="text-lg font-semibold text-gray-900"
+                                        class="text-sm font-medium text-gray-900"
                                         >Total</span
                                     >
                                     <span
-                                        class="text-lg font-bold text-gray-900"
+                                        class="text-sm font-medium text-gray-900"
                                         >৳{{
                                             formatPrice(orderGrandTotal)
                                         }}</span
@@ -1591,7 +1604,7 @@ onMounted(async () => {
                                 !shippingForm.customer_name ||
                                 !shippingForm.shipping_address
                             "
-                            class="mt-3 w-full bg-slate-900 hover:bg-slate-800 disabled:bg-gray-300 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                            class="mt-2 w-full bg-slate-900 hover:bg-slate-800 disabled:bg-gray-300 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
                         >
                             Complete Sale
                         </button>
@@ -1599,83 +1612,150 @@ onMounted(async () => {
                 </div>
             </div>
 
-      <!-- Variation Selection Modal -->
-      <div v-if="showVariationModal && currentProduct"
-           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
-          <div class="p-6">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-              <h3 class="text-lg font-semibold text-gray-900">{{ currentProduct.name }}</h3>
-              <button
-                @click="showVariationModal = false"
-                class="text-gray-400 hover:text-gray-600 p-1"
-              >
-                <X class="w-5 h-5" />
-              </button>
-            </div>
-
-            <!-- Attribute Selection -->
-            <div class="space-y-6">
-              <div v-for="attr in productAttributes" :key="attr.name" class="border-b pb-4 last:border-b-0">
-                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-                  Select {{ attr.name }}
-                </h4>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="val in attr.values"
-                    :key="val.id"
-                    @click="selectAttributeValue(attr.name, val.id)"
-                    :disabled="!isAttributeValueAvailable(attr.name, val.id)"
-                    :class="[
-                      'px-4 py-2 rounded-full border-2 text-sm font-medium transition-all',
-                      selectedAttributeValues[attr.name] === val.id
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : isAttributeValueAvailable(attr.name, val.id)
-                          ? 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'
-                          : 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
-                    ]"
-                  >
-                    {{ val.value }}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Selected Variation Info -->
-            <div v-if="matchedVariation" class="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div class="flex justify-between items-center">
-                <div>
-                  <p class="text-sm text-gray-500">Selected Variation</p>
-                  <p class="text-lg font-bold text-gray-900">৳{{ formatPrice(parseFloat(matchedVariation.price || 0) + parseFloat(currentProduct.price || 0)) }}</p>
-                  <p class="text-sm" :class="matchedVariation.stock > 0 ? 'text-green-600' : 'text-red-600'">
-                    {{ matchedVariation.stock > 0 ? `${matchedVariation.stock} in stock` : 'Out of stock' }}
-                  </p>
-                </div>
-                <button
-                  @click="addMatchedVariationToCart"
-                  :disabled="matchedVariation.stock === 0 || cartLoading"
-                  :class="[
-                    'px-6 py-3 rounded-lg font-medium transition-colors',
-                    matchedVariation.stock === 0
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : cartLoading
-                        ? 'bg-blue-400 text-white'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  ]"
+            <!-- Variation Selection Modal -->
+            <div
+                v-if="showVariationModal && currentProduct"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            >
+                <div
+                    class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto"
                 >
-                  {{ cartLoading ? 'Adding...' : matchedVariation.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
-                </button>
-              </div>
-            </div>
+                    <div class="p-3">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium text-gray-900">
+                                {{ currentProduct.name }}
+                            </h3>
+                            <button
+                                @click="showVariationModal = false"
+                                class="text-gray-400 hover:text-gray-600 p-1"
+                            >
+                                <X class="w-5 h-5" />
+                            </button>
+                        </div>
 
-            <!-- No selection message -->
-            <div v-else class="mt-6 p-4 bg-gray-50 rounded-lg text-center text-gray-500">
-              <p>Please select all options to see availability</p>
+                        <!-- Attribute Selection -->
+                        <div class="space-y-2">
+                            <div
+                                v-for="attr in productAttributes"
+                                :key="attr.name"
+                                class="border-b pb-2 last:border-b-0"
+                            >
+                                <h4
+                                    class="text-[10px] font-medium text-gray-700 uppercase tracking-wide mb-1"
+                                >
+                                    Select {{ attr.name }}
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="val in attr.values"
+                                        :key="val.id"
+                                        @click="
+                                            selectAttributeValue(
+                                                attr.name,
+                                                val.id,
+                                            )
+                                        "
+                                        :disabled="
+                                            !isAttributeValueAvailable(
+                                                attr.name,
+                                                val.id,
+                                            )
+                                        "
+                                        :class="[
+                                            'px-2 py-1 rounded-full border text-[10px] font-medium transition-all',
+                                            selectedAttributeValues[
+                                                attr.name
+                                            ] === val.id
+                                                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                : isAttributeValueAvailable(
+                                                        attr.name,
+                                                        val.id,
+                                                    )
+                                                  ? 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'
+                                                  : 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed',
+                                        ]"
+                                    >
+                                        {{ val.value }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Variation Info -->
+                        <div
+                            v-if="matchedVariation"
+                            class="mt-2 p-2 bg-gray-50 rounded-lg"
+                        >
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] text-gray-500">
+                                        Selected Variation
+                                    </p>
+                                    <p class="text-sm font-medium text-gray-900">
+                                        ৳{{
+                                            formatPrice(
+                                                parseFloat(
+                                                    matchedVariation.price || 0,
+                                                ) +
+                                                    parseFloat(
+                                                        currentProduct.price ||
+                                                            0,
+                                                    ),
+                                            )
+                                        }}
+                                    </p>
+                                    <p
+                                        class="text-[10px]"
+                                        :class="
+                                            matchedVariation.stock > 0
+                                                ? 'text-green-600'
+                                                : 'text-red-600'
+                                        "
+                                    >
+                                        {{
+                                            matchedVariation.stock > 0
+                                                ? `${matchedVariation.stock} in stock`
+                                                : "Out of stock"
+                                        }}
+                                    </p>
+                                </div>
+                                <button
+                                    @click="addMatchedVariationToCart"
+                                    :disabled="
+                                        matchedVariation.stock === 0 ||
+                                        cartLoading
+                                    "
+                                    :class="[
+                                        'px-3 py-1.5 rounded-lg font-medium text-xs transition-colors',
+                                        matchedVariation.stock === 0
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : cartLoading
+                                              ? 'bg-blue-400 text-white'
+                                              : 'bg-blue-600 hover:bg-blue-700 text-white',
+                                    ]"
+                                >
+                                    {{
+                                        cartLoading
+                                            ? "Adding..."
+                                            : matchedVariation.stock === 0
+                                              ? "Out of Stock"
+                                              : "Add to Cart"
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- No selection message -->
+                        <div
+                            v-else
+                            class="mt-2 p-2 bg-gray-50 rounded-lg text-center text-gray-500 text-[10px]"
+                        >
+                            <p>Please select all options to see availability</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
 
             <!-- User Creation Modal -->
             <div
@@ -1683,9 +1763,9 @@ onMounted(async () => {
                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             >
                 <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold">
+                    <div class="p-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium">
                                 Create New User
                             </h3>
                             <button
@@ -1698,65 +1778,65 @@ onMounted(async () => {
                                 ×
                             </button>
                         </div>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-sm text-gray-600"
+                        <div class="space-y-1">
+                             <div>
+                                <label class="text-[10px] text-gray-600"
                                     >Name</label
                                 >
                                 <input
                                     v-model="newUser.name"
                                     type="text"
-                                    class="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600"
+                                <label class="text-[10px] text-gray-600"
                                     >Email</label
                                 >
                                 <input
                                     v-model="newUser.email"
                                     type="email"
-                                    class="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600"
+                                <label class="text-[10px] text-gray-600"
                                     >Phone Number</label
                                 >
                                 <input
                                     v-model="newUser.phone_number"
                                     type="text"
-                                    class="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600"
+                                <label class="text-[10px] text-gray-600"
                                     >Password</label
                                 >
                                 <input
                                     v-model="newUser.password"
                                     type="password"
-                                    class="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600"
+                                <label class="text-[10px] text-gray-600"
                                     >Confirm Password</label
                                 >
                                 <input
                                     v-model="newUser.password_confirmation"
                                     type="password"
-                                    class="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                         </div>
-                        <div class="mt-4 flex justify-end space-x-2">
+                        <div class="mt-2 flex justify-end space-x-1">
                             <button
                                 @click="
                                     showUserModal = false;
                                     resetNewUserForm();
                                 "
-                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                                class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
                             >
                                 Cancel
                             </button>
@@ -1770,7 +1850,7 @@ onMounted(async () => {
                                     newUser.password !==
                                         newUser.password_confirmation
                                 "
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                                class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:bg-gray-400"
                             >
                                 Create User
                             </button>
@@ -1804,10 +1884,10 @@ input[type="number"],
 select,
 textarea {
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
     outline: none;
     transition: all 0.2s;
 }
@@ -1823,11 +1903,11 @@ textarea:focus {
 
 /* Button styles */
 .btn-primary {
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 0.75rem;
     background-color: #111827;
     color: white;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
     font-weight: 500;
     transition: background-color 0.2s;
 }

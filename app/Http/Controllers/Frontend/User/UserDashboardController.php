@@ -10,20 +10,32 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use App\Models\Order;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class UserDashboardController extends Controller
+class UserDashboardController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            function ($request, $next) {
+                $user = Auth::user();
+                if ($user && $user->roles()->exists() && !$user->hasRole('customer')) {
+                    return redirect()->route('admin.dashboard.index');
+                }
+                return $next($request);
+            }
+        ];
+    }
+
     /**
      * Display the user dashboard.
      */
-    public function index(Request $request): Response|\Illuminate\Http\RedirectResponse
+    public function index(Request $request): Response
     {
         $user = Auth::user();
-
-        // ✅ Admin check
-        if ($user->hasAnyRole(['admin', 'super-admin', 'Admin', 'Super Admin'])) {
-            return redirect()->route('admin.dashboard.index');
-        }
 
         // Get user's orders excluding incomplete orders with product relationships
         $orders = Order::where('user_id', $user->id)

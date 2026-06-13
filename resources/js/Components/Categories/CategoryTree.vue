@@ -84,31 +84,27 @@ const updateOrder = async (categoryId) => {
 
 <template>
     <div class="category-node" :class="{ 'is-root': level === 0 }">
-        <!-- Category Row Item -->
         <div
             class="category-row group"
-            :class="{ 'bg-blue-50/30': isHovered }"
+            :class="{ 'bg-slate-50': isHovered }"
             @mouseenter="isHovered = true"
             @mouseleave="isHovered = false"
         >
-            <!-- Hierarchy Lines and Content -->
             <div
-                class="flex items-center flex-1 min-w-0"
-                :style="{ paddingLeft: `${level * 24}px` }"
+                class="flex min-w-0 flex-1 items-start"
+                :style="{ paddingLeft: `${level * 18}px` }"
             >
-                <!-- Vertical guide lines for nested items -->
                 <div
                     v-if="level > 0"
                     class="hierarchy-line"
                     v-for="i in level"
                     :key="i"
-                    :style="{ left: `${(i - 1) * 24 + 12}px` }"
+                    :style="{ left: `${(i - 1) * 18 + 9}px` }"
                 ></div>
 
-                <!-- Expand/Collapse Button -->
                 <button
                     @click="toggleExpand"
-                    class="w-6 h-6 flex items-center justify-center rounded-md transition-all duration-200 hover:bg-gray-200/50 mr-2 z-10"
+                    class="mr-2 mt-1 flex h-6 w-6 items-center justify-center rounded-md transition-all duration-200 hover:bg-gray-200/60"
                     :class="category.children?.length ? 'visible' : 'invisible'"
                 >
                     <component
@@ -117,22 +113,21 @@ const updateOrder = async (categoryId) => {
                     />
                 </button>
 
-                <!-- Category Visuals (Icon/Image) -->
-                <div class="relative flex-shrink-0 mr-3">
+                <div class="relative mr-3 shrink-0">
                     <div
-                        class="w-10 h-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm group-hover:shadow transition-shadow duration-200"
+                        class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white transition-all duration-200"
                     >
                         <img
                             v-if="category.image"
                             :src="category.image"
-                            class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-110"
+                            class="h-full w-full object-cover"
                             @error="(e) => (e.target.src = '')"
                         />
                         <ImageIcon v-else class="w-5 h-5 text-gray-300" />
                     </div>
                     <div
                         v-if="category.icon"
-                        class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white bg-white shadow-sm overflow-hidden"
+                        class="absolute -bottom-1 -right-1 h-4 w-4 overflow-hidden rounded-full border border-white bg-white"
                     >
                         <img
                             :src="category.icon"
@@ -141,23 +136,62 @@ const updateOrder = async (categoryId) => {
                     </div>
                 </div>
 
-                <!-- Name and Sub-info -->
-                <div class="flex flex-col min-w-0">
+                <div class="min-w-0 flex-1">
                     <span
-                        class="text-sm font-semibold text-gray-800 truncate group-hover:text-blue-600 transition-colors duration-200"
+                        class="block truncate text-xs font-semibold text-gray-800 sm:text-sm"
                     >
                         {{ category.name }}
                     </span>
-                    <span
-                        class="text-[10px] uppercase tracking-wider text-gray-400 font-bold"
+                    <div
+                        class="mt-2 flex flex-wrap items-center gap-2 md:hidden"
                     >
-                        ID: #{{ category.id }} •
-                        {{ category.children?.length || 0 }} Subcategories
-                    </span>
+                        <button
+                            @click="
+                                updateStatus(
+                                    category.id,
+                                    category.status === 'active'
+                                        ? 'deactive'
+                                        : 'active'
+                                )
+                            "
+                            class="status-pill transition-all duration-200"
+                            :class="
+                                category.status === 'active'
+                                    ? 'is-active'
+                                    : 'is-inactive'
+                            "
+                        >
+                            <span
+                                class="mr-1.5 h-1.5 w-1.5 rounded-full"
+                                :class="
+                                    category.status === 'active'
+                                        ? 'bg-green-500'
+                                        : 'bg-gray-400'
+                                "
+                            ></span>
+                            {{
+                                category.status === "active"
+                                    ? "Active"
+                                    : "Inactive"
+                            }}
+                        </button>
+
+                        <div class="relative">
+                            <input
+                                v-model.number="orderValue"
+                                type="number"
+                                min="0"
+                                class="order-input"
+                                @change="updateOrder(category.id)"
+                            />
+                            <LayoutGrid
+                                class="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-300"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Status Column -->
             <div
                 class="hidden md:flex items-center justify-center w-32 shrink-0"
             >
@@ -187,7 +221,6 @@ const updateOrder = async (categoryId) => {
                 </button>
             </div>
 
-            <!-- Order Column -->
             <div
                 class="hidden md:flex items-center justify-center w-24 shrink-0"
             >
@@ -205,9 +238,8 @@ const updateOrder = async (categoryId) => {
                 </div>
             </div>
 
-            <!-- Actions Column -->
             <div
-                class="flex items-center justify-end w-40 shrink-0 space-x-1 px-4"
+                class="ml-2 flex shrink-0 items-start justify-end gap-1 self-start md:w-40 md:px-4"
             >
                 <Link
                     :href="
@@ -280,7 +312,7 @@ const updateOrder = async (categoryId) => {
 }
 
 .category-row {
-    @apply flex items-center px-4 py-3 transition-all duration-200 border-b border-gray-50 bg-white;
+    @apply flex items-start gap-2 border-b border-gray-100 bg-white px-3 py-3 transition-all duration-200 sm:px-4;
 }
 
 .category-row:last-child {
@@ -292,25 +324,24 @@ const updateOrder = async (categoryId) => {
 }
 
 .hierarchy-line {
-    @apply absolute top-0 bottom-0 w-[1.5px] bg-gray-200 pointer-events-none transition-colors duration-300;
+    @apply pointer-events-none absolute top-0 bottom-0 w-px bg-gray-200 transition-colors duration-300;
 }
 
-/* Horizontal connector for the current level */
 .hierarchy-line:last-of-type::after {
     content: "";
-    @apply absolute top-1/2 left-0 w-3 h-[1.5px] bg-gray-200 -translate-y-1/2 rounded-r-full;
+    @apply absolute left-0 top-1/2 h-px w-2 -translate-y-1/2 rounded-r-full bg-gray-200;
 }
 
 .category-row:hover .hierarchy-line {
-    @apply bg-blue-300;
+    @apply bg-slate-300;
 }
 
 .category-row:hover .hierarchy-line:last-of-type::after {
-    @apply bg-blue-400;
+    @apply bg-slate-400;
 }
 
 .status-pill {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border transition-all;
+    @apply inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all;
 }
 
 .status-pill.is-active {
@@ -322,20 +353,19 @@ const updateOrder = async (categoryId) => {
 }
 
 .order-input {
-    @apply w-16 pl-7 pr-2 py-1 text-xs border border-gray-100 rounded-md focus:outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all text-center font-medium text-gray-600;
+    @apply w-14 rounded-md border border-gray-200 py-1 pl-6 pr-2 text-center text-[11px] font-medium text-gray-600 transition-all focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100;
 }
 
 .action-btn {
-    @apply p-2 rounded-lg transition-all duration-200;
+    @apply rounded-lg p-2 transition-all duration-200;
 }
 
 .category-children {
-    @apply bg-gray-50/10;
+    @apply bg-white;
 }
 
-/* Custom shadow for row items */
 .category-row:hover {
     z-index: 5;
-    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 3px 10px -6px rgba(15, 23, 42, 0.18);
 }
 </style>

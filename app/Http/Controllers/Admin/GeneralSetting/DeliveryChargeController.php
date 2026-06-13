@@ -12,9 +12,10 @@ class DeliveryChargeController extends Controller
 {
     public function index()
     {
-        $districts = DeliveryZone::where('type', 'district')
+        $districts = DeliveryZone::where('type', DeliveryZone::TYPE_DISTRICT)
+            ->where('is_active', true)
             ->withCount(['children as custom_thanas_count' => function ($query) {
-                $query->whereNotNull('charge');
+                $query->where('is_active', true)->whereNotNull('charge');
             }])
             ->orderBy('name')
             ->get();
@@ -29,7 +30,12 @@ class DeliveryChargeController extends Controller
 
     public function getThanas(DeliveryZone $district)
     {
-        return response()->json($district->children()->orderBy('name')->get());
+        return response()->json(
+            $district->children()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get()
+        );
     }
 
     public function updateSettings(Request $request)

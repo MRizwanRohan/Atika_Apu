@@ -29,6 +29,8 @@ const settingsForm = useForm({
     is_enabled: props.settings?.is_enabled ?? false,
     order_create_sms_enabled: props.settings?.order_create_sms_enabled ?? false,
     order_create_sms_template: props.settings?.order_create_sms_template || "",
+    order_cancel_sms_enabled: props.settings?.order_cancel_sms_enabled ?? false,
+    order_cancel_sms_template: props.settings?.order_cancel_sms_template || "",
 });
 
 const templateForm = useForm({
@@ -190,6 +192,21 @@ const refreshBalance = () => {
                         </div>
                         <p class="text-xs text-gray-500">Automatically send an SMS to customers when they place a new order.</p>
                     </div>
+
+                    <!-- Order Cancelled Notification Toggle -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <XCircle class="w-5 h-5 text-rose-500" />
+                                <h3 class="font-bold text-gray-900 dark:text-white">Order Cancelled SMS</h3>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="settingsForm.order_cancel_sms_enabled" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-rose-300 dark:peer-focus:ring-rose-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-rose-500"></div>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500">Automatically send an SMS to customers when their order is cancelled.</p>
+                    </div>
                 </div>
 
                 <!-- Template Management -->
@@ -214,6 +231,31 @@ const refreshBalance = () => {
                                     <span class="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-800 font-bold uppercase tracking-tighter"> {name} </span>
                                     <span class="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-800 font-bold uppercase tracking-tighter"> {order_number} </span>
                                     <span class="text-[10px] px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-800 font-bold uppercase tracking-tighter"> {total} </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Cancelled SMS Template -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                        <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <FileText class="w-5 h-5 text-rose-600" />
+                                <h3 class="font-bold text-gray-900 dark:text-white">Order Cancelled SMS Template</h3>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="space-y-1.5">
+                                <textarea 
+                                    v-model="settingsForm.order_cancel_sms_template"
+                                    rows="4" 
+                                    class="w-full p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all resize-none font-medium"
+                                    placeholder="Enter message template..."
+                                ></textarea>
+                                <div class="flex flex-wrap gap-2 pt-1">
+                                    <span class="text-[10px] px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-md border border-rose-100 dark:border-rose-800 font-bold uppercase tracking-tighter"> {name} </span>
+                                    <span class="text-[10px] px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-md border border-rose-100 dark:border-rose-800 font-bold uppercase tracking-tighter"> {order_number} </span>
+                                    <span class="text-[10px] px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-md border border-rose-100 dark:border-rose-800 font-bold uppercase tracking-tighter"> {total} </span>
                                 </div>
                             </div>
                         </div>

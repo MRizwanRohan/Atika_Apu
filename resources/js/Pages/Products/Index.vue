@@ -12,6 +12,7 @@ import {
     X,
     Filter,
     SlidersHorizontal,
+    ShoppingBag,
 } from "lucide-vue-next";
 import debounce from "lodash/debounce";
 
@@ -65,7 +66,8 @@ watch(
 
 // Check if attribute is a color type (case-insensitive)
 const isColorAttribute = (attributeName) => {
-    return attributeName.toLowerCase() === "color";
+    const name = attributeName.toLowerCase();
+    return name === "color" || name === "colour";
 };
 
 // Sort options
@@ -322,7 +324,7 @@ const formatPrice = (price) => {
 <template>
     <Head title="Products" />
     <FrontendLayout>
-        <div class="min-h-screen bg-gray-50">
+        <div class="min-h-screen bg-gray-50 mb-20">
             <div class="container mx-auto px-4 py-6">
                 <!-- Page Header -->
                 <div class="mb-6 text-center">
@@ -817,29 +819,55 @@ const formatPrice = (price) => {
                         <!-- No results -->
                         <div
                             v-else
-                            class="bg-white rounded-lg shadow-sm p-12 text-center"
+                            class="bg-white rounded-2xl border border-gray-100 p-8 md:p-16 text-center max-w-2xl mx-auto shadow-sm"
                         >
                             <div
-                                class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center"
+                                class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center bg-gradient-to-tr from-amber-50 to-orange-100 rounded-full text-amber-500 shadow-inner group"
                             >
-                                <SlidersHorizontal
-                                    class="w-12 h-12 text-gray-400"
+                                <ShoppingBag
+                                    class="w-10 h-10 transform group-hover:scale-110 transition-transform duration-300 text-primary"
                                 />
+                                <span class="absolute -top-1 -right-1 flex h-4 w-4">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-primary"></span>
+                                </span>
                             </div>
+                            
                             <h3
-                                class="text-xl font-semibold text-gray-900 mb-2"
+                                class="text-2xl font-bold text-gray-900 mb-3 tracking-tight"
                             >
                                 No products found
                             </h3>
-                            <p class="text-gray-500 mb-6">
-                                Try adjusting your filters or search terms
+                            <p class="text-gray-500 max-w-md mx-auto mb-8 text-sm leading-relaxed">
+                                We couldn't find any products matching your filters or search criteria.
                             </p>
-                            <button
-                                @click="clearAllFilters"
-                                class="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                            >
-                                Clear All Filters
-                            </button>
+
+                            <!-- Special Pre-order Message for Customer -->
+                            <div class="bg-gradient-to-r from-primary/5 via-amber-500/5 to-primary/5 border border-primary/10 rounded-xl p-6 mb-8 text-left max-w-md mx-auto">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-1.5 flex items-center gap-2">
+                                    <span>✨</span> আপনার কাঙ্ক্ষিত প্রোডাক্টটি খুঁজে পাচ্ছেন না?
+                                </h4>
+                                <p class="text-xs text-gray-600 leading-relaxed">
+                                    চিন্তার কিছু নেই! আপনি এখনই প্রি-অর্ডার করতে পারেন এবং আমরা বিশেষ করে আপনার জন্যই প্রোডাক্টটি সংগ্রহ করে দেব। আপনার কী প্রয়োজন তা আমাদের জানান!
+                                </p>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <Link
+                                    href="/pre-order-lead"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-primary text-white rounded-xl font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:bg-primary/95 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm gap-2"
+                                >
+                                    <ShoppingBag class="w-4 h-4" />
+                                    Pre-Order Now
+                                </Link>
+                                <button
+                                    @click="clearAllFilters"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm"
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Pagination -->

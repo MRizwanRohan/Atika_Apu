@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
@@ -46,13 +47,13 @@ class RegisteredUserController extends Controller
             'address' => $request->address,
         ]);
 
-        // Assign customer role
+        Role::findOrCreate('customer', config('permission.default_guard'));
         $user->assignRole('customer');
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('user.dashboard', absolute: false));
+        return redirect(route('dashboard', absolute: false));
     }
 }

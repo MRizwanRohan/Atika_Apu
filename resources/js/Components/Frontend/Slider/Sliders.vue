@@ -27,18 +27,32 @@
                                 :href="slider.Link"
                                 class="block w-full h-full outline-none"
                             >
-                                <img
-                                    :src="slider.image"
-                                    :alt="'G&G Motion Slide ' + slider.id"
-                                    class="w-full h-full object-cover block"
-                                />
+                                <picture>
+                                    <source
+                                        v-if="slider.mobile_image"
+                                        :srcset="slider.mobile_image"
+                                        media="(max-width: 768px)"
+                                    />
+                                    <img
+                                        :src="slider.image"
+                                        :alt="'G&G Motion Slide ' + slider.id"
+                                        class="w-full h-full object-cover block"
+                                    />
+                                </picture>
                             </Link>
                             <div v-else class="w-full h-full outline-none">
-                                <img
-                                    :src="slider.image"
-                                    :alt="'G&G Motion Slide ' + slider.id"
-                                    class="w-full h-full object-cover block"
-                                />
+                                <picture>
+                                    <source
+                                        v-if="slider.mobile_image"
+                                        :srcset="slider.mobile_image"
+                                        media="(max-width: 768px)"
+                                    />
+                                    <img
+                                        :src="slider.image"
+                                        :alt="'G&G Motion Slide ' + slider.id"
+                                        class="w-full h-full object-cover block"
+                                    />
+                                </picture>
                             </div>
                         </swiper-slide>
                     </swiper>

@@ -52,7 +52,7 @@ class PurchaseController extends Controller
     {
         try {
             $purchase = $this->purchaseService->createPurchase($request->validated());
-            
+
             // If the purchase was auto-received, clear cache
             if ($purchase && $purchase->status === 'received') {
                 $this->clearAllProductCaches();
@@ -68,7 +68,7 @@ class PurchaseController extends Controller
     {
         try {
             $this->purchaseService->receivePurchase($id);
-            
+
             // Clear all product caches so newest stock/cost is visible
             $this->clearAllProductCaches();
 

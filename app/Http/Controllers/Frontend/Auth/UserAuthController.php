@@ -35,11 +35,11 @@ class UserAuthController extends Controller
 
         $user = Auth::user();
 
-        if ($user->hasAnyRole(['admin', 'super-admin', 'Admin', 'Super Admin'])) {
+        if ($user->roles()->exists() && !$user->hasRole('customer')) {
             return redirect()->route('admin.dashboard.index');
         }
 
-        return redirect()->intended(route('user.dashboard'));
+        return redirect()->intended(route('dashboard'));
     }
 
     /**

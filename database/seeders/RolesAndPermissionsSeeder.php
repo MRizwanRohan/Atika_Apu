@@ -19,6 +19,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'admin.dashboard.index',
             'admin.orders.index',
             'admin.pos.index',
+            'admin.facebook-entries.index',
             'admin.products.index',
             'admin.products.create',
             'admin.attributes.index',
@@ -70,6 +71,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $managerRole->givePermissionTo([
             'admin.dashboard.index',
             'admin.orders.index',
+            'admin.facebook-entries.index',
             'admin.products.index',
             'admin.inventory.getAllProductsStock',
             'admin.reports.generateReport',
@@ -92,6 +94,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $salesRole->givePermissionTo([
             'admin.dashboard.index',
             'admin.pos.index',
+            'admin.facebook-entries.index',
             'admin.products.index',
             'admin.inventory.getAllProductsStock',
             'admin.coupons.index',

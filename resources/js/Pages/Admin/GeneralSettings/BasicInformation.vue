@@ -320,7 +320,7 @@
                         </span>
                     </div>
 
-                    <div class="mb-4 md:col-span-2">
+                    <!-- <div class="mb-4 md:col-span-2">
                         <label class="block text-gray-700"
                             >Attention Notice</label
                         >
@@ -342,7 +342,7 @@
                         >
                             {{ form.errors.attention_notice }}
                         </span>
-                    </div>
+                    </div> -->
 
                     <div class="mb-4 md:col-span-2">
                         <label class="block text-gray-700">bKash Payment Instructions</label>

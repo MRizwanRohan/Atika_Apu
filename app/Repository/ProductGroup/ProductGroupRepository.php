@@ -70,7 +70,7 @@ class ProductGroupRepository implements ProductGroupRepositoryInterface
     {
         return ProductGroup::with(['products' => function($query) {
                 $query->where('status', 'Published')
-                    ->with(['category', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
+                    ->with(['categories', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
                     ->withAvg('reviews', 'rating')
                     ->withCount('reviews')
                     ->take(10); // Show mapping 10 products

@@ -157,6 +157,11 @@ class PathaoService
             throw new \Exception('Courier settings not found', 404);
         }
 
+        // Prevent duplicate dispatch for orders already sent to Pathao
+        if ($order->is_courier && $order->courier_name === 'pathao') {
+            throw new \Exception('This order has already been sent to Pathao.');
+        }
+
         $itemQuantity = $order->items->sum('quantity');
         $itemWeight = $order->items->sum(function ($item) {
             return $item->quantity * 0.5;

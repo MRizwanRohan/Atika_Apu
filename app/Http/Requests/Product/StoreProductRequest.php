@@ -62,7 +62,8 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code',
-            'category_id' => 'required|exists:categories,id',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'slug' => 'nullable|string|max:255|unique:products,slug',
             'short_description' => 'nullable|string',
@@ -75,10 +76,10 @@ class StoreProductRequest extends FormRequest
             // previous_price check (comparison with price) handled in validator to allow variable products without price
             'previous_price' => 'nullable|numeric|min:0',
             'youtube_video' => 'nullable|url|max:500',
-            'feature_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'feature_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:6000',
             'upload_video' => 'nullable|mimetypes:video/mp4,video/ogg,video/webm|max:51200',
             'gallery_images' => 'nullable|array|max:10',
-            'gallery_images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
+            'gallery_images.*' => 'image|mimes:jpg,jpeg,png,webp|max:6000',
             'product_tags' => 'nullable|array|max:20',
             'product_tags.*' => 'string|max:50',
             'specification' => 'nullable|array',
@@ -93,7 +94,7 @@ class StoreProductRequest extends FormRequest
             'variations' => 'required_if:type,variable|array|min:1',
             'variations.*.price' => 'required_if:type,variable|numeric|min:0',
             'variations.*.stock' => 'required_if:type,variable|integer|min:0',
-            'variations.*.image_path' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'variations.*.image_path' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:6000',
             'variations.*.attributes' => 'required_if:type,variable|array|min:1',
             'variations.*.attributes.*.attribute_value_id' => 'required_if:type,variable|integer|exists:attribute_values,id',
             'variations.*.previous_price' => 'nullable|numeric|min:0',
@@ -143,8 +144,9 @@ class StoreProductRequest extends FormRequest
             'product_code.unique' => 'This product code already exists. Please use a different code.',
             'product_code.max' => 'Product code cannot exceed 50 characters.',
 
-            'category_id.required' => 'Please select a category.',
-            'category_id.exists' => 'Selected category does not exist.',
+            'category_ids.required' => 'Please select at least one category.',
+            'category_ids.array' => 'Selected categories must be an array.',
+            'category_ids.*.exists' => 'One of the selected categories does not exist.',
 
             'brand_id.exists' => 'Selected brand does not exist.',
 
@@ -231,7 +233,7 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => 'product name',
             'product_code' => 'product code',
-            'category_id' => 'category',
+            'category_ids' => 'categories',
             'brand_id' => 'brand',
             'short_description' => 'short description',
             'type' => 'product type',

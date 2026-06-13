@@ -54,7 +54,7 @@
 
                         <!-- Red Ribbon for Pre-Order -->
                         <div v-if="isPreOrderMode" class="absolute top-0 right-0 z-40 overflow-hidden w-28 h-28 pointer-events-none">
-                            <div class="absolute top-[22px] right-[-36px] w-[140px] bg-red-600 text-white text-[11px] font-bold uppercase tracking-widest py-1.5 rotate-45 text-center shadow-lg border-y border-white/20">
+                            <div class="absolute top-[22px] right-[-36px] w-[140px] bg-gradient-to-r from-red-600 to-rose-600 text-white text-[11px] font-black uppercase tracking-widest py-1.5 rotate-45 text-center shadow-lg border-y border-white/20">
                                 Pre-Order
                             </div>
                         </div>
@@ -162,7 +162,8 @@ const checkScroll = () => {
 const allMedia = computed<Media[]>(() => {
     const media: Media[] = [];
 
-    if (props.selectedVariationImage) {
+    // Prepend variation image ONLY if it is not already included in props.images list
+    if (props.selectedVariationImage && !props.images.includes(props.selectedVariationImage)) {
         media.push({
             type: "image",
             src: props.selectedVariationImage,
@@ -212,11 +213,20 @@ watch(
     () => props.selectedVariationImage,
     (newVal) => {
         if (newVal) {
-            activeIndex.value = 0;
-            nextTick(() => {
-                scrollThumbnailIntoView(0);
-                checkScroll();
-            });
+            const index = allMedia.value.findIndex(m => m.src === newVal);
+            if (index !== -1) {
+                activeIndex.value = index;
+                nextTick(() => {
+                    scrollThumbnailIntoView(index);
+                    checkScroll();
+                });
+            } else {
+                activeIndex.value = 0;
+                nextTick(() => {
+                    scrollThumbnailIntoView(0);
+                    checkScroll();
+                });
+            }
         }
     }
 );

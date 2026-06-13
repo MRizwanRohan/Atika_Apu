@@ -31,5 +31,8 @@ class GeneralSetting extends Model
         'primary_color',
         'bkash_instructions',
         'nagad_instructions',
+        'popup_enabled',
+        'popup_image',
+        'popup_link',
     ];
 }

@@ -2,13 +2,14 @@
 
 use App\Models\PreOrderLead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PreOrderLeadTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_can_create_a_pre_order_lead()
     {
         $data = [
@@ -28,7 +29,7 @@ class PreOrderLeadTest extends TestCase
         $this->assertEquals('pending', $lead->status);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_correct_fillable_attributes()
     {
         $lead = new PreOrderLead();
@@ -38,6 +39,7 @@ class PreOrderLeadTest extends TestCase
             'email',
             'phone',
             'product_interest',
+            'reference_link',
             'message',
             'image_path',
             'status',
@@ -46,7 +48,7 @@ class PreOrderLeadTest extends TestCase
         $this->assertEquals($expectedFillable, $lead->getFillable());
     }
 
-    /** @test */
+    #[Test]
     public function it_has_correct_enum_values_for_status()
     {
         $lead = PreOrderLead::create([

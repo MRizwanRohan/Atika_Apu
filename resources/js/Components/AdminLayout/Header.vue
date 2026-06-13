@@ -6,12 +6,12 @@
         <div class="flex items-center gap-4">
             <button
                 @click="toggleSidebar"
-                class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200"
+                class="xl:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white focus:outline-none transition-all duration-200"
             >
                 <Menu class="h-6 w-6" />
             </button>
 
-            <div class="hidden md:block">
+            <div class="hidden xl:block">
                 <h1
                     class="text-xl font-bold text-gray-800 dark:text-white tracking-tight"
                 >
@@ -33,7 +33,7 @@
                 title="Visit Website"
             >
                 <ExternalLink class="h-5 w-5" />
-                <span class="hidden lg:block text-xs font-medium">Visit Website</span>
+                <span class="hidden xl:block text-xs font-medium">Visit Website</span>
             </a>
 
             <!-- Cache Clear -->
@@ -43,7 +43,7 @@
                 title="Clear Cache"
             >
                 <RotateCw class="h-5 w-5" />
-                <span class="hidden lg:block text-xs font-medium">Clear Cache</span>
+                <span class="hidden xl:block text-xs font-medium">Clear Cache</span>
             </button>
 
             <!-- Fullscreen Toggle -->

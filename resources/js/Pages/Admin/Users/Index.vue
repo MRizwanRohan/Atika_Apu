@@ -1,9 +1,9 @@
 <template>
   <Head title="Users" />
   <AdminLayout>
-    <div class="p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-semibold">Users Management</h1>
+    <div class="p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 class="text-xl sm:text-2xl font-semibold">Users Management</h1>
         <button 
           @click="openCreateModal"
           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -13,34 +13,34 @@
       </div>
 
       <!-- Users Table -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="bg-white rounded-lg shadow overflow-x-auto">
         <table class="min-w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Name</th>
+              <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Email</th>
+              <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Roles</th>
+              <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Created At</th>
+              <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="user in users" :key="user.id">
-              <td class="px-6 py-4 whitespace-nowrap">{{ user.name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
-              <td class="px-6 py-4">
+              <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">{{ user.name }}</td>
+              <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">{{ user.email }}</td>
+              <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
                 <div class="flex flex-wrap gap-1">
                   <span 
                     v-for="role in user.roles" 
                     :key="role.id"
-                    class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                    class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs whitespace-nowrap"
                   >
                     {{ role.name }}
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(user.created_at) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">{{ formatDate(user.created_at) }}</td>
+              <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">
                 <button 
                   @click="openEditModal(user)"
                   class="text-indigo-600 hover:text-indigo-900 mr-3"

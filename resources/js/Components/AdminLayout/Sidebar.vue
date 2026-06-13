@@ -304,6 +304,12 @@ const navigationItems = [
         permission: "admin.pos.index",
     },
     {
+        label: "Facebook Entry",
+        route: "admin.facebook-entries.index",
+        icon: MessageSquare,
+        permission: "admin.facebook-entries.index",
+    },
+    {
         label: "Products",
         icon: Globe,
         id: 1,
@@ -338,11 +344,11 @@ const navigationItems = [
                 route: "admin.product-groups.index",
                 permission: "admin.product-groups.index",
             },
-            {
-                label: "Product Videos",
-                route: "admin.product-videos.index",
-                permission: "admin.product-videos.index",
-            },
+            //{
+            //   label: "Product Videos",
+            //    route: "admin.product-videos.index",
+            //    permission: "admin.product-videos.index",
+            //},
         ],
     },
     {
@@ -467,12 +473,12 @@ const navigationItems = [
     //     icon: Users,
     //     permission: "admin.corporate-clients.index",
     // },
-    {
-        label: "Landing Pages",
-        route: "admin.landing-pages.index",
-        icon: FilePenLine,
-        permission: "admin.landing-pages.index",
-    },
+    // {
+    //     label: "Landing Pages",
+    //     route: "admin.landing-pages.index",
+    //     icon: FilePenLine,
+    //     permission: "admin.landing-pages.index",
+    // },
     {
         label: "Site Pages",
         route: "admin.site-pages.index",
@@ -519,6 +525,11 @@ const navigationItems = [
                 permission: "admin.settings.basicInformation",
             },
             {
+                label: "Popup Settings",
+                route: "admin.settings.popup",
+                permission: "admin.settings.basicInformation",
+            },
+            {
                 label: "Media",
                 route: "admin.media.index",
                 permission: "admin.media.index",
@@ -528,11 +539,11 @@ const navigationItems = [
                 route: "admin.sliders.index",
                 permission: "admin.sliders.index",
             },
-            {
-                label: "Banners",
-                route: "admin.banners.index",
-                permission: "admin.banners.index",
-            },
+            // {
+            //     label: "Banners",
+            //     route: "admin.banners.index",
+            //     permission: "admin.banners.index",
+            // },
             {
                 label: "Instagram Feed",
                 route: "admin.instagram-feeds.index",

@@ -39,7 +39,7 @@ watch(
             isEditing.value = true;
             form.name = newValue.name;
             const nameLower = (newValue.name || "").toString().trim().toLowerCase();
-            const isColor = nameLower === "color" || nameLower === "colorus";
+            const isColor = nameLower === "color" || nameLower === "colour" || nameLower === "colours" || nameLower === "colorus";
             form.values = newValue.values.map((v) => {
                 if (isColor) {
                     return {
@@ -64,7 +64,7 @@ watch(
 
 const isColorAttribute = computed(() => {
     const name = (form.name || "").toString().trim().toLowerCase();
-    return name === "color" || name === "colorus";
+    return name === "color" || name === "colour" || name === "colours" || name === "colorus";
 });
 
 // Keep values in sync when attribute name changes
@@ -135,203 +135,207 @@ const editAttr = (id) => {
 </script>
 
 <template>
-    <Head title="Create Attribute" />
+    <Head title="Attributes" />
     <AdminLayout>
-        <div class="w-full mx-auto p-4">
-            <div class="grid lg:grid-cols-2 grid-cols-1 gap-5">
-                <div class="create_attr">
-                    <form
-                        @submit.prevent="submitForm"
-                        class="mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-                    >
-                        <h1 class="text-2xl font-bold mb-4">
-                            {{
-                                isEditing
-                                    ? "Edit Attribute"
-                                    : "Create Attribute"
-                            }}
-                        </h1>
-                        <div class="mb-4">
-                            <label
-                                for="name"
-                                class="block text-gray-700 text-sm font-bold mb-2"
-                                >Attribute Name</label
-                            >
-                            <input
-                                v-model="form.name"
-                                id="name"
-                                type="text"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="Enter attribute name"
-                                required
-                            />
-                            <span
-                                v-if="form.errors.name"
-                                class="text-red-500 text-xs mt-1"
-                                >{{ form.errors.name }}</span
-                            >
-                        </div>
-
-                        <div
-                            v-for="(value, index) in form.values"
-                            :key="index"
-                            class="mb-4 relative"
-                        >
-                            <label
-                                :for="'value_' + index"
-                                class="block text-gray-700 text-sm font-bold mb-2"
-                                >Value {{ index + 1 }}</label
-                            >
-                            <div class="flex gap-2">
-                                <input
-                                    v-model="form.values[index].value"
-                                    :id="'value_' + index"
-                                    type="text"
-                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    placeholder="Enter value"
-                                    required
-                                />
-                                <input
-                                    v-if="isColorAttribute"
-                                    v-model="form.values[index].color"
-                                    type="color"
-                                    class="h-[38px] w-[50px] p-1 border rounded cursor-pointer"
-                                    title="Choose Color"
-                                />
-                            </div>
-                            <span
-                                v-if="form.errors[`values.${index}.value`]"
-                                class="text-red-500 text-xs mt-1 block"
-                            >
-                                {{ form.errors[`values.${index}.value`] }}
-                            </span>
-                            <div class="absolute top-[26px] -right-[38px]">
-                                <button
-                                    type="button"
-                                    @click="form.values.splice(index, 1)"
-                                    class="text-red-500 hover:text-red-700 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke-width="1.5"
-                                        stroke="currentColor"
-                                        class="size-6"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            d="M6 18 18 6M6 6l12 12"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div
-                            class="flex flex-col lg:flex-row items-center justify-between"
-                        >
-                            <button
-                                type="button"
-                                @click="addValue"
-                                class="text-blue-500 hover:text-blue-700 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            >
-                                + Add More Values
-                            </button>
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="btn btn-primary"
-                            >
-                                {{ isEditing ? "Update" : "Submit" }}
-                            </button>
-                        </div>
-                    </form>
+        <div class="w-full mx-auto p-4 md:p-6">
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        Product Attributes
+                        <span class="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-indigo-100 dark:border-indigo-800">
+                            {{ attrList.length }} Total
+                        </span>
+                    </h1>
+                    <p class="text-xs text-gray-500 mt-1">Manage product variations like size, color, etc.</p>
                 </div>
-                <div class="attr_list_wrapper">
-                    <div class="attr_list p-5 bg-white shadow-md rounded">
-                        <h1 class="text-2xl font-bold mb-4">Attribute List</h1>
-                        <div class="overflow-x-auto">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Values</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="attr in attrList" :key="attr.id">
-                                        <td>{{ attr.name }}</td>
-                                        <td>
-                                            <ul class="flex items-center gap-2">
-                                                <li
-                                                    v-for="value in attr.values"
-                                                    :key="value.id"
-                                                    class="px-2 py-1 text-xs rounded-full bg-blue-500 text-white"
-                                                >
-                                                    <span
-                                                        v-if="value.color"
-                                                        class="w-3 h-3 rounded-full inline-block mr-1 border border-white"
-                                                        :style="{
-                                                            backgroundColor:
-                                                                value.color,
-                                                        }"
-                                                    ></span>
-                                                    {{ value.value }}
-                                                </li>
-                                            </ul>
-                                        </td>
-                                        <td>
-                                            <div
-                                                class="flex justify-end space-x-2 relative"
-                                            >
-                                                <!-- Delete Button -->
-                                                <div class="relative group">
-                                                    <button
-                                                        @click="
-                                                            openDeleteModal(
-                                                                attr.id
-                                                            )
-                                                        "
-                                                        class="table_delete_action hover:bg-red-500 hover:text-white p-2 rounded"
-                                                    >
-                                                        <Trash2Icon size="20" />
-                                                    </button>
-                                                    <span
-                                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1"
-                                                    >
-                                                        Delete
-                                                    </span>
-                                                </div>
+                <div v-if="isEditing" class="flex gap-2">
+                    <button 
+                        @click="router.get(route('admin.attributes.index'))"
+                        class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors uppercase tracking-tight"
+                    >
+                        Back to List
+                    </button>
+                </div>
+            </div>
 
-                                                <!-- Edit Link -->
-                                                <div class="relative group">
-                                                    <button
-                                                        @click="
-                                                            editAttr(attr.id)
-                                                        "
-                                                        class="table_edit_action hover:bg-green-500 hover:text-white p-2 rounded"
-                                                    >
-                                                        <SquarePen size="20" />
-                                                    </button>
-                                                    <span
-                                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1"
-                                                    >
-                                                        Edit
-                                                    </span>
+            <div class="grid lg:grid-cols-12 grid-cols-1 gap-6">
+                <!-- Form Section -->
+                <div class="lg:col-span-5">
+                    <div class="sticky top-6">
+                        <form
+                            @submit.prevent="submitForm"
+                            class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm rounded-2xl p-6"
+                        >
+                            <h2 class="text-sm font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                {{ isEditing ? "Update Attribute" : "Create New Attribute" }}
+                            </h2>
+                            
+                            <div class="space-y-5">
+                                <div>
+                                    <label for="name" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Attribute Name</label>
+                                    <input
+                                        v-model="form.name"
+                                        id="name"
+                                        type="text"
+                                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-gray-50/50 dark:bg-gray-900 text-gray-900 dark:text-white outline-none transition-all text-sm font-medium"
+                                        placeholder="e.g. Size or Color"
+                                        required
+                                    />
+                                    <span v-if="form.errors.name" class="text-red-500 text-[10px] font-bold mt-1.5 ml-1 block uppercase">{{ form.errors.name }}</span>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between ml-1">
+                                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Attribute Values</label>
+                                        <button
+                                            type="button"
+                                            @click="addValue"
+                                            class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors uppercase tracking-widest"
+                                        >
+                                            + Add Value
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid gap-3">
+                                        <div
+                                            v-for="(value, index) in form.values"
+                                            :key="index"
+                                            class="flex items-center gap-2 group relative"
+                                        >
+                                            <div class="relative flex-1">
+                                                <input
+                                                    v-model="form.values[index].value"
+                                                    :id="'value_' + index"
+                                                    type="text"
+                                                    class="w-full pl-4 pr-10 py-2 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none transition-all text-sm font-medium"
+                                                    :placeholder="'Value ' + (index + 1)"
+                                                    required
+                                                />
+                                                <div v-if="isColorAttribute" class="absolute right-2 top-1/2 -translate-y-1/2">
+                                                    <input
+                                                        v-model="form.values[index].color"
+                                                        type="color"
+                                                        class="w-6 h-6 p-0 border-none rounded-lg cursor-pointer bg-transparent"
+                                                        title="Choose Color"
+                                                    />
                                                 </div>
                                             </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                            
+                                            <button
+                                                type="button"
+                                                @click="form.values.splice(index, 1)"
+                                                class="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                            >
+                                                <Trash2Icon size="18" />
+                                            </button>
+
+                                            <span
+                                                v-if="form.errors[`values.${index}.value`]"
+                                                class="absolute -bottom-4 left-4 text-red-500 text-[9px] font-bold uppercase"
+                                            >
+                                                {{ form.errors[`values.${index}.value`] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="form.values.length === 0" class="py-10 border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center text-gray-400">
+                                        <p class="text-xs font-medium">No values added yet</p>
+                                        <button type="button" @click="addValue" class="mt-2 text-[10px] font-bold text-indigo-500 uppercase tracking-widest hover:underline">Click to add</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-8">
+                                <button
+                                    type="submit"
+                                    :disabled="form.processing"
+                                    class="w-full py-3 bg-gray-900 dark:bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-black dark:hover:bg-indigo-700 transition-all shadow-lg shadow-gray-200 dark:shadow-none disabled:opacity-50 uppercase tracking-widest"
+                                >
+                                    {{ isEditing ? "Update Attribute" : "Create Attribute" }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- List Section -->
+                <div class="lg:col-span-7">
+                    <div class="flex items-center justify-between mb-4 px-2">
+                        <h2 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            Existing Attributes
+                        </h2>
+                    </div>
+                    
+                    <div class="grid gap-4">
+                        <div 
+                            v-for="attr in attrList" 
+                            :key="attr.id" 
+                            class="group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-5 hover:border-indigo-200 dark:hover:border-indigo-900 transition-all hover:shadow-sm"
+                        >
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 transition-colors">
+                                        <div class="text-lg font-bold">{{ attr.name.charAt(0).toUpperCase() }}</div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">{{ attr.name }}</h3>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">#{{ attr.id }}</span>
+                                            <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                                            <span class="text-[10px] text-indigo-500/70 font-bold uppercase tracking-widest">{{ attr.values.length }} Values</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button
+                                        @click="editAttr(attr.id)"
+                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all"
+                                        title="Edit"
+                                    >
+                                        <SquarePen size="18" />
+                                    </button>
+                                    <button
+                                        @click="openDeleteModal(attr.id)"
+                                        class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all"
+                                        title="Delete"
+                                    >
+                                        <Trash2Icon size="18" />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2">
+                                <div
+                                    v-for="value in attr.values"
+                                    :key="value.id"
+                                    class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-[11px] font-bold border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 transition-all hover:bg-white dark:hover:bg-gray-800 hover:border-indigo-200"
+                                >
+                                    <span
+                                        v-if="value.color"
+                                        class="w-3 h-3 rounded-full inline-block mr-2 border border-white shadow-sm"
+                                        :style="{ backgroundColor: value.color }"
+                                    ></span>
+                                    {{ value.value }}
+                                </div>
+                                <div v-if="attr.values.length === 0" class="text-[10px] text-gray-400 font-medium italic">No values defined</div>
+                            </div>
+                        </div>
+
+                        <div v-if="attrList.length === 0" class="py-16 bg-white dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center">
+                            <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-3xl mb-4 text-gray-300">
+                                <div class="w-12 h-12 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl uppercase font-bold text-xs">?</div>
+                            </div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">No attributes found</p>
+                            <p class="text-[10px] text-gray-400 mt-1">Start by creating your first attribute on the left</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        
         <DeleteModal
             :item-id="selectedAttributeId"
             item-name="Attribute"

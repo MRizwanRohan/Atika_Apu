@@ -15,7 +15,6 @@ class Product extends Model
         'name',
         'slug',
         'product_code',
-        'category_id',
         'brand_id',
         'short_description',
         'description',
@@ -51,12 +50,21 @@ class Product extends Model
         'is_pre_order' => 'boolean',
     ];
 
-    protected $appends = ['feature_image_url', 'avg_rating', 'reviews_count'];
+    protected $appends = ['feature_image_url', 'avg_rating', 'reviews_count', 'category'];
 
-    // Load category including soft-deleted for historical records (orders, invoices)
-    public function category()
+    // New Many-to-Many Relationship
+    public function categories(): BelongsToMany
     {
-        return $this->belongsTo(Category::class)->withTrashed()->with('parentRecursive');
+        return $this->belongsToMany(Category::class, 'category_product')->withTrashed()->with('parentRecursive')->withTimestamps();
+    }
+
+    // Accessor for backward compatibility (maps product.category to the first category)
+    public function getCategoryAttribute()
+    {
+        if ($this->relationLoaded('categories')) {
+            return $this->categories->first();
+        }
+        return $this->categories()->first();
     }
 
     public function variations()

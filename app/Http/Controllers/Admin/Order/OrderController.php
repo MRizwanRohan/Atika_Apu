@@ -57,10 +57,10 @@ class OrderController extends Controller
             'min_total' => $request->input('min_total'),
             'max_total' => $request->input('max_total'),
             'source' => $request->input('source'),
-            'is_pre_order' => $request->input('is_pre_order'),
+            'is_pre_order' => $request->input('is_pre_order', 'no'),
         ];
 
-        $perPage = (int) $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 50);
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
 
@@ -91,7 +91,7 @@ class OrderController extends Controller
             ->toArray();
 
         return Inertia::render('Admin/Orders/Index', [
-            'orders'       => $orders,
+            'orders' => $orders,
             'statusCounts' => $statusCounts,
             'sentOrderIds' => $sentOrderIds,
             'courierSettings' => \App\Models\CourierSetting::first(),
@@ -114,7 +114,7 @@ class OrderController extends Controller
             'order_number' => $request->input('order_number'),
         ];
 
-        $perPage = (int) $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 50);
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
 
@@ -128,6 +128,35 @@ class OrderController extends Controller
         $orders->withPath(route('admin.orders.incomplete'));
 
         return Inertia::render('Admin/Orders/IncompleteOrders', [
+            'orders' => $orders,
+        ]);
+    }
+
+    /**
+     * Display pre-order requests
+     */
+    public function preOrders(Request $request)
+    {
+        $filters = [
+            'is_pre_order' => true,
+            'customer_search' => $request->input('customer_search'),
+            'order_number' => $request->input('order_number'),
+        ];
+
+        $perPage = (int) $request->input('per_page', 50);
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+
+        $orders = $this->orderService->getOrders([
+            'per_page' => $perPage,
+            'filters' => $filters,
+            'sort_by' => $sortBy,
+            'sort_direction' => $sortDirection,
+        ]);
+
+        $orders->withPath(route('admin.orders.pre-order'));
+
+        return Inertia::render('Admin/Orders/PreOrders', [
             'orders' => $orders,
         ]);
     }
@@ -174,16 +203,16 @@ class OrderController extends Controller
         try {
             //$order = Order::with(['items.product', 'items.variation'])->findOrFail($id);
             $order = Order::with([
-                'items.product' => function($query) {
+                'items.product' => function ($query) {
                     $query->withTrashed();
                 },
-                'items.productVariation' => function($query) {
+                'items.productVariation' => function ($query) {
                     $query->withTrashed();
                 },
-                'items.productVariation.attributes.value' => function($query) {
+                'items.productVariation.attributes.value' => function ($query) {
                     $query->withTrashed();
                 },
-                'items.productVariation.attributes.value.attribute' => function($query) {
+                'items.productVariation.attributes.value.attribute' => function ($query) {
                     $query->withTrashed();
                 }
             ])->findOrFail($id);
@@ -198,8 +227,9 @@ class OrderController extends Controller
             // Get payment methods for dropdown
             $paymentMethods = [
                 'cod' => 'Cash on Delivery',
-                'credit_card' => 'Credit Card',
-                'paypal' => 'PayPal',
+                'bkash' => 'BKash',
+                'nagad' => 'Nagad',
+                'rocket' => 'Rocket',
                 'bank_transfer' => 'Bank Transfer'
             ];
 
@@ -209,7 +239,11 @@ class OrderController extends Controller
                 'processing' => 'Processing',
                 'completed' => 'Completed',
                 'cancelled' => 'Cancelled',
-                'incomplete' => 'Incomplete'
+                'incomplete' => 'Incomplete',
+                'received_china' => 'Received in China Warehouse',
+                'received_bd_airport' => 'Received in BD Airport',
+                'received_bd_warehouse' => 'Received in BD Warehouse',
+                'purchase_ok' => 'Purchase',
             ];
 
             // Get payment statuses for dropdown
@@ -224,12 +258,12 @@ class OrderController extends Controller
 
             // Transform order items to include variation deleted status
             // No need to load again - already loaded with withTrashed() above
-            $order->items->each(function($item) {
+            $order->items->each(function ($item) {
                 // Add is_deleted flag to the product object
                 if ($item->product) {
                     $item->product->is_deleted = $item->product->trashed();
                 }
-                
+
                 if ($item->product_variation_id && $item->productVariation) {
                     // Add is_deleted flag to the productVariation object
                     $item->productVariation->is_deleted = $item->productVariation->trashed();
@@ -241,7 +275,8 @@ class OrderController extends Controller
                 'products' => $products,
                 'paymentMethods' => $paymentMethods,
                 'orderStatuses' => $orderStatuses,
-                'paymentStatuses' => $paymentStatuses
+                'paymentStatuses' => $paymentStatuses,
+                'courierSettings' => \App\Models\CourierSetting::first(),
             ]);
 
             // return view('orders.edit', compact(
@@ -352,8 +387,10 @@ class OrderController extends Controller
             'area' => 'nullable|in:inside_dhaka,outside_dhaka',
             'shipping_district' => 'nullable|string|max:255',
             'shipping_thana' => 'nullable|string|max:255',
-            'status' => 'nullable|in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed',
+            'status' => 'nullable|in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed,received_china,received_bd_airport,received_bd_warehouse,purchase_ok',
             'source' => 'nullable|in:website,facebook,whatsapp,phone_call,telegram,tiktok,manual',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'customer_notes' => 'nullable|string',
         ]);
 
         $order = Order::findOrFail($id);
@@ -381,6 +418,8 @@ class OrderController extends Controller
             'shipping_cost' => $validated['shipping_cost'] ?? $order->shipping_cost,
             'area' => $validated['area'] ?? $order->area,
             'source' => $validated['source'] ?? $order->source,
+            'paid_amount' => $validated['paid_amount'] ?? $order->paid_amount,
+            'customer_notes' => $validated['customer_notes'] ?? $order->customer_notes,
         ]);
 
 
@@ -506,10 +545,10 @@ class OrderController extends Controller
             $order = Order::with([
                 'items.product',
                 'items.productVariation',
-                'items.productVariation.attributes.value' => function($query) {
+                'items.productVariation.attributes.value' => function ($query) {
                     $query->withTrashed();
                 },
-                'items.productVariation.attributes.value.attribute' => function($query) {
+                'items.productVariation.attributes.value.attribute' => function ($query) {
                     $query->withTrashed();
                 }
             ])->findOrFail($id);
@@ -661,7 +700,7 @@ class OrderController extends Controller
                 'final_status' => 'required|string|in:delivered,partially_delivered,returned',
             ]);
 
-            $order = $this->orderService->processPartialDelivery((int)$orderId, $validated);
+            $order = $this->orderService->processPartialDelivery((int) $orderId, $validated);
 
             $this->updateOrderCache();
 
@@ -751,6 +790,11 @@ class OrderController extends Controller
     public function destroyItem(Order $order, $item)
     {
         try {
+            // Check if order item can be removed
+            if (in_array($order->status, ['delivered', 'cancelled', 'returned', 'partially_delivered'])) {
+                return redirect()->back()->with('error', 'Cannot remove items from order in ' . ucfirst(str_replace('_', ' ', $order->status)) . ' status');
+            }
+
             DB::beginTransaction();
 
             // Find the order item and ensure it belongs to the order
@@ -849,29 +893,29 @@ class OrderController extends Controller
     }
 
 
-public function downloadInvoice(Order $order)
-{
-    // Eager load the nested relationships
-    $order->load([
-        'items.product',
-        'items.productVariation',
-        'items.productVariation.attributes.value' => function($query) {
-            $query->withTrashed();
-        },
-        'items.productVariation.attributes.value.attribute' => function($query) {
-            $query->withTrashed();
-        }
-    ]);
+    public function downloadInvoice(Order $order)
+    {
+        // Eager load the nested relationships
+        $order->load([
+            'items.product',
+            'items.productVariation',
+            'items.productVariation.attributes.value' => function ($query) {
+                $query->withTrashed();
+            },
+            'items.productVariation.attributes.value.attribute' => function ($query) {
+                $query->withTrashed();
+            }
+        ]);
 
-    // Return or pass to a view or PDF generation
-    //return $order;
+        // Return or pass to a view or PDF generation
+        //return $order;
 
-    //return view('invoices.order', ['order' => $order]);
+        //return view('invoices.order', ['order' => $order]);
 
-    // If generating a PDF
-    $pdf = Pdf::loadView('invoices.order', ['order' => $order]);
-    return $pdf->download('invoice-' . $order->id . '.pdf');
-}
+        // If generating a PDF
+        $pdf = Pdf::loadView('invoices.order', ['order' => $order]);
+        return $pdf->download('invoice-' . $order->id . '.pdf');
+    }
 
 
     public function bulkDownloadInvoices(Request $request)
@@ -882,18 +926,18 @@ public function downloadInvoice(Order $order)
         $orders = Order::with([
             'items.product',
             'items.productVariation',
-            'items.productVariation.attributes.value' => function($query) {
+            'items.productVariation.attributes.value' => function ($query) {
                 $query->withTrashed();
             },
-            'items.productVariation.attributes.value.attribute' => function($query) {
+            'items.productVariation.attributes.value.attribute' => function ($query) {
                 $query->withTrashed();
             }
         ])
-        ->whereIn('id', $orderIds)
-        ->orderBy('id')
-        ->get();
+            ->whereIn('id', $orderIds)
+            ->orderBy('id')
+            ->get();
 
-            //return view('invoices.bulk', ['orders' => $orders]);
+        //return view('invoices.bulk', ['orders' => $orders]);
 
         // Pass all orders to a combined PDF view
         $pdf = Pdf::loadView('invoices.bulk', ['orders' => $orders]);
@@ -903,7 +947,7 @@ public function downloadInvoice(Order $order)
 
 
 
-        public function bulkPrintInvoices(Request $request)
+    public function bulkPrintInvoices(Request $request)
     {
         $orderIds = explode(',', $request->query('order_ids')); // e.g. "3,1,2"
 
@@ -911,16 +955,16 @@ public function downloadInvoice(Order $order)
         $orders = Order::with([
             'items.product',
             'items.productVariation',
-            'items.productVariation.attributes.value' => function($query) {
+            'items.productVariation.attributes.value' => function ($query) {
                 $query->withTrashed();
             },
-            'items.productVariation.attributes.value.attribute' => function($query) {
+            'items.productVariation.attributes.value.attribute' => function ($query) {
                 $query->withTrashed();
             }
         ])
-        ->whereIn('id', $orderIds)
-        ->orderBy('id')
-        ->get();
+            ->whereIn('id', $orderIds)
+            ->orderBy('id')
+            ->get();
 
         $settings = GeneralSetting::select('app_name', 'address', 'store_email', 'store_phone_number')->first();
         $logo = Media::select('logo')->first();
@@ -950,15 +994,15 @@ public function downloadInvoice(Order $order)
                 ->where('id', $itemId)
                 ->firstOrFail();
 
-            // Check if order can be updated (only pending, processing, or incomplete orders)
-            if (!in_array($order->status, ['pending', 'processing', 'incomplete'])) {
+            // Check if order can be updated
+            if (in_array($order->status, ['delivered', 'cancelled', 'returned', 'partially_delivered'])) {
                 if ($request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Cannot update order in ' . $order->status . ' status'
+                        'message' => 'Cannot update order in ' . ucfirst(str_replace('_', ' ', $order->status)) . ' status'
                     ], 422);
                 }
-                return redirect()->back()->with('error', 'Cannot update order in ' . $order->status . ' status');
+                return redirect()->back()->with('error', 'Cannot update order in ' . ucfirst(str_replace('_', ' ', $order->status)) . ' status');
             }
 
             // Get product and variation for stock check

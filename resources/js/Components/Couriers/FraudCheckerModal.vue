@@ -1,133 +1,124 @@
 <template>
   <div
     v-if="visible"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+    class="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4"
   >
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden relative animate-in fade-in zoom-in duration-200">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden relative animate-in fade-in zoom-in duration-200">
       <!-- Close Button -->
       <button
-        class="absolute top-4 right-4 z-10 p-2 bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors"
+        class="absolute top-2 right-2 z-10 p-1 bg-gray-100/50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors"
         @click="$emit('close')"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
 
-      <div class="flex flex-col md:flex-row max-h-[90vh] overflow-y-auto">
+      <div class="flex flex-col md:flex-row max-h-[80vh] overflow-y-auto">
         <!-- Left Side - Logo and Success Rate -->
-        <div class="w-full md:w-[350px] bg-gray-50/50 p-8 text-center border-b md:border-b-0 md:border-r border-gray-100">
-          <div class="mb-8">
-            <img src="/assets/img/logo/logo.png" alt="logo" class="mx-auto h-12 object-contain">
+        <div class="w-full md:w-[180px] bg-gray-50/50 p-3 text-center border-b md:border-b-0 md:border-r border-gray-100 flex flex-col justify-center">
+          <div class="mb-2">
+            <img src="/assets/img/logo/logo.png" alt="logo" class="mx-auto h-6 object-contain">
           </div>
 
-          <h2 class="text-xl font-bold mb-8 text-gray-900 tracking-tight">Delivery Success Ratio</h2>
+          <h2 class="text-[9px] font-bold mb-2 text-gray-400 uppercase tracking-widest">Success Ratio</h2>
 
-          <div class="flex justify-center mb-8">
-            <div class="relative w-40 h-40 rounded-full border-[12px] border-gray-100 flex items-center justify-center shadow-inner overflow-hidden">
+          <div class="flex justify-center mb-2">
+            <div class="relative w-20 h-20 rounded-full border-[6px] border-gray-100 flex items-center justify-center shadow-inner overflow-hidden">
               <div 
                 v-if="aggregated.total_orders > 0"
-                class="absolute inset-0 rounded-full border-[12px] transition-all duration-1000"
+                class="absolute inset-0 rounded-full border-[6px] transition-all duration-1000"
                 :class="aggregated.success_rate > 70 ? 'border-green-500' : (aggregated.success_rate > 40 ? 'border-yellow-500' : 'border-red-500')"
                 :style="{ clipPath: `polygon(50% 50%, -50% -50%, ${aggregated.success_rate > 50 ? '150% -50%, 150% 150%, -50% 150%' : '50% -50%'}, -50% -50%)` }"
               ></div>
               <div class="text-center">
-                <span class="text-4xl font-black text-gray-900 tracking-tighter">
-                  {{ aggregated.total_orders > 0 ? aggregated.success_rate.toFixed(1) + '%' : 'N/A' }}
+                <span class="text-xl font-black text-gray-900 tracking-tighter">
+                  {{ aggregated.total_orders > 0 ? aggregated.success_rate.toFixed(0) + '%' : 'N/A' }}
                 </span>
-                <div class="text-[10px] uppercase font-bold text-gray-500 mt-1">Reliability</div>
+                <div class="text-[7px] uppercase font-bold text-gray-400">Reliability</div>
               </div>
             </div>
           </div>
 
           <div 
             :class="[
-              'inline-flex items-center gap-2 px-4 py-2 rounded-full font-black text-sm uppercase mb-4',
+              'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[9px] uppercase mb-2 mx-auto',
               aggregated.total_orders === 0 ? 'bg-gray-100 text-gray-600' : 
               (aggregated.success_rate > 70 ? 'bg-green-100 text-green-700' : 
               (aggregated.success_rate > 40 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'))
             ]"
           >
-            <span 
-              :class="[
-                'w-2 h-2 rounded-full animate-pulse',
-                aggregated.total_orders === 0 ? 'bg-gray-400' : 
-                (aggregated.success_rate > 70 ? 'bg-green-500' : 
-                (aggregated.success_rate > 40 ? 'bg-yellow-500' : 'bg-red-500'))
-              ]"
-            ></span>
             {{ aggregated.total_orders === 0 ? 'No Data' : (aggregated.success_rate > 70 ? 'Excellent' : (aggregated.success_rate > 40 ? 'Average' : 'Risky')) }}
           </div>
-          <p class="text-sm font-medium text-gray-600 leading-relaxed px-4">
+          <p class="text-[9px] font-medium text-gray-500 leading-tight">
             {{ reliabilityDescription }}
           </p>
         </div>
 
         <!-- Right Side - Content -->
-        <div class="flex-1 p-6 md:p-10">
+        <div class="flex-1 p-3">
           <!-- Phone Header -->
-          <div class="bg-gray-900 rounded-2xl p-6 text-white mb-8 shadow-xl shadow-gray-200">
-            <div class="text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1">Checking Number</div>
-            <div class="text-2xl font-black tracking-tight font-mono">{{ customerNumber }}</div>
+          <div class="bg-gray-900 rounded-lg p-2.5 text-white mb-3 flex items-center justify-between">
+            <div>
+              <div class="text-gray-400 text-[8px] uppercase font-black tracking-widest leading-none mb-1">Number</div>
+              <div class="text-base font-black tracking-tight font-mono leading-none">{{ customerNumber }}</div>
+            </div>
+            <div class="bg-gray-800 px-2 py-1 rounded border border-gray-700">
+               <span class="text-[9px] font-bold leading-none" :class="aggregated.success_rate > 40 ? 'text-green-400' : 'text-red-400'">
+                {{ aggregated.success_rate > 40 ? 'VERIFIED' : 'FLAGGED' }}
+               </span>
+            </div>
           </div>
 
           <!-- Stats Grid -->
-          <div class="grid grid-cols-3 gap-4 mb-8">
-            <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-              <div class="text-2xl font-black text-blue-700">{{ aggregated.total_success + aggregated.total_cancel }}</div>
-              <div class="text-[10px] font-bold text-blue-500 uppercase">মোট অর্ডার</div>
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="bg-blue-50/50 rounded-lg p-2 border border-blue-100/50 text-center">
+              <div class="text-[8px] font-bold text-blue-500 uppercase leading-none mb-1">Total</div>
+              <div class="text-base font-black text-blue-700 leading-none">{{ aggregated.total_success + aggregated.total_cancel }}</div>
             </div>
-            <div class="bg-green-50 rounded-2xl p-4 border border-green-100">
-              <div class="text-2xl font-black text-green-700">{{ aggregated.total_success }}</div>
-              <div class="text-[10px] font-bold text-green-500 uppercase">ডেলিভারি</div>
+            <div class="bg-green-50/50 rounded-lg p-2 border border-green-100/50 text-center">
+              <div class="text-[8px] font-bold text-green-500 uppercase leading-none mb-1">Delivered</div>
+              <div class="text-base font-black text-green-700 leading-none">{{ aggregated.total_success }}</div>
             </div>
-            <div class="bg-red-50 rounded-2xl p-4 border border-red-100">
-              <div class="text-2xl font-black text-red-700">{{ aggregated.total_cancel }}</div>
-              <div class="text-[10px] font-bold text-red-500 uppercase">বাতিল</div>
+            <div class="bg-red-50/50 rounded-lg p-2 border border-red-100/50 text-center">
+              <div class="text-[8px] font-bold text-red-500 uppercase leading-none mb-1">Cancel</div>
+              <div class="text-base font-black text-red-700 leading-none">{{ aggregated.total_cancel }}</div>
             </div>
           </div>
 
           <!-- Details Table -->
-          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div class="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
-              <table class="w-full text-left">
+              <table class="w-full text-left text-[10px]">
                 <thead>
                   <tr class="bg-gray-50 border-b border-gray-100">
-                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500">Courier</th>
-                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-center">Orders</th>
-                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-center">Delivered</th>
-                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-center">Cancelled</th>
-                    <th class="px-4 py-4 text-[10px] font-black uppercase text-gray-500 text-right">Cancel Rate</th>
+                    <th class="px-2 py-1.5 font-bold uppercase text-gray-400">Courier</th>
+                    <th class="px-2 py-1.5 font-bold uppercase text-gray-400 text-center">Success</th>
+                    <th class="px-2 py-1.5 font-bold uppercase text-gray-400 text-right">Ratio</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50">
-                  <tr class="hover:bg-gray-50/50 transition-colors">
-                    <td class="px-4 py-4"><span class="font-bold text-gray-900">SteadFast</span></td>
+                <tbody class="divide-y divide-gray-50 font-medium">
+                  <tr class="hover:bg-gray-50/30">
+                    <td class="px-2 py-1.5 text-gray-700 font-bold">SteadFast</td>
                     <template v-if="steadfastData.error">
-                      <td colspan="4" class="px-4 py-4 text-right text-[10px] font-bold text-red-400 italic">
+                      <td colspan="2" class="px-2 py-1.5 text-right text-[8px] text-red-400 italic">
                         {{ steadfastData.error }}
                       </td>
                     </template>
                     <template v-else>
-                      <td class="px-4 py-4 text-center font-bold">{{ steadfastData.total }}</td>
-                      <td class="px-4 py-4 text-center font-bold text-green-600">{{ steadfastData.success }}</td>
-                      <td class="px-4 py-4 text-center font-bold text-red-600">{{ steadfastData.cancel }}</td>
-                      <td class="px-4 py-4 text-right">
-                        <span class="bg-red-50 text-red-600 px-2 py-1 rounded-lg text-xs font-black">{{ steadfastCancelRate }}%</span>
+                      <td class="px-2 py-1.5 text-center text-green-600 font-bold">{{ steadfastData.success }}/{{ steadfastData.total }}</td>
+                      <td class="px-2 py-1.5 text-right">
+                        <span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-bold">{{ steadfastCancelRate }}%</span>
                       </td>
                     </template>
                   </tr>
-                  <tr>
-                    <td class="px-4 py-4"><span class="font-bold text-red-500">Pathao</span></td>
-                    <td colspan="4" class="px-4 py-4 text-right text-[10px] font-bold text-gray-400 italic">
-                      Private API - Data restricted
-                    </td>
+                  <tr class="opacity-50">
+                    <td class="px-2 py-1.5 font-bold text-red-400">Pathao</td>
+                    <td colspan="2" class="px-2 py-1.5 text-right text-[8px] text-gray-400 italic">restricted</td>
                   </tr>
-                  <tr>
-                    <td class="px-4 py-4"><span class="font-black text-red-600">REDX</span></td>
-                    <td colspan="4" class="px-4 py-4 text-right text-[10px] font-bold text-gray-400 italic">
-                      Private API - Data restricted
-                    </td>
+                  <tr class="opacity-50">
+                    <td class="px-2 py-1.5 font-bold text-red-500">REDX</td>
+                    <td colspan="2" class="px-2 py-1.5 text-right text-[8px] text-gray-400 italic">restricted</td>
                   </tr>
                 </tbody>
               </table>

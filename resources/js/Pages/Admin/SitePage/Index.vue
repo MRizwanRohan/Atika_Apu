@@ -3,13 +3,13 @@
         <title>Site Pages</title>
     </Head>
     <AdminLayout>
-        <div class="p-6">
-            <h1 class="text-2xl font-bold mb-4">Site Pages</h1>
+        <div class="p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h1 class="text-xl sm:text-2xl font-bold">Site Pages</h1>
 
-            <div class="mb-4">
                 <Link
                     :href="route('admin.site-pages.create')"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full sm:w-auto text-center"
                 >
                     Create New Page
                 </Link>
@@ -22,16 +22,16 @@
                 {{ $page.props.flash.success }}
             </div>
 
-            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="bg-white shadow-md rounded-lg overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-6 py-3 text-left">Name</th>
-                            <th class="px-6 py-3 text-left">Slug</th>
-                            <th class="px-6 py-3 text-left">Title</th>
-                            <th class="px-6 py-3 text-left">Status</th>
-                            <th class="px-6 py-3 text-left">Created At</th>
-                            <th class="px-6 py-3 text-right">Actions</th>
+                            <th class="px-4 py-3 sm:px-6 text-left whitespace-nowrap text-sm sm:text-base">Name</th>
+                            <th class="px-4 py-3 sm:px-6 text-left whitespace-nowrap text-sm sm:text-base">Slug</th>
+                            <th class="px-4 py-3 sm:px-6 text-left whitespace-nowrap text-sm sm:text-base">Title</th>
+                            <th class="px-4 py-3 sm:px-6 text-left whitespace-nowrap text-sm sm:text-base">Status</th>
+                            <th class="px-4 py-3 sm:px-6 text-left whitespace-nowrap text-sm sm:text-base">Created At</th>
+                            <th class="px-4 py-3 sm:px-6 text-right whitespace-nowrap text-sm sm:text-base">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,15 +40,16 @@
                             :key="page.id"
                             class="border-t"
                         >
-                            <td class="px-6 py-4">{{ page.name }}</td>
-                            <td class="px-6 py-4">{{ page.slug }}</td>
-                            <td class="px-6 py-4">{{ page.title || "-" }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">{{ page.name }}</td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">{{ page.slug }}</td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">{{ page.title || "-" }}</td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">
                                 <select
                                     name="status"
                                     :id="'status-' + page.id"
                                     :value="page.status"
                                     @change="updateStatus(page.id, $event.target.value)"
+                                    class="text-sm sm:text-base p-1 border rounded"
                                     :class="page.status == 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
                                 >
                                     <option :value="1">Active</option>
@@ -56,10 +57,10 @@
                                 </select>
                             </td>
 
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm sm:text-base">
                                 {{ new Date(page.created_at).toLocaleDateString() }}
                             </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-right text-sm sm:text-base">
                                 <Link
                                     :href="route('admin.site-pages.edit', page.id)"
                                     class="text-blue-600 hover:text-blue-900 mr-4"

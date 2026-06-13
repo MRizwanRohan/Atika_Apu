@@ -12,7 +12,7 @@ class CartItemResource extends JsonResource
             'id' => $this->id,
             'product_id' => $this->product_id,
             'product_name' => $this->product->name ?? 'Product Not Available',
-            'product_image' => $this->product->feature_image ?? null,
+            'product_image' => ($this->variation && $this->variation->image_path) ? $this->variation->image_path : ($this->product->feature_image ?? null),
             'is_pre_order' => $this->is_pre_order ?? false,
             'is_free_delivery' => $this->product->is_free_delivery ?? false,
             'variation_id' => $this->product_variation_id,

@@ -78,6 +78,12 @@ class CartService
             throw new ProductNotAvailableException('Product is not available for sale');
         }
 
+        // If product has variations, a variation must be selected
+        $hasVariations = $product->variations()->exists();
+        if ($hasVariations && empty($data['product_variation_id'])) {
+            throw new ProductNotAvailableException('Please select product options before adding to cart');
+        }
+
         // Check variation if provided
         $variation = null;
         if (isset($data['product_variation_id'])) {

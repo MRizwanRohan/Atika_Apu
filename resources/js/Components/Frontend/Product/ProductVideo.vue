@@ -200,7 +200,7 @@ onMounted(() => {
                                     class="absolute top-0 left-0 right-0 p-6 z-10"
                                 >
                                     <div
-                                        class="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2 inline-block"
+                                        class="bg-black/50 rounded-lg px-4 py-2 inline-block"
                                     >
                                         <h3
                                             class="text-white font-semibold text-sm leading-tight"
@@ -216,7 +216,7 @@ onMounted(() => {
                                     @click="toggleVideo(product.id)"
                                 >
                                     <div
-                                        class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300"
+                                        class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300"
                                     >
                                         <Play
                                             v-if="!playingStates[product.id]"
@@ -246,7 +246,7 @@ onMounted(() => {
                                         >
                                             <NuxtLink
                                                 :to="`/product/${product.slug}`"
-                                                class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-center w-full px-4 py-2 rounded-lg transition-all duration-300"
+                                                class="bg-white/20 hover:bg-white/30 text-white text-center w-full px-4 py-2 rounded-lg transition-all duration-300"
                                             >
                                                 View
                                             </NuxtLink>

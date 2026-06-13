@@ -120,9 +120,6 @@ const isPreOrderMode = computed(
     () => props.product.stock <= 0 && props.product.is_pre_order,
 );
 
-const goToDetails = () => {
-    router.visit(route("product.details", props.product.slug));
-};
 
 const handleCartClick = (e) => {
     e.preventDefault();
@@ -147,8 +144,8 @@ const handleCartClick = (e) => {
 </script>
 
 <template>
-    <div
-        @click="goToDetails"
+    <Link
+        :href="route('product.details', product.slug)"
         class="group relative flex flex-col h-full bg-white rounded-md border border-gray-100 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow"
         :class="{ 'opacity-80 grayscale-[0.5]': isOutOfStock }"
     >
@@ -307,7 +304,7 @@ const handleCartClick = (e) => {
             :show="showQuickView"
             @close="showQuickView = false"
         />
-    </div>
+    </Link>
 </template>
 
 <style scoped>

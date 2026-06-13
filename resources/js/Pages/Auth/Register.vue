@@ -30,7 +30,7 @@ const submit = () => {
         <Head title="Register" />
 
         <div
-            class="min-h-screen flex items-center justify-center bg-[#f8fafc] py-12 px-4 sm:px-6 lg:px-8 font-sans"
+            class=" flex items-center justify-center bg-[#f8fafc] pb-12 px-4 sm:px-6 lg:px-8 font-sans"
         >
             <div class="max-w-[500px] w-full">
                 <!-- Main Card -->
@@ -38,17 +38,27 @@ const submit = () => {
                     class="bg-white rounded-xl shadow-[0_8px_24px_rgba(10,31,68,0.06)] overflow-hidden py-[35px] px-[30px] relative border border-[#e1e4e8]"
                 >
                     <!-- Top Navigation Tab -->
-                    <div class="absolute top-8 left-8 sm:left-12">
-                        <Link
-                            :href="route('login')"
-                            class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors duration-200"
-                        >
-                            Login
-                        </Link>
+                    <div class="flex justify-center mb-6">
+                        <div class="inline-flex p-1 bg-[#f1f5f9] rounded-full border border-slate-100 w-full max-w-[280px]">
+                            <Link
+                                :href="route('login')"
+                                class="flex-1 text-center py-2.5 rounded-full text-sm font-bold transition-all duration-200"
+                                :class="route().current('login') ? 'bg-white text-[#6c5dd3] shadow-[0_2px_6px_rgba(0,0,0,0.06)]' : 'text-slate-500 hover:text-slate-800'"
+                            >
+                                Login
+                            </Link>
+                            <Link
+                                :href="route('register')"
+                                class="flex-1 text-center py-2.5 rounded-full text-sm font-bold transition-all duration-200"
+                                :class="route().current('register') ? 'bg-white text-[#6c5dd3] shadow-[0_2px_6px_rgba(0,0,0,0.06)]' : 'text-slate-500 hover:text-slate-800'"
+                            >
+                                Register
+                            </Link>
+                        </div>
                     </div>
 
                     <!-- Header -->
-                    <div class="text-center mt-6 mb-10">
+                    <div class="text-center mt-4 mb-8">
                         <h1 class="text-3xl font-extrabold text-slate-900 mb-2">
                             Create Account
                         </h1>

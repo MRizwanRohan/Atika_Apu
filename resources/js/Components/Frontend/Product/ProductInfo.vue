@@ -140,6 +140,10 @@ const availableAttributes = computed(() => {
                     color: attr.value.color,
                     image: variation.image_path || null
                 });
+            } else if (variation.image_path && !valuesMap.get(attr.value.id).image) {
+                // If it already exists but has no image, and this variation has an image, update it
+                const existing = valuesMap.get(attr.value.id);
+                existing.image = variation.image_path;
             }
         });
     });
@@ -156,24 +160,42 @@ const selectAttribute = (key, value) => {
 };
 
 // Auto-select first options if available
-onMounted(() => {
-    availableAttributes.value.forEach(attr => {
-        if (attr.values.length > 0) {
-            selectAttribute(attr.key, attr.values[0]);
-        }
-    });
-});
+// onMounted(() => {
+//     availableAttributes.value.forEach(attr => {
+//         if (attr.values.length > 0) {
+//             selectAttribute(attr.key, attr.values[0]);
+//         }
+//     });
+// });
 
 watch(selectedAttributes, () => {
     const variation = selectedVariation.value;
-    const colorSelection = selectedAttributes.value["color"];
+    const colorSelection = selectedAttributes.value["color"] || selectedAttributes.value["colour"];
     const attributeImage = colorSelection?.image || null;
     emit("variation-change", { variation, attributeImage });
 }, { deep: true });
 
+// Check if all required attributes are selected
+const allAttributesSelected = computed(() => {
+    if (availableAttributes.value.length === 0) return true;
+    return availableAttributes.value.every(attr => selectedAttributes.value[attr.key]);
+});
+
+// Find which attributes are missing selection
+const missingAttributes = computed(() => {
+    return availableAttributes.value
+        .filter(attr => !selectedAttributes.value[attr.key])
+        .map(attr => attr.name);
+});
+
 // Actions
 const addToCart = () => {
     if (!hasStock.value) return error("Product is out of stock");
+
+    // Require variation selection for products with attributes
+    if (availableAttributes.value.length > 0 && !allAttributesSelected.value) {
+        return warning(`Please select: ${missingAttributes.value.join(', ')}`);
+    }
     
     isAddingToCart.value = true;
     addToCartAction({
@@ -182,7 +204,7 @@ const addToCart = () => {
         variationId: selectedVariation.value?.id || null,
         onSuccess: () => {
             isAddingToCart.value = false;
-            success("Added to cart successfully!");
+            // Note: success toast is shown globally by FrontendLayout flash watcher
             trackAddToCart(props.product, selectedVariation.value, quantity.value);
             pixelTrackAddToCart(props.product, selectedVariation.value, quantity.value);
         },
@@ -192,6 +214,11 @@ const addToCart = () => {
 
 const buyNow = () => {
     if (!hasStock.value) return error("Product is out of stock");
+
+    // Require variation selection for products with attributes
+    if (availableAttributes.value.length > 0 && !allAttributesSelected.value) {
+        return warning(`Please select: ${missingAttributes.value.join(', ')}`);
+    }
     
     addToCartAction({
         productId: props.product.id,
@@ -252,23 +279,23 @@ const messengerLink = computed(() => {
             
             <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
             
-            <div class="flex items-center gap-1">
-                <span class="font-normal">Availability:</span>
-                <span v-if="isPreOrderMode" class="text-violet-600 font-semibold">Pre-Order</span> 
-                <span v-else-if="!hasStock" class="text-rose-600 font-semibold">Out of Stock</span>
-                <span v-else class="text-emerald-600 font-semibold">In Stock</span>
+            <div class="flex items-center gap-1.5">
+                <span class="text-gray-500 font-normal">Availability:</span>
+                <span v-if="isPreOrderMode" class="bg-red-50 text-red-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-red-200 shadow-sm shadow-red-50">Pre-Order</span> 
+                <span v-else-if="!hasStock" class="bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-rose-200 shadow-sm shadow-rose-50">Out of Stock</span>
+                <span v-else class="bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-200 shadow-sm shadow-emerald-50">In Stock</span>
             </div>
 
-            <!-- <div v-if="product.product_code" class="flex items-center gap-1">
+            <div v-if="product.product_code" class="flex items-center gap-1">
                 <span class="font-normal">Code:</span>
                 <span class="text-gray-900 font-semibold">{{ product.product_code }}</span>
-            </div> -->
+            </div>
 
             <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
 
-            <div class="flex items-center gap-1">
-                <span class="font-normal">Sold:</span>
-                <span class="text-gray-900 font-semibold">{{ (Number(product.fake_sold_count || 0) + Number(product.sold_stock || 0)) }}</span>
+            <div class="flex items-center gap-1 bg-primary text-white px-3 py-1 rounded-full">
+                <span class="font-normal text-white">Sold:</span>
+                <span class="text-white font-semibold">{{ (Number(product.fake_sold_count || 0) + Number(product.sold_stock || 0)) }}</span>
             </div>
         </div>        <!-- Attributes Grid (2 Columns) -->
         <div v-if="availableAttributes.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -278,7 +305,7 @@ const messengerLink = computed(() => {
 
                 <div class="flex flex-wrap gap-3">
                     <!-- Color Swatches (Circular) -->
-                    <template v-if="attribute.key.toLowerCase() === 'color'">
+                    <template v-if="attribute.key.toLowerCase() === 'color' || attribute.key.toLowerCase() === 'colour'">
                         <div
                             v-for="value in attribute.values"
                             :key="value.id"
@@ -374,16 +401,47 @@ const messengerLink = computed(() => {
                 </a>
 
                 <!-- Delivery Info -->
-                <div class="border border-gray-200 rounded-2xl p-4 flex items-center gap-4 bg-gray-50/50">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-                        <Truck :size="24" class="text-gray-400" />
+                <div 
+                    :class="[
+                        'border rounded-2xl p-4 flex items-center gap-4 transition-all duration-300',
+                        isPreOrderMode 
+                            ? 'border-red-300 bg-gradient-to-r from-red-50/80 via-rose-50/40 to-red-50/50 shadow-md shadow-red-100/50' 
+                            : 'border-gray-200 bg-gray-50/50'
+                    ]"
+                >
+                    <div 
+                        :class="[
+                            'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300',
+                            isPreOrderMode ? 'bg-red-600 text-white shadow-sm shadow-red-200' : 'bg-white text-gray-400'
+                        ]"
+                    >
+                        <Truck :size="24" :class="isPreOrderMode ? 'text-white' : 'text-gray-400'" />
                     </div>
-                    <div class="text-sm">
-                        <span class="text-gray-400 font-semibold uppercase text-[10px] tracking-wider block">Estimated Delivery</span>
-                        <span v-if="isPreOrderMode" class="font-semibold text-gray-900 text-sm leading-tight block">
+                    <div class="text-sm flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span 
+                                :class="[
+                                    'font-semibold uppercase text-[10px] tracking-wider block',
+                                    isPreOrderMode ? 'text-red-600 font-bold' : 'text-gray-400'
+                                ]"
+                            >
+                                Estimated Delivery
+                            </span>
+                            <span 
+                                v-if="isPreOrderMode" 
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-700 animate-pulse animate-duration-1000"
+                            >
+                                <span class="relative flex h-1.5 w-1.5">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-600"></span>
+                                </span>
+                                Pre-Order
+                            </span>
+                        </div>
+                        <span v-if="isPreOrderMode" class="font-semibold text-gray-900 text-sm leading-tight block mt-1">
                             20-30 days delivery • 50% advance (৳{{ formatPrice(pricing.main * 0.5) }})
                         </span>
-                        <span v-else class="font-semibold text-gray-900 text-base">3-5 Working Days</span>
+                        <span v-else class="font-semibold text-gray-900 text-base block mt-0.5">3-5 Working Days</span>
                     </div>
                 </div>
         </div>

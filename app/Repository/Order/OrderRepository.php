@@ -83,7 +83,7 @@ class OrderRepository implements OrderRepositoryInterface
     }
 
 public function getPaginatedOrders(
-    int $perPage = 10,
+    int $perPage = 50,
     array $filters = [],
     string $sortBy = 'created_at',
     string $sortDirection = 'desc'
@@ -187,7 +187,7 @@ public function getPaginatedOrders(
             'paid_amount' => $order->paid_amount ?? 0.00,
             'return_charge' => $order->return_charge ?? 0.00,
             'has_pre_order' => $order->items->contains(fn($item) => (bool) $item->is_pre_order),
-            'payment_verification_status' => $order->payment_verification_status,
+            'payment_verification_status' => $order->payment_verification_status ?? 'pending',
             'payment_status' => $order->payment_status ?? 'unpaid',
             'payment_method' => $order->payment_method ?? 'N/A',
             'transaction_id' => $order->transaction_id ?: null,
@@ -250,25 +250,13 @@ public function getPaginatedOrders(
     protected function calculateDuplicatePercentage($order): int
     {
         $duplicatePercentage = 0;
-        if (!empty($order->customer_phone) && $order->items && $order->items->isNotEmpty()) {
-            $previousOrder = \App\Models\Order::select('orders.id', 'orders.created_at')
-                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-                ->where('orders.customer_phone', $order->customer_phone)
-                ->where('orders.id', '!=', $order->id)
-                ->where('orders.created_at', '<=', $order->created_at)
-                ->where(function ($query) use ($order) {
-                    foreach ($order->items as $item) {
-                        $query->orWhere(function ($q) use ($item) {
-                            $q->where('order_items.product_id', $item->product_id);
-                            if ($item->product_variation_id) {
-                                $q->where('order_items.product_variation_id', $item->product_variation_id);
-                            } else {
-                                $q->whereNull('order_items.product_variation_id');
-                            }
-                        });
-                    }
-                })
-                ->orderBy('orders.created_at', 'desc')
+        if (!empty($order->customer_phone)) {
+            $previousOrder = \App\Models\Order::select('id', 'created_at')
+                ->where('customer_phone', $order->customer_phone)
+                ->where('id', '!=', $order->id)
+                ->where('status', '!=', 'incomplete') // Ignore abandoned/incomplete orders
+                ->where('created_at', '<=', $order->created_at)
+                ->orderBy('created_at', 'desc')
                 ->first();
 
             if ($previousOrder) {
@@ -370,6 +358,11 @@ public function getPaginatedOrders(
             $query->where('status', '!=', 'incomplete');
         }
 
+        // Exclude cancelled orders from main order list unless explicitly filtering for them
+        if (empty($filters['status'])) {
+            $query->where('status', '!=', 'cancelled');
+        }
+
         // Filter by status
         if (!empty($filters['status'])) {
             if (is_array($filters['status'])) {
@@ -442,10 +435,16 @@ public function getPaginatedOrders(
 
         // Filter by pre-order
         if (isset($filters['is_pre_order']) && $filters['is_pre_order'] !== '' && $filters['is_pre_order'] !== null) {
-            $value = filter_var($filters['is_pre_order'], FILTER_VALIDATE_BOOLEAN);
-            $query->whereHas('items', function ($q) use ($value) {
-                $q->where('is_pre_order', $value);
-            });
+            $value = ($filters['is_pre_order'] === 'yes');
+            if ($value) {
+                $query->whereHas('items', function ($q) {
+                    $q->where('is_pre_order', true);
+                });
+            } else {
+                $query->whereDoesntHave('items', function ($q) {
+                    $q->where('is_pre_order', true);
+                });
+            }
         }
     }
 

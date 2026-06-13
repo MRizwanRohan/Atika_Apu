@@ -6,12 +6,12 @@
     >
         <!-- Sidebar -->
         <div
-            class="inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out md:z-10"
+            class="inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out xl:z-10"
             :class="{
                 'fixed -translate-x-full': !sidebarOpen && isMobile,
                 'fixed w-52 translate-x-0 shadow-2xl': sidebarOpen && isMobile,
-                'md:relative w-20': !sidebarOpen && !isMobile && !isHovered,
-                'md:relative w-52': sidebarOpen && !isMobile,
+                'xl:relative w-20': !sidebarOpen && !isMobile && !isHovered,
+                'xl:relative w-52': sidebarOpen && !isMobile,
                 'fixed w-52 z-50 shadow-2xl':
                     isHovered && !isMobile && !sidebarOpen,
             }"
@@ -28,7 +28,7 @@
         <!-- Overlay for mobile -->
         <div
             v-if="sidebarOpen && isMobile"
-            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 md:hidden"
+            class="fixed inset-0 bg-gray-900/50 z-40 xl:hidden"
             @click="toggleSidebar"
         ></div>
 
@@ -50,7 +50,7 @@
 
             <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-0 sm:p-6">
-                <div class="w-full mx-auto p-4 sm:p-6">
+                <div class="w-full mx-auto p-1 sm:p-2">
                     <slot />
                 </div>
             </main>
@@ -99,7 +99,7 @@ const toggleFullscreen = () => {
             .exitFullscreen()
             .then(() => (isFullscreen.value = false))
             .catch((err) =>
-                console.error(`Exit fullscreen error: ${err.message}`)
+                console.error(`Exit fullscreen error: ${err.message}`),
             );
     }
 };
@@ -110,7 +110,7 @@ const toggleSubmenu = (index) => {
 
 // Check screen size
 const checkScreenSize = () => {
-    isMobile.value = window.innerWidth < 768; // Updated to use Tailwind's sm breakpoint
+    isMobile.value = window.innerWidth < 1280; // Updated to include lg (1024px) in mobile view
     if (isMobile.value) {
         isHovered.value = false;
         sidebarOpen.value = false; // Close sidebar by default on mobile

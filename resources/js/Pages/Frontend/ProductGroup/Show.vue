@@ -11,7 +11,7 @@ const props = defineProps({
 <template>
     <Head :title="group.name" />
     <FrontendLayout>
-        <div class="min-h-screen bg-gray-50">
+        <div class="min-h-screen bg-gray-50 py-4 mb-12">
             <!-- Banner Section -->
             <div
                 v-if="group.banner"

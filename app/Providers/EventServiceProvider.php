@@ -35,6 +35,7 @@ class EventServiceProvider extends ServiceProvider
         OrderUpdated::class => [
             ClearOrderUpdateCache::class,
             SendMetaConversionOnOrderUpdated::class,
+            \App\Listeners\SendOrderCancelledSmsNotification::class,
         ],
     ];
     public function register(): void

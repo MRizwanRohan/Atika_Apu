@@ -76,6 +76,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    isPreOrder: {
+        type: [Boolean, String],
+        default: false,
+    },
 });
 
 // Define emits — only notify parent about status-change (no optimistic update)
@@ -88,7 +92,7 @@ watch(() => props.modelValue, (val) => {
 });
 
 // Status options with exact colors from the second image
-const statusOptions = [
+const allStatusOptions = [
     { value: "pending", label: "Pending", bgClass: "bg-blue-500 text-white" },
     {
         value: "processing",
@@ -127,11 +131,44 @@ const statusOptions = [
         label: "Partially Delivered",
         bgClass: "bg-stone-500 text-white",
     },
+    {
+        value: "purchase_ok",
+        label: "Purchase",
+        bgClass: "bg-amber-500 text-white",
+    },
+    {
+        value: "received_china",
+        label: "Received in China Warehouse",
+        bgClass: "bg-orange-600 text-white",
+    },
+    {
+        value: "received_bd_airport",
+        label: "Sent To BD",
+        bgClass: "bg-pink-600 text-white",
+    },
+    {
+        value: "received_bd_warehouse",
+        label: "Arrived In BD",
+        bgClass: "bg-emerald-600 text-white",
+    },
 ];
+
+
+
+
+const statusOptions = computed(() => {
+    return allStatusOptions.filter(option => {
+        const preOrderOnly = ['received_china', 'received_bd_airport', 'received_bd_warehouse', 'purchase_ok'];
+        if (preOrderOnly.includes(option.value)) {
+            return props.isPreOrder === true || props.isPreOrder === 'yes';
+        }
+        return true;
+    });
+});
 
 // Computed property to get the appropriate styling based on status
 const getStatusClasses = computed(() => {
-    const currentOption = statusOptions.find(
+    const currentOption = statusOptions.value.find(
         (option) => option.value === localSelected.value
     );
 
@@ -203,6 +240,22 @@ select option[value="confirmed"] {
 }
 select option[value="partially_delivered"] {
     background-color: rgb(120, 113, 108); /* stone-500 */
+    color: white;
+}
+select option[value="received_china"] {
+    background-color: #ea580c; /* orange-600 */
+    color: white;
+}
+select option[value="received_bd_airport"] {
+    background-color: #db2777; /* pink-600 */
+    color: white;
+}
+select option[value="received_bd_warehouse"] {
+    background-color: #059669; /* emerald-600 */
+    color: white;
+}
+select option[value="purchase_ok"] {
+    background-color: #f59e0b; /* amber-500 */
     color: white;
 }
 </style>

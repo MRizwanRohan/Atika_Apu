@@ -12,7 +12,7 @@ interface OrderRepositoryInterface
 
 
     public function getPaginatedOrders(
-        int $perPage = 10,
+        int $perPage = 50,
         array $filters = [],
         string $sortBy = 'created_at',
         string $sortDirection = 'desc'

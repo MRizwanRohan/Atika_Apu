@@ -89,16 +89,16 @@ const cleantopnotice = (html) => {
     <header class="sticky top-0 z-50 bg-white shadow-sm font-sans">
         <!-- Top Notice -->
         <div
-            v-if="cleantopnotice(settings?.generalSettings?.top_notice)"
+            
             class="hidden lg:block bg-primary text-white py-1.5 overflow-hidden"
         >
             <div class="container mx-auto px-4 flex items-center justify-between">
-                <div
-                    class="text-[10px] sm:text-xs tracking-widest text-white"
+                <div v-if="cleantopnotice(settings?.generalSettings?.top_notice)"
+                    class="text-[10px] w-2/3 sm:text-xs tracking-widest text-white"
                     v-html="settings?.generalSettings?.top_notice"
                 ></div>
                 
-                <div class="flex items-center gap-6">
+                <div class="flex items-center justify-end w-full gap-6">
                     <Link
                         href="/order/track"
                         class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"

@@ -50,6 +50,9 @@ class CustomerController extends Controller
         if ($request->filled('min_spent')) {
             $query->where('total_spent', '>=', $request->min_spent);
         }
+        if ($request->filled('is_blocked')) {
+            $query->where('is_blocked', '=', $request->is_blocked === 'blocked');
+        }
 
 
         // Sorting
@@ -175,5 +178,38 @@ class CustomerController extends Controller
         return Inertia::render('Admin/Customers/Show', [
             'customer' => $customer,
         ]);
+    }
+
+    /**
+     * Store a newly created customer in storage (Manual Entry).
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|unique:customers,phone|max:255',
+            'email' => 'nullable|email|unique:customers,email|max:255',
+            'address' => 'nullable|string',
+            'district' => 'nullable|string|max:255',
+            'thana' => 'nullable|string|max:255',
+            'area' => 'nullable|string|max:255',
+        ]);
+
+        Customer::create($validated);
+
+        return back()->with('success', 'Customer manually entered successfully.');
+    }
+
+    /**
+     * Toggle the block status of the customer.
+     */
+    public function toggleBlock(Customer $customer)
+    {
+        $customer->update([
+            'is_blocked' => !$customer->is_blocked
+        ]);
+
+        $status = $customer->is_blocked ? 'blocked' : 'unblocked';
+        return back()->with('success', "Customer successfully {$status}.");
     }
 }

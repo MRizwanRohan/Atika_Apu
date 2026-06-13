@@ -135,6 +135,7 @@ class DashboardController extends Controller
         $endDate = Carbon::now()->endOfDay();
 
         $orders = Order::selectRaw('DATE(created_at) as date, COUNT(*) as order_count, SUM(total) as revenue')
+            ->where('status', '!=', 'incomplete')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
@@ -166,6 +167,7 @@ class DashboardController extends Controller
         $endDate = Carbon::now()->endOfDay();
 
         $orders = Order::selectRaw('DATE(created_at) as date, COUNT(*) as order_count, SUM(total) as revenue')
+            ->where('status', '!=', 'incomplete')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
@@ -215,6 +217,7 @@ class DashboardController extends Controller
     private function getOrderStatusData()
     {
         return Order::select('status', DB::raw('COUNT(*) as value'))
+            ->where('status', '!=', 'incomplete')
             ->groupBy('status')
             ->get()
             ->map(function ($item) {
@@ -228,6 +231,7 @@ class DashboardController extends Controller
     private function getPaymentStatusData()
     {
         return Order::select('payment_status', DB::raw('COUNT(*) as value'))
+            ->where('status', '!=', 'incomplete')
             ->groupBy('payment_status')
             ->get()
             ->map(function ($item) {
@@ -252,6 +256,7 @@ class DashboardController extends Controller
     {
         // Return counts and total sales grouped by delivery status
         $rows = Order::select('status', DB::raw('COUNT(*) as orders'), DB::raw('SUM(total) as sales'))
+            ->where('status', '!=', 'incomplete')
             ->groupBy('status')
             ->get();
 

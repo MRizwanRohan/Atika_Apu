@@ -1,6 +1,13 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from "vue";
-import hierarchyData from "../../../../../public/jsondata/bangladesh_hierarchy.json";
+import {
+    ref,
+    computed,
+    watch,
+    onMounted,
+    nextTick,
+    onBeforeUnmount,
+} from "vue";
+import checkoutLocations from "../../../../../public/jsondata/checkout_locations.json";
 import { useForm, usePage, Head, Link } from "@inertiajs/vue3";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import { useCart } from "@/Composables/useCart";
@@ -31,6 +38,7 @@ const { incrementQuantity, decrementQuantity, removeItem } = useCart();
 
 // Track if incomplete order has already been sent
 const incompleteOrderSent = ref(false);
+let incompleteOrderTimer = null;
 
 // Helper to get cookie value
 const getCookie = (name) => {
@@ -49,6 +57,7 @@ const form = useForm({
     shipping_address: props.user?.address || "",
     shipping_district: "",
     shipping_thana: "",
+    shipping_union: "",
     shipping_cost: 0,
     area: "inside_dhaka",
     customer_notes: "",
@@ -233,6 +242,7 @@ const fetchShippingCost = async () => {
             params: {
                 district: form.shipping_district,
                 thana: form.shipping_thana,
+                union: form.shipping_union,
             },
         });
         form.shipping_cost = response.data.charge;
@@ -242,9 +252,16 @@ const fetchShippingCost = async () => {
 };
 
 // Watch location changes for dynamic shipping cost
-watch([() => form.shipping_district, () => form.shipping_thana], () => {
-    fetchShippingCost();
-});
+watch(
+    [
+        () => form.shipping_district,
+        () => form.shipping_thana,
+        () => form.shipping_union,
+    ],
+    () => {
+        fetchShippingCost();
+    },
+);
 
 // Validate Bangladesh phone number (11 digits starting with 01)
 const isValidBDPhone = (phone) => {
@@ -254,19 +271,44 @@ const isValidBDPhone = (phone) => {
 // UI state for phone validation (client-side only)
 const phoneTouched = ref(false);
 const isPhoneValid = computed(() => isValidBDPhone(form.customer_phone));
+const canCreateIncompleteOrder = computed(() => {
+    return (
+        isPhoneValid.value &&
+        !!form.customer_name?.trim() &&
+        !!form.shipping_address?.trim() &&
+        form.shipping_address.trim().length >= 10 &&
+        !!form.shipping_district &&
+        form.items.length > 0
+    );
+});
 
-// Watch phone number for incomplete order creation
 watch(
-    () => form.customer_phone,
-    (newPhone) => {
-        if (isValidBDPhone(newPhone) && !incompleteOrderSent.value) {
-            // Construct incomplete order payload
+    [
+        () => form.customer_name,
+        () => form.customer_phone,
+        () => form.shipping_address,
+        () => form.shipping_district,
+        () => form.shipping_thana,
+        () => form.items.length,
+    ],
+    () => {
+        if (incompleteOrderTimer) {
+            clearTimeout(incompleteOrderTimer);
+        }
+
+        if (!canCreateIncompleteOrder.value || incompleteOrderSent.value) {
+            return;
+        }
+
+        incompleteOrderTimer = setTimeout(() => {
             const incompletePayload = {
                 user_id: form.user_id,
                 session_id: form.session_id,
-                customer_name: form.customer_name || "Guest",
-                customer_phone: newPhone,
-                shipping_address: form.shipping_address || "incomplete address",
+                customer_name: form.customer_name.trim(),
+                customer_phone: form.customer_phone,
+                shipping_address: form.shipping_address.trim(),
+                shipping_district: form.shipping_district,
+                shipping_thana: form.shipping_thana || null,
                 shipping_cost: form.shipping_cost || 0,
                 area: form.area || "",
                 customer_notes: form.customer_notes || "",
@@ -276,19 +318,23 @@ watch(
                 items: form.items,
             };
 
-            // Send background request
             axios
                 .post(route("order.store"), incompletePayload)
-                .then((res) => {
-                    console.log("Incomplete order tracked successfully");
+                .then(() => {
                     incompleteOrderSent.value = true;
                 })
                 .catch((err) => {
                     console.error("Tracking failed", err);
                 });
-        }
+        }, 1200);
     },
 );
+
+onBeforeUnmount(() => {
+    if (incompleteOrderTimer) {
+        clearTimeout(incompleteOrderTimer);
+    }
+});
 
 // Form submission handler
 const submitOrder = () => {
@@ -297,6 +343,16 @@ const submitOrder = () => {
         phoneTouched.value = true;
         // Optionally scroll to the phone input
         document.getElementById("customer_phone")?.focus();
+        return;
+    }
+
+    if (!form.shipping_district || !form.shipping_thana) {
+        toast.warning("Please select your district and thana");
+        return;
+    }
+
+    if (!form.shipping_address?.trim()) {
+        toast.warning("Please enter your shipping address");
         return;
     }
 
@@ -309,6 +365,8 @@ const submitOrder = () => {
         }
     }
 
+    form.shipping_address = form.shipping_address.trim();
+
     form.post(route("order.store"), {
         preserveScroll: true,
         onSuccess: (page) => {
@@ -319,51 +377,45 @@ const submitOrder = () => {
             }
             if (page.props.flash?.error) {
                 console.error("Order error:", page.props.flash.error);
+                toast.error(page.props.flash.error);
             }
         },
         onError: (errors) => {
             console.error("Order submission failed:", errors);
+            if (errors.message) {
+                toast.error(errors.message);
+            } else {
+                const firstError = Object.values(errors)[0];
+                toast.error(
+                    firstError || "Order submission failed. Please try again.",
+                );
+            }
         },
     });
 };
 
 // Bangladesh Hierarchy Logic
-const districts = ref([]);
-const thanas = ref([]);
+const districts = computed(() =>
+    [...checkoutLocations].sort((a, b) => a.district.localeCompare(b.district)),
+);
 
-onMounted(() => {
-    // Flatten all districts from all divisions
-    if (hierarchyData) {
-        districts.value = hierarchyData
-            .flatMap((division) =>
-                division.districts.map((district) => ({
-                    id: district.id,
-                    name: district.name,
-                    upazilas: district.upazilas,
-                })),
-            )
-            .sort((a, b) => a.name.localeCompare(b.name));
-    }
+const thanas = computed(() => {
+    if (!form.shipping_district) return [];
+
+    const selectedDistrict = districts.value.find(
+        (district) => district.district === form.shipping_district,
+    );
+
+    const unsortedThanas = selectedDistrict?.thanas || [];
+    return [...unsortedThanas].sort((a, b) => a.name.localeCompare(b.name));
 });
 
+// Update search text when district changes
 watch(
     () => form.shipping_district,
     (newDistrictName) => {
-        const selectedDistrict = districts.value.find(
-            (d) => d.name === newDistrictName,
-        );
-        if (selectedDistrict) {
-            thanas.value = (selectedDistrict.upazilas || []).sort((a, b) =>
-                a.name.localeCompare(b.name),
-            );
-            // Reset Thana if not in new list
-            if (!thanas.value.find((t) => t.name === form.shipping_thana)) {
-                form.shipping_thana = "";
-            }
-        } else {
-            thanas.value = [];
-            form.shipping_thana = "";
-        }
+        form.shipping_thana = "";
+        form.shipping_union = "";
 
         // Auto-update area based on district (needed for courier integration)
         if (newDistrictName === "Dhaka") {
@@ -530,6 +582,7 @@ onMounted(() => {
                                         Order review
                                     </h2>
                                 </div>
+
                                 <div
                                     class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
                                 >
@@ -566,6 +619,18 @@ onMounted(() => {
                                             >
                                                 {{ item.product_name }}
                                             </h4>
+                                            <!-- Variation Attributes -->
+                                            <div
+                                                v-if="item.variation_attributes && item.variation_attributes.length > 0"
+                                                class="flex flex-wrap gap-x-3 gap-y-1 mb-2 text-[10px] sm:text-xs text-gray-400 font-medium uppercase tracking-wider"
+                                            >
+                                                <div
+                                                    v-for="(attr, idx) in item.variation_attributes"
+                                                    :key="idx"
+                                                >
+                                                    {{ attr.name }}: <span class="text-gray-600 font-semibold">{{ attr.value }}</span>
+                                                </div>
+                                            </div>
                                             <div
                                                 class="flex items-center gap-3 sm:gap-4"
                                             >
@@ -669,19 +734,50 @@ onMounted(() => {
                                                 class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-gray-400 font-normal text-gray-800 text-sm"
                                             />
                                         </div>
-                                        <div
-                                            class="flex items-center border border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary bg-white transition-all"
-                                        >
-                                            <span
-                                                class="mr-2 text-gray-500 font-normal border-r pr-2 border-gray-200 text-sm"
-                                                >88</span
+                                        <div class="space-y-1">
+                                            <div
+                                                class="flex items-center border border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary bg-white transition-all"
+                                                :class="{
+                                                    'border-red-500 ring-1 ring-red-500':
+                                                        form.errors
+                                                            .customer_phone ||
+                                                        form.errors.message,
+                                                }"
                                             >
-                                            <input
-                                                v-model="form.customer_phone"
-                                                type="tel"
-                                                placeholder="01*********"
-                                                class="flex-1 bg-transparent border-none outline-none p-0 focus:ring-0 placeholder:text-gray-400 font-normal text-gray-800 text-sm"
-                                            />
+                                                <span
+                                                    class="mr-2 text-gray-500 font-normal border-r pr-2 border-gray-200 text-sm"
+                                                    :class="{
+                                                        'text-red-500 border-red-200':
+                                                            form.errors
+                                                                .customer_phone ||
+                                                            form.errors.message,
+                                                    }"
+                                                    >88</span
+                                                >
+                                                <input
+                                                    v-model="
+                                                        form.customer_phone
+                                                    "
+                                                    type="tel"
+                                                    placeholder="01*********"
+                                                    class="flex-1 bg-transparent border-none outline-none p-0 focus:ring-0 placeholder:text-gray-400 font-normal text-gray-800 text-sm"
+                                                    id="customer_phone"
+                                                />
+                                            </div>
+                                            <p
+                                                v-if="
+                                                    form.errors
+                                                        .customer_phone ||
+                                                    form.errors.message
+                                                "
+                                                class="text-[10px] text-red-500 font-semibold tracking-tight mt-1 ml-1"
+                                            >
+                                                {{
+                                                    form.errors
+                                                        .customer_phone ||
+                                                    form.errors.message
+                                                }}
+                                            </p>
                                         </div>
 
                                         <!-- District & Thana side by side on mobile -->
@@ -704,10 +800,10 @@ onMounted(() => {
                                                     </option>
                                                     <option
                                                         v-for="d in districts"
-                                                        :key="d.id"
-                                                        :value="d.name"
+                                                        :key="d.district"
+                                                        :value="d.district"
                                                     >
-                                                        {{ d.name }}
+                                                        {{ d.district }}
                                                     </option>
                                                 </select>
                                                 <!-- <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none sm:hidden">
@@ -721,28 +817,25 @@ onMounted(() => {
                                                         form.shipping_thana
                                                     "
                                                     class="w-full px-2 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all bg-white text-gray-700 font-normal appearance-none text-[12px] sm:text-sm cursor-pointer"
-                                                    :disabled="
-                                                        !form.shipping_district
-                                                    "
                                                     style="
                                                         appearance: none;
                                                         -webkit-appearance: none;
+                                                    "
+                                                    :disabled="
+                                                        !form.shipping_district
                                                     "
                                                 >
                                                     <option value="" disabled>
                                                         Thana
                                                     </option>
                                                     <option
-                                                        v-for="t in thanas"
-                                                        :key="t.id"
-                                                        :value="t.name"
+                                                        v-for="thana in thanas"
+                                                        :key="thana.id"
+                                                        :value="thana.name"
                                                     >
-                                                        {{ t.name }}
+                                                        {{ thana.name }}
                                                     </option>
                                                 </select>
-                                                <!-- <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none sm:hidden">
-                                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                </div> -->
                                             </div>
                                         </div>
 
@@ -968,7 +1061,7 @@ onMounted(() => {
                                             <div>
                                                 <label
                                                     class="block text-[9px] sm:text-[10px] font-bold text-blue-900 uppercase tracking-wider mb-1"
-                                                    >Transaction ID (TrxID)
+                                                    >Sender Number
                                                     <span class="text-red-500"
                                                         >*</span
                                                     ></label
@@ -978,7 +1071,7 @@ onMounted(() => {
                                                     v-model="
                                                         form.transaction_id
                                                     "
-                                                    placeholder="Ex: 8NH7YH9L"
+                                                    placeholder="01*********"
                                                     class="w-full px-3 py-1.5 sm:py-2 border border-blue-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-xs sm:text-sm font-medium"
                                                     required
                                                 />

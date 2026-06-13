@@ -54,11 +54,17 @@ class OrderService implements OrderInterface
             // Validate order data
             $validatedData = $this->validateOrderPayload($orderData);
 
-
-            // Log input data for traceability
-            // Log::info('Order creation started', [
-            //     'order_data' => $validatedData
-            // ]);
+            // Check if the customer is blocked
+            $phone = $validatedData['customer_phone'] ?? null;
+            if ($phone) {
+                $customer = \App\Models\Customer::where('phone', $phone)->first();
+                if ($customer && $customer->is_blocked) {
+                    throw new InvalidOrderDataException(
+                        'This phone number is blocked. You cannot place orders with this number.',
+                        ['customer_phone' => ['This customer phone number has been blocked.']]
+                    );
+                }
+            }
 
             if (empty($validatedData)) {
                 throw new InvalidOrderDataException(
@@ -261,7 +267,7 @@ class OrderService implements OrderInterface
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:255'],
             'landing_order' => ['nullable', 'boolean'],
-            'status' => ['nullable', 'in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed'],
+            'status' => ['nullable', 'in:pending,processing,cancelled,shipped,delivered,returned,incomplete,on_hold,confirmed,received_china,received_bd_airport,received_bd_warehouse,purchase_ok'],
             'source' => ['nullable', 'string', 'in:website,facebook,whatsapp,phone_call,telegram,tiktok,manual'],
             'customer_name' => ['required', 'string', 'max:255'],
             'shipping_address' => ['required', 'string', 'max:500'],
@@ -675,7 +681,7 @@ class OrderService implements OrderInterface
      */
     protected function generateUniqueOrderNumber(): string
     {
-        return 'ORD-' . now()->format('His') . '-' . Str::random(4);
+        return 'TNM-' . now()->format('His') . '-' . Str::random(4);
     }
 
     // clear cart
@@ -695,7 +701,7 @@ class OrderService implements OrderInterface
      */
     public function getOrders(array $params = []): LengthAwarePaginator
     {
-        $perPage = $params['per_page'] ?? 10;
+        $perPage = $params['per_page'] ?? 50;
         $sortBy = $params['sort_by'] ?? 'created_at';
         $sortDirection = $params['sort_direction'] ?? 'desc';
 
@@ -795,10 +801,10 @@ class OrderService implements OrderInterface
             // Find the order
             $order = $this->orderRepository->findOrderById($orderId);
 
-            // Check if order can be updated (only pending, processing, or incomplete orders)
-            if (!in_array($order->status, ['pending', 'processing', 'incomplete'])) {
+            // Check if order can be updated (allow all except delivered, cancelled, returned, or partially_delivered)
+            if (in_array($order->status, ['delivered', 'cancelled', 'returned', 'partially_delivered'])) {
                 throw new InvalidOrderDataException(
-                    'Cannot update order in ' . $order->status . ' status',
+                    'Cannot update order in ' . ucfirst(str_replace('_', ' ', $order->status)) . ' status',
                     ['status' => 'Order cannot be updated in its current status']
                 );
             }
@@ -1439,8 +1445,22 @@ class OrderService implements OrderInterface
      */
     public function updateOrderStatus(int $orderId, string $newStatus): Order
     {
-        // Valid status values
-        $validStatuses = ['pending', 'processing', 'cancelled', 'shipped', 'delivered', 'returned', 'incomplete', 'on_hold', 'confirmed'];
+        $validStatuses = [
+            'pending',
+            'processing',
+            'cancelled',
+            'shipped',
+            'delivered',
+            'returned',
+            'incomplete',
+            'on_hold',
+            'confirmed',
+            'partially_delivered',
+            'received_china',
+            'received_bd_airport',
+            'received_bd_warehouse',
+            'purchase_ok',
+        ];
 
         if (!in_array($newStatus, $validStatuses)) {
             throw new \InvalidArgumentException("Invalid status: {$newStatus}");
@@ -1644,11 +1664,11 @@ class OrderService implements OrderInterface
                 $order = $order->first();
             }
 
-            // Check if order can be updated (only pending, processing, or incomplete orders)
-            if (!in_array($order->status, ['pending', 'processing', 'incomplete'])) {
+            // Check if order can be updated (allow all except delivered, cancelled, returned, or partially_delivered)
+            if (in_array($order->status, ['delivered', 'cancelled', 'returned', 'partially_delivered'])) {
                 throw new InvalidOrderDataException(
-                    'Cannot update order in ' . $order->status . ' status',
-                    ['status' => 'Order cannot be updated in its current status']
+                    'Cannot add items to order in ' . ucfirst(str_replace('_', ' ', $order->status)) . ' status',
+                    ['status' => 'Order items cannot be added in its current status']
                 );
             }
 
@@ -1912,4 +1932,3 @@ class OrderService implements OrderInterface
         ]);
     }
 }
-

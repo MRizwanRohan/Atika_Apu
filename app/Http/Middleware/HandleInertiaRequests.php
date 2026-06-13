@@ -126,6 +126,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
+                'tracking_id' => fn () => $request->session()->get('tracking_id'),
+                'cod_amount' => fn () => $request->session()->get('cod_amount'),
             ],
             // Admin notifications (only visible to admin users)
             'adminNotifications' => fn () => ($user && ($user->hasRole('admin') || $user->hasRole('super-admin')))

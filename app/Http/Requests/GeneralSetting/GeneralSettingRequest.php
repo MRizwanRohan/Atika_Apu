@@ -46,6 +46,9 @@ class GeneralSettingRequest extends FormRequest
             'primary_color' => 'nullable|string|max:7',
             'bkash_instructions' => 'nullable|string',
             'nagad_instructions' => 'nullable|string',
+            'popup_enabled' => 'nullable|boolean',
+            'popup_image' => 'nullable|string',
+            'popup_link' => 'nullable|string',
         ];
     }
 }

@@ -85,8 +85,12 @@ public function generateReport(Request $request)
         // Performant Category Breakdown
         $productsByCategory = \App\Models\Category::withCount('products')
             ->get()->mapWithKeys(function ($cat) {
-                $ids = \App\Models\Product::where('category_id', $cat->id)->pluck('id');
-                $simple = \App\Models\Product::where('category_id', $cat->id)->where('type', 'simple')
+                $ids = \App\Models\Product::whereHas('categories', function ($q) use ($cat) {
+                    $q->where('categories.id', $cat->id);
+                })->pluck('id');
+                $simple = \App\Models\Product::whereHas('categories', function ($q) use ($cat) {
+                    $q->where('categories.id', $cat->id);
+                })->where('type', 'simple')
                     ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * IFNULL(unit_cost, 0)) as v')->first();
                 $variations = \App\Models\ProductVariation::whereIn('product_id', $ids)
                     ->selectRaw('sum(stock) as s, sum(sold_stock) as sl, sum(stock * IFNULL(unit_cost, 0)) as v')->first();
@@ -104,7 +108,7 @@ public function generateReport(Request $request)
             });
 
         // Top Performers Strategy (Balanced query/logic)
-        $topPerformers = \App\Models\Product::with(['category', 'variations'])->get()
+        $topPerformers = \App\Models\Product::with(['categories', 'variations'])->get()
             ->map(fn($p) => [
                 'id' => $p->id,
                 'name' => $p->name,
@@ -315,7 +319,7 @@ public function exportOrdersPDF(Request $request)
 
         $query = Product::query()
             ->with([
-                'category:id,name',
+                'categories:id,name',
                 'variations:id,product_id,price,stock,sold_stock,image_path',
                 'variations.attributes:id,product_variation_id,attribute_value_id',
                 'variations.attributes.value' => function($query) {
@@ -325,7 +329,7 @@ public function exportOrdersPDF(Request $request)
                     $query->withTrashed()->select(['id', 'name', 'deleted_at']);
                 }
             ])
-            ->select(['id', 'name', 'stock', 'sold_stock', 'feature_image', 'category_id', 'type'])
+            ->select(['id', 'name', 'stock', 'sold_stock', 'feature_image', 'type'])
             ->when($search, function($q) use ($search) {
                 $q->where(function($sq) use ($search) {
                     $sq->where('name', 'like', "%{$search}%")
@@ -414,7 +418,7 @@ public function exportOrdersPDF(Request $request)
         $outOfStockProducts = [];
 
         Product::with([
-            'category:id,name',
+            'categories:id,name',
             'variations:id,product_id,price,stock,sold_stock,image_path',
             'variations.attributes:id,product_variation_id,attribute_value_id',
             'variations.attributes.value:id,attribute_id,value',
@@ -479,7 +483,7 @@ public function exportOrdersPDF(Request $request)
         $lowStockProducts = [];
 
         Product::with([
-            'category:id,name',
+            'categories:id,name',
             'variations:id,product_id,price,stock,sold_stock,image_path',
             'variations.attributes:id,product_variation_id,attribute_value_id',
             'variations.attributes.value:id,attribute_id,value',

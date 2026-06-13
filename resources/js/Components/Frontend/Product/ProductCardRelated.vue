@@ -159,7 +159,7 @@ const handleCompare = () => {
             <button
                 @click.prevent="handleWishlist"
                 :class="[
-                    'p-2.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110',
+                    'p-2.5 rounded-full shadow-md   transition-all duration-200 hover:scale-110',
                     isInWishlist(product.id)
                         ? 'bg-red-50 text-red-600'
                         : 'bg-white/90 text-gray-500 hover:text-red-500 hover:bg-red-50',
@@ -171,7 +171,7 @@ const handleCompare = () => {
             <button
                 @click.prevent="handleCompare"
                 :class="[
-                    'p-2.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110',
+                    'p-2.5 rounded-full shadow-md   transition-all duration-200 hover:scale-110',
                     isInCompare(product.id)
                         ? 'bg-blue-50 text-blue-600'
                         : 'bg-white/90 text-gray-500 hover:text-blue-500 hover:bg-blue-50',

@@ -33,6 +33,15 @@ class CourierController extends Controller
             }
 
             $order = Order::findOrFail($id);
+
+            // Prevent duplicate consignment for already-sent orders
+            if ($order->is_courier && $order->courier_name === 'steadfast') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This order has already been sent to Steadfast.',
+                ], 422);
+            }
+
             $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
 
             $courierData = [
@@ -128,6 +137,16 @@ class CourierController extends Controller
         foreach ($orderIds as $orderId) {
             try {
                 $order = Order::findOrFail($orderId);
+
+                // Skip orders already dispatched to Steadfast to prevent duplicate consignments
+                if ($order->is_courier && $order->courier_name === 'steadfast') {
+                    $errors[] = [
+                        'order_id' => $orderId,
+                        'message'  => 'Order already sent to Steadfast (skipped)',
+                        'skipped'  => true,
+                    ];
+                    continue;
+                }
 
                 $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
 

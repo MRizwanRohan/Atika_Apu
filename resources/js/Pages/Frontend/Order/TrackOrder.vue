@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useForm, Head } from "@inertiajs/vue3";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
+import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
     orders: {
@@ -18,6 +19,8 @@ const props = defineProps({
     },
 });
 
+const { success } = useToast();
+
 const form = useForm({
     track_input: props.filters.track_input || "",
 });
@@ -26,8 +29,27 @@ const submit = () => {
     form.get(route("order.track"), {
         preserveState: true,
         preserveScroll: true,
+        onSuccess: () => {
+            if (props.searched) {
+                if (props.orders.length > 0) {
+                    success("Order found successfully!");
+                } else {
+                    success("No orders found for this search.", 4000);
+                }
+            }
+        },
     });
 };
+
+onMounted(() => {
+    if (props.searched) {
+        if (props.orders.length > 0) {
+            success("Order found successfully!");
+        } else {
+            success("No orders found for this search.", 4000);
+        }
+    }
+});
 
 const statuses = ["pending", "processing", "shipped", "delivered"];
 
@@ -50,10 +72,10 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
 <template>
     <Head title="Track Order" />
     <FrontendLayout>
-        <div class="min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8 relative">
+        <div class="min-h-screen bg-gray-50/50 pb-12 px-4 sm:px-6 lg:px-8 relative">
             <div class="max-w-4xl mx-auto relative z-10">
-                <!-- Search Card -->
-                <div
+                <!-- Search Card (only show when not searched) -->
+                <div v-if="!searched"
                     class="bg-white rounded-[2rem] p-8 mb-12 shadow-xl shadow-gray-200/50 border border-gray-100 max-w-md mx-auto"
                 >
                     <!-- Icon -->
@@ -89,7 +111,7 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                                 id="track_input"
                                 v-model="form.track_input"
                                 type="text"
-                                placeholder="e.g. TNM-10294 or 017XXXXXX"
+                                placeholder="e.g. TNM-10294 or 017XXXXXXXX"
                                 class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white placeholder:text-gray-300"
                                 required
                             />
@@ -582,6 +604,18 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
                             >". Please try again.
                         </p>
                     </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button
+                        @click="form.get(route('order.track'), { preserveState: true, preserveScroll: true })"
+                        class="inline-flex items-center gap-2 text-primary font-bold hover:underline"
+                    >
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Search Again
+                    </button>
                 </div>
             </div>
         </div>

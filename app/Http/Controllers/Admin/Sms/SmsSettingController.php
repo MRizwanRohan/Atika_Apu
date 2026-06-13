@@ -21,7 +21,9 @@ class SmsSettingController extends Controller
             $settings = SmsSetting::create([
                 'is_enabled' => false,
                 'order_create_sms_enabled' => false,
-                'order_create_sms_template' => "Hello {name}, Your order #{order_number} has been placed. Total: ৳{total}. Thank you for shopping with us!"
+                'order_create_sms_template' => "Hello {name}, Your order #{order_number} has been placed. Total: ৳{total}. Thank you for shopping with us!",
+                'order_cancel_sms_enabled' => false,
+                'order_cancel_sms_template' => "Hello {name}, Your order #{order_number} has been cancelled. If you have any questions, please contact our support."
             ]);
         }
 
@@ -46,6 +48,8 @@ class SmsSettingController extends Controller
             'is_enabled' => 'required|boolean',
             'order_create_sms_enabled' => 'required|boolean',
             'order_create_sms_template' => 'nullable|string',
+            'order_cancel_sms_enabled' => 'required|boolean',
+            'order_cancel_sms_template' => 'nullable|string',
         ]);
 
         $settings = SmsSetting::first();
@@ -55,6 +59,8 @@ class SmsSettingController extends Controller
             'is_enabled' => $request->is_enabled,
             'order_create_sms_enabled' => $request->order_create_sms_enabled,
             'order_create_sms_template' => $request->order_create_sms_template,
+            'order_cancel_sms_enabled' => $request->order_cancel_sms_enabled,
+            'order_cancel_sms_template' => $request->order_cancel_sms_template,
         ]);
 
         return back()->with('success', 'SMS settings updated successfully.');

@@ -2,51 +2,100 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
 use App\Models\DeliveryZone;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class DeliveryZoneSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $jsonPath = public_path('jsondata/bangladesh_hierarchy.json');
+        $jsonPath = public_path('jsondata/checkout_locations.json');
         if (!File::exists($jsonPath)) {
             return;
         }
 
         $data = json_decode(File::get($jsonPath), true);
+        if (!is_array($data)) {
+            return;
+        }
 
-        foreach ($data as $division) {
-            foreach ($division['districts'] as $district) {
-                // Create or Update District
-                $districtModel = DeliveryZone::updateOrCreate(
-                    ['type' => 'district', 'json_id' => $district['id']],
+        $districtAliases = [
+            'Barishal' => ['Barisal'],
+            'Bogura' => ['Bogra'],
+            'Cumilla' => ['Comilla'],
+            "Cox's Bazar" => ['Coxsbazar'],
+            'Jashore' => ['Jessore'],
+            'Jhalokathi' => ['Jhalakathi'],
+        ];
+
+        $syncedDistrictIds = [];
+
+        foreach ($data as $district) {
+            $districtNames = array_values(array_unique(array_filter([
+                $district['district'] ?? null,
+                ...($districtAliases[$district['district']] ?? []),
+            ])));
+
+            $districtModel = DeliveryZone::where('type', DeliveryZone::TYPE_DISTRICT)
+                ->whereIn('name', $districtNames)
+                ->first();
+
+            if ($districtModel) {
+                $districtModel->update([
+                    'name' => $district['district'],
+                    'bn_name' => $district['bn'] ?? null,
+                    'json_id' => $districtModel->json_id ?: 'district:' . Str::slug($district['district']),
+                    'parent_id' => null,
+                ]);
+            } else {
+                $districtModel = DeliveryZone::create([
+                    'type' => DeliveryZone::TYPE_DISTRICT,
+                    'name' => $district['district'],
+                    'bn_name' => $district['bn'] ?? null,
+                    'json_id' => 'district:' . Str::slug($district['district']),
+                    'parent_id' => null,
+                ]);
+            }
+
+            $syncedDistrictIds[] = $districtModel->id;
+
+            $thanaJsonIds = [];
+
+            foreach (($district['thanas'] ?? []) as $thana) {
+                $thanaJsonIds[] = (string) $thana['id'];
+
+                DeliveryZone::updateOrCreate(
                     [
-                        'name' => $district['name'],
-                        'bn_name' => $district['bn_name'],
-                        'parent_id' => null,
-                        // Set default charges if needed, or leave null for admin to set
+                        'type' => DeliveryZone::TYPE_THANA,
+                        'json_id' => (string) $thana['id'],
+                    ],
+                    [
+                        'name' => $thana['name'],
+                        'bn_name' => $thana['bn'] ?? null,
+                        'parent_id' => $districtModel->id,
                     ]
                 );
-
-                foreach ($district['upazilas'] as $upazila) {
-                    // Create or Update Upazila (Thana)
-                    DeliveryZone::updateOrCreate(
-                        ['type' => 'upazila', 'json_id' => $upazila['id']],
-                        [
-                            'name' => $upazila['name'],
-                            'bn_name' => $upazila['bn_name'],
-                            'parent_id' => $districtModel->id,
-                        ]
-                    );
-                }
             }
+
+            DeliveryZone::where('type', DeliveryZone::TYPE_THANA)
+                ->where('parent_id', $districtModel->id)
+                ->when(
+                    !empty($thanaJsonIds),
+                    fn ($query) => $query->whereNotIn('json_id', $thanaJsonIds),
+                    fn ($query) => $query
+                )
+                ->delete();
+        }
+
+        $obsoleteDistrictIds = DeliveryZone::where('type', DeliveryZone::TYPE_DISTRICT)
+            ->whereNotIn('id', $syncedDistrictIds)
+            ->pluck('id');
+
+        if ($obsoleteDistrictIds->isNotEmpty()) {
+            DeliveryZone::whereIn('parent_id', $obsoleteDistrictIds)->delete();
+            DeliveryZone::whereIn('id', $obsoleteDistrictIds)->delete();
         }
     }
 }

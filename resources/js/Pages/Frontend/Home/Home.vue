@@ -7,12 +7,12 @@ import Sliders from "@/Components/Frontend/Slider/Sliders.vue";
 import Features from "@/Components/Frontend/Features/Features.vue";
 import ProductVideoReel from "@/Components/Frontend/Product/ProductVideoReel.vue";
 import GsapSlider from "@/Components/Frontend/Slider/GsapSlider.vue";
+import { computed, toRef } from "vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
-import { computed, toRef, defineAsyncComponent } from "vue";
-
-const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
-const InstagramFeed = defineAsyncComponent(() => import("@/Components/Frontend/Home/InstagramFeed.vue"));
+import ProductsGroup from "@/Components/Frontend/Home/ProductsGroup.vue";
+import InstagramFeed from "@/Components/Frontend/Home/InstagramFeed.vue";
+import PromoPopup from "@/Components/Frontend/Home/PromoPopup.vue";
 
 defineOptions({
     layout: FrontendLayout,
@@ -88,6 +88,13 @@ const pageTitle = computed(
      <!-- <pre>{{ sideBanners }}</pre> -->
 
       <Sliders :sliders="sliders" />
+
+    <PromoPopup 
+        v-if="settings?.generalSettings?.popup_enabled"
+        :enabled="settings?.generalSettings?.popup_enabled == 1"
+        :image="settings?.generalSettings?.popup_image"
+        :link="settings?.generalSettings?.popup_link"
+    />
 
 
     <!-- Featured Categories -->

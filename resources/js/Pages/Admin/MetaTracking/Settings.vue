@@ -69,11 +69,11 @@ async function sendTestEvent() {
 <template>
     <Head title="Meta Tracking Settings" />
     <AdminLayout>
-        <div class="max-w-3xl mx-auto py-8 px-4">
+        <div class="max-w-4xl mx-auto py-8 px-4">
             <!-- Header -->
-            <div class="mb-8 flex items-center justify-between">
+            <div class="mb-8 flex flex-col md:flex-row items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                         <span class="text-blue-600">📡</span> Meta Tracking Settings
                     </h1>
                     <p class="text-gray-500 text-sm mt-1">Configure Meta Pixel (browser) and Conversion API (server-side) tracking.</p>

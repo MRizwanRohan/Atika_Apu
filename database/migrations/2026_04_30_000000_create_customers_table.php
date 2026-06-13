@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('orders_count')->default(0);
             $table->decimal('total_spent', 15, 2)->default(0);
             $table->timestamp('last_order_at')->nullable();
+            $table->boolean('is_blocked')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

@@ -40,13 +40,17 @@ class ProductController extends Controller
         $minPrice = $request->input('min_price', null);
         $maxPrice = $request->input('max_price', null);
         $sortBy = $request->input('sort_by', 'latest');
-        $perPage = $request->input('per_page', 12);
+        $perPage = $request->input('per_page', 40);
         $attributeFilters = $request->input('attributes', []); // e.g., ['Size' => ['XL', 'L'], 'Color' => ['Red']]
 
-            // Build filters payload and delegate to ProductService
+        // Build filters payload and delegate to ProductService
         $filterPayload = $request->only([
             'search', 'category', 'category_ids', 'brand_ids', 'min_price', 'max_price', 'sort_by', 'per_page', 'attributes'
         ]);
+
+        if (!isset($filterPayload['per_page'])) {
+            $filterPayload['per_page'] = $perPage;
+        }
 
         if ($categorySlug) {
             $filterPayload['category'] = $categorySlug;
@@ -67,6 +71,7 @@ class ProductController extends Controller
                 'min_price' => $filterPayload['min_price'] ?? null,
                 'max_price' => $filterPayload['max_price'] ?? null,
                 'sort_by' => $filterPayload['sort_by'] ?? $sortBy,
+                'per_page' => $filterPayload['per_page'] ?? $perPage,
                 'attributes' => $filterPayload['attributes'] ?? [],
             ],
         ]);
@@ -93,8 +98,8 @@ class ProductController extends Controller
                         ->orWhere('product_code', 'like', "%{$query}%")
                         ->orWhere('product_tags', 'like', "%{$query}%");
                 })
-                ->with(['category:id,name,slug'])
-                ->select(['id', 'name', 'slug', 'price', 'previous_price', 'feature_image', 'category_id'])
+                ->with(['categories:id,name,slug'])
+                ->select(['id', 'name', 'slug', 'price', 'previous_price', 'feature_image'])
                 ->limit($limit)
                 ->get();
         });
@@ -162,7 +167,14 @@ class ProductController extends Controller
      */
     public function productGroup($slug)
     {
-        $group = \App\Models\ProductGroup::with('products')
+        $group = \App\Models\ProductGroup::with([
+            'products' => function ($query) {
+                $query->where('status', 'Published')
+                    ->with(['categories', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
+                    ->withAvg('reviews', 'rating')
+                    ->withCount('reviews');
+            }
+        ])
             ->where('slug', $slug)
             ->where('status', true)
             ->firstOrFail();

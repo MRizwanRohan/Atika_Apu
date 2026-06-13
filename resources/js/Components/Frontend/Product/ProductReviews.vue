@@ -47,7 +47,7 @@ const loadMoreReviews = () => {
 </script>
 
 <template>
-    <div class="mt-12 border-t pt-8">
+    <div class="mt-4 border-t pt-8">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg md:text-2xl font-bold text-gray-900">

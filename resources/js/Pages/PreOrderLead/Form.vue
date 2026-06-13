@@ -1,10 +1,14 @@
 <template>
   <FrontendLayout>
     <Head title="Pre-Order Request" />
-    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-[#fdfdfd]">
+    <div class="min-h-screen px-4 sm:px-6 lg:px-8 bg-[#fdfdfd]">
       <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl shadow-gray-100 overflow-hidden border border-gray-100">
           <div class="p-8 sm:p-12">
+            <div class="text-center mb-[25px]">
+              <h2 class="m-0 mb-2 text-[26px] font-extrabold text-[#0a1f44] uppercase tracking-[0.5px]">Request Product</h2>
+              <p class="m-0 text-[14px] text-[#666] leading-relaxed">আপনি যে পণ্যটি খুঁজছেন তার বিস্তারিত আমাদের পাঠান, আমরা আপনার জন্য এটি ইম্পোর্ট করে দেব!</p>
+            </div>
             <form @submit.prevent="submitForm" class="space-y-8">
               <!-- Product Images -->
               <div class="space-y-3">
@@ -89,8 +93,8 @@
                   <input
                     id="reference_link"
                     v-model="form.reference_link"
-                    type="url"
-                    placeholder="Paste product URL"
+                    type="text"
+                    placeholder="Paste product URL (Optional)"
                     class="block w-full pl-14 pr-5 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300 placeholder:text-gray-400 group-hover:border-gray-300"
                   />
                 </div>
@@ -140,7 +144,7 @@
                 <button
                   type="submit"
                   :disabled="loading"
-                  class="w-full flex items-center justify-center gap-3 py-4 sm:py-5 px-8 rounded-xl text-sm font-semibold text-white bg-[#001D3D] hover:bg-black transition-all duration-300 shadow-xl shadow-[#001D3D]/10 disabled:opacity-70 disabled:cursor-not-allowed group"
+                  class="w-full flex items-center justify-center gap-3 py-4 sm:py-5 px-8 rounded-xl text-sm font-semibold text-white bg-primary transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed group"
                 >
                   <svg 
                     v-if="!loading"

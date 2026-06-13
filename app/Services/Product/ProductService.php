@@ -21,23 +21,53 @@ use App\Models\Campaign;
 
 class ProductService
 {
+  public function getAdminProductsQuery($request)
+  {
+    $search = $request->input('search');
+    $categoryIds = $request->input('category_ids', []);
+    if ($request->filled('category_id')) {
+      $categoryIds = array_merge((array)$categoryIds, [$request->input('category_id')]);
+    }
+
+    $query = Product::with([
+      'categories.parentRecursive',
+      'brand',
+    ]);
+
+    if ($search) {
+      $query->where(function ($q) use ($search) {
+        $q->where('name', 'like', "%{$search}%")
+          ->orWhere('id', 'like', "%{$search}%")
+          ->orWhere('price', 'like', "%{$search}%")
+          ->orWhere('status', 'like', "%{$search}%");
+      });
+    }
+
+    if (!empty($categoryIds)) {
+      $query->whereHas('categories', function ($q) use ($categoryIds) {
+        $q->whereIn('categories.id', array_unique($categoryIds));
+      });
+    }
+
+    return $query->orderBy('order', 'asc')->orderBy('created_at', 'desc');
+  }
 
 
   public function getAllProductsForAdmin($request)
   {
-    $perPage = $request->input('per_page', 10);
+    $perPage = $request->input('per_page', 50);
     $search = $request->input('search', '');
-    $categoryId = $request->input('category_id', '');
+    $categoryIdsJson = json_encode($request->input('category_ids', [])) . '_' . $request->input('category_id', '');
     $page = $request->input('page', 1);
 
     // Generate unique cache key based on pagination, search and category
     $version = Product::getCacheVersion();
-    $cacheKey = "products.v{$version}.admin.page.{$page}.per_page.{$perPage}.search." . md5($search) . ".category.{$categoryId}";
+    $cacheKey = "products.v{$version}.admin.page.{$page}.per_page.{$perPage}.search." . md5($search) . ".category." . md5($categoryIdsJson);
 
     // Cache for 30 minutes (1800 seconds)
-    return Cache::remember($cacheKey, 1800, function () use ($search, $perPage, $categoryId) {
-      $query = Product::with([
-        'category.parentRecursive',
+    return Cache::remember($cacheKey, 1800, function () use ($request, $search, $perPage) {
+      $query = $this->getAdminProductsQuery($request)->with([
+        'categories.parentRecursive',
         'brand',
         'variations.attributes.value' => function($q) {
           $q->withTrashed(); // Load soft-deleted values to check
@@ -48,24 +78,6 @@ class ProductService
         'campaigns'
       ])->withAvg('reviews', 'rating')
         ->withCount('reviews');
-
-      // Apply search if provided
-      if ($search) {
-        $query->where(function ($q) use ($search) {
-          $q->where('name', 'like', "%{$search}%")
-            ->orWhere('id', 'like', "%{$search}%")
-            ->orWhere('price', 'like', "%{$search}%")
-            ->orWhere('status', 'like', "%{$search}%");
-        });
-      }
-
-      // Apply category filter if provided
-      if ($categoryId) {
-        $query->where('category_id', $categoryId);
-      }
-
-      // Order by order column, then by latest
-      $query->orderBy('order', 'asc')->orderBy('created_at', 'desc');
 
       // Get paginated results with soft-delete filtering for variations
       $products = $query->paginate($perPage);
@@ -99,7 +111,7 @@ class ProductService
   {
     $version = Product::getCacheVersion();
     return Cache::remember("products.v{$version}.all", 1800, function () {
-      return Product::with(['category.parentRecursive', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+      return Product::with(['categories.parentRecursive', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
         ->withAvg('reviews', 'rating')
         ->withCount('reviews')
         ->get();
@@ -112,7 +124,7 @@ class ProductService
     $version = Product::getCacheVersion();
     return Cache::remember("product.v{$version}.{$slug}", 3600, function () use ($slug) {
       return Product::where('slug', $slug)
-        ->with(['category.parentRecursive', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+        ->with(['categories.parentRecursive', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
         ->withAvg('reviews', 'rating')
         ->withCount('reviews')
         ->first();
@@ -135,9 +147,11 @@ class ProductService
                 $ids = $this->getAllDescendantCategoryIds($root->id);
 
                 // Fetch products for these categories
-                $products = Product::whereIn('category_id', $ids)
+                $products = Product::whereHas('categories', function($q) use ($ids) {
+                        $q->whereIn('categories.id', $ids);
+                    })
                     ->where('status', 'Published')
-                    ->with(['category', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
+                    ->with(['categories', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
                     ->withAvg('reviews', 'rating')
                     ->withCount('reviews')
                     ->orderBy('created_at', 'desc')
@@ -154,9 +168,9 @@ class ProductService
             }
 
             // Optional: Include Uncategorized products at the end
-            $uncategorized = Product::whereNull('category_id')
+            $uncategorized = Product::whereDoesntHave('categories')
                 ->where('status', 'Published')
-                ->with(['category', 'variations.attributes.value.attribute'])
+                ->with(['categories', 'variations.attributes.value.attribute'])
                 ->withAvg('reviews', 'rating')
                 ->withCount('reviews')
                 ->orderBy('created_at', 'desc')
@@ -184,7 +198,7 @@ class ProductService
         $campaigns = Campaign::active()
             ->with([
                 'products', 
-                'products.category.parentRecursive', 
+                'products.categories.parentRecursive', 
                 'products.variations', 
                 'products.variations.attributes.value.attribute', 
                 'products.campaigns'
@@ -249,17 +263,20 @@ class ProductService
 
     return Cache::remember($cacheKey, 1800, function () use ($productId, $limit) {
       try {
-        $product = Product::with('category')->find($productId);
+        $product = Product::with('categories')->find($productId);
         if (!$product) {
           return collect();
         }
 
         // Prefer same category
-        if ($product->category_id) {
-          $related = Product::where('category_id', $product->category_id)
+        $categoryIds = $product->categories->pluck('id');
+        if ($categoryIds->isNotEmpty()) {
+          $related = Product::whereHas('categories', function($q) use ($categoryIds) {
+              $q->whereIn('categories.id', $categoryIds);
+            })
             ->where('id', '!=', $productId)
             ->where('status', 'Published')
-            ->with(['category', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+            ->with(['categories', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->take($limit)
@@ -275,7 +292,7 @@ class ProductService
           $related = Product::where('brand_id', $product->brand_id)
             ->where('id', '!=', $productId)
             ->where('status', 'Published')
-            ->with(['category', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+            ->with(['categories', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->take($limit)
@@ -289,7 +306,7 @@ class ProductService
         // Final fallback: latest published products excluding current
         return Product::where('id', '!=', $productId)
           ->where('status', 'Published')
-          ->with(['category', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+          ->with(['categories', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
           ->withAvg('reviews', 'rating')
           ->withCount('reviews')
           ->orderBy('created_at', 'desc')
@@ -331,11 +348,11 @@ class ProductService
     $minPrice = $params['min_price'] ?? null;
     $maxPrice = $params['max_price'] ?? null;
     $sortBy = $params['sort_by'] ?? 'latest';
-    $perPage = $params['per_page'] ?? 12;
+    $perPage = $params['per_page'] ?? 40;
     $attributeFilters = $params['attributes'] ?? [];
 
     $query = Product::where('status', 'Published')
-        ->with(['category', 'brand', 'variations.attributes.value.attribute', 'campaigns'])
+        ->with(['categories', 'brand', 'variations.attributes.value.attribute', 'campaigns'])
         ->withAvg('reviews', 'rating')
         ->withCount('reviews');
 
@@ -353,14 +370,18 @@ class ProductService
       $category = Category::where('slug', $categorySlug)->first();
       if ($category) {
         $allCategoryIds = $this->getAllDescendantCategoryIds($category->id);
-        $query->whereIn('category_id', $allCategoryIds);
+        $query->whereHas('categories', function ($q) use ($allCategoryIds) {
+          $q->whereIn('categories.id', $allCategoryIds);
+        });
       }
     } elseif (!empty($categoryIds)) {
       $allIds = [];
       foreach ((array) $categoryIds as $catId) {
         $allIds = array_merge($allIds, $this->getAllDescendantCategoryIds($catId));
       }
-      $query->whereIn('category_id', array_unique($allIds));
+      $query->whereHas('categories', function ($q) use ($allIds) {
+        $q->whereIn('categories.id', array_unique($allIds));
+      });
     }
 
     // Brand
@@ -389,6 +410,9 @@ class ProductService
         }
       }
     }
+
+    // Pre-order and Stock-out products always at the end
+    $query->orderBy(DB::raw('CASE WHEN stock <= 0 OR is_pre_order = 1 THEN 1 ELSE 0 END'), 'asc');
 
     // Sorting
     switch ($sortBy) {
@@ -500,19 +524,6 @@ class ProductService
 
       Log::info('Product creation attempt:', ['name' => $request->name, 'base_slug' => $baseSlug, 'code' => $productCode]);
 
-      // Check if an ACTIVE product exists with same name/slug
-      // Names must be unique among ACTIVE products
-      $activeProduct = Product::where('slug', $baseSlug)->first();
-
-      if ($activeProduct) {
-        DB::rollBack();
-        Log::info('Duplicate product name blocked:', ['slug' => $baseSlug, 'existing_id' => $activeProduct->id]);
-        return [
-          'success' => false,
-          'error' => "A product with this name already exists. Please use a different name.",
-        ];
-      }
-
       // Check if product_code conflicts with any product (active or soft-deleted)
       // Codes must be unique globally
       $existingProductCode = Product::withTrashed()
@@ -557,12 +568,15 @@ class ProductService
         $this->prepareProductData($request, $featureImagePath, $galleryImages, $totalStock, $uploadVideoPath)
       );
 
+      // Sync category relationship
+      $product->categories()->sync($request->category_ids);
+
       Log::info('Created Product ID: ' . $product);
 
       // Handle Variations
       if ($request->type === 'variable') {
-       $test= $this->storeProductVariations($product, $request);
-       Log::info('Stored Variations: ' . $test);
+        $this->storeProductVariations($product, $request);
+        Log::info('Stored Variations for product ID: ' . $product->id);
       }
 
       DB::commit();
@@ -656,25 +670,6 @@ class ProductService
 
       \Illuminate\Support\Facades\Log::info('ProductService: Starting update for product ' . $product->id);
 
-      // Check if name is changing
-      $baseSlug = Str::slug($request->name);
-
-      if ($baseSlug !== $product->slug) {
-        // If changing to a different name, check that no other ACTIVE product has this name
-        $activeProduct = Product::where('slug', $baseSlug)
-          ->where('id', '!=', $product->id)
-          ->first();
-
-        if ($activeProduct) {
-          DB::rollBack();
-          Log::info('Duplicate product name blocked on update:', ['slug' => $baseSlug, 'existing_id' => $activeProduct->id]);
-          return [
-            'success' => false,
-            'error' => "A product with this name already exists. Please use a different name.",
-          ];
-        }
-      }
-
       // Check if product_code is changing and conflicts
       $newProductCode = $request->product_code;
 
@@ -727,6 +722,9 @@ class ProductService
       $product->update(
         $this->prepareProductData($request, $featureImagePath, $galleryImages, $totalStock, $uploadVideoPath, $product->id)
       );
+
+      // Sync category relationship
+      $product->categories()->sync($request->category_ids);
 
       // Handle Variations
       if ($request->type === 'variable') {
@@ -802,7 +800,6 @@ class ProductService
       'name' => $request->name,
       'slug' => $this->generateUniqueSlug($request->name, $productId),
       'product_code' => $request->product_code,
-      'category_id' => $request->category_id,
       'brand_id' => $request->brand_id,
       'short_description' => $request->short_description,
       'description' => $request->description,
@@ -1034,6 +1031,7 @@ public function quickUpdate($productId, array $data)
                 }
 
                 // Soft delete product (keeps all data for orders and inventory tracking)
+                /** @var Product $product */
                 $product->delete();
             }
 
@@ -1057,6 +1055,36 @@ public function quickUpdate($productId, array $data)
       foreach ($orders as $item) {
         Product::where('id', $item['id'])->update(['order' => $item['order']]);
       }
+      DB::commit();
+      return ['success' => true];
+    } catch (\Exception $e) {
+      DB::rollBack();
+      return ['success' => false, 'error' => $e->getMessage()];
+    }
+  }
+
+
+  public function updateProductStock($productId, $data)
+  {
+    try {
+      DB::beginTransaction();
+
+      $product = Product::findOrFail($productId);
+
+      if ($data['type'] === 'simple') {
+        $product->update(['stock' => $data['stock']]);
+      } else {
+        foreach ($data['variations'] as $vData) {
+          ProductVariation::where('id', $vData['id'])
+            ->where('product_id', $productId)
+            ->update(['stock' => $vData['stock']]);
+        }
+        
+        // Refresh total stock for variable product
+        $totalStock = ProductVariation::where('product_id', $productId)->sum('stock');
+        $product->update(['stock' => $totalStock]);
+      }
+
       DB::commit();
       return ['success' => true];
     } catch (\Exception $e) {

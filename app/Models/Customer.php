@@ -21,12 +21,14 @@ class Customer extends Model
         'orders_count',
         'total_spent',
         'last_order_at',
+        'is_blocked',
     ];
 
     protected $casts = [
         'last_order_at' => 'datetime',
         'total_spent' => 'decimal:2',
         'orders_count' => 'integer',
+        'is_blocked' => 'boolean',
     ];
 
     public function orders()

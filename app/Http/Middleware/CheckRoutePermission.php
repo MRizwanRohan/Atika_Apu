@@ -27,6 +27,7 @@ class CheckRoutePermission
         // Orders - all order routes require admin.orders.index
         'admin.orders.*' => 'admin.orders.index',
         'admin.invoice.*' => 'admin.orders.index',
+        'admin.facebook-entries.*' => 'admin.facebook-entries.index',
 
         // Products - product related routes
         'admin.products.*' => 'admin.products.index',

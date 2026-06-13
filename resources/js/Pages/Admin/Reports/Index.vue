@@ -1,88 +1,78 @@
 <template>
     <Head title="Reports Dashboard" />
     <AdminLayout>
-        <div class="reports-dashboard p-6 bg-gray-50 min-h-screen">
+        <div class="reports-dashboard p-4 bg-gray-50/50 min-h-screen">
             <!-- Header -->
-            <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 class="text-lg font-medium text-gray-800">
                         Reports Dashboard
                     </h1>
-                    <p class="text-gray-600">
-                        Track your business performance and inventory insights
+                    <p class="text-xs text-gray-500">
+                        Track business performance and inventory insights
                     </p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <button 
                         @click="filterToday"
-                        class="px-4 py-2 bg-orange-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-orange-700 transition-all flex items-center gap-2"
+                        class="px-3 py-1.5 bg-orange-600 text-white rounded text-xs transition-all flex items-center gap-2 hover:bg-orange-700"
                     >
-                        <TrendingUp :size="16" />
-                        Today's Report
+                        <TrendingUp :size="14" />
+                        Today
                     </button>
                 </div>
             </div>
 
 
             <!-- Source-wise Performance Summary -->
-            <div class="mb-10">
-                <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div class="mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div 
                         v-for="source in sourceStats" 
                         :key="source.source_name"
-                        class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/40 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500"
+                        class="bg-white p-4 rounded-lg border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.05)] relative overflow-hidden group"
                     >
-                        <!-- Decorative Background Blob -->
-                        <div class="absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.07] transition-opacity" :class="getSourceBadgeClass(source.source_name)"></div>
-
-                        <div class="flex items-center justify-between mb-8">
-                            <div class="flex items-center gap-4">
-                                <div class="p-3.5 rounded-[1.25rem] shadow-lg transition-transform group-hover:rotate-12 duration-500" :class="getSourceBadgeClass(source.source_name)">
-                                    <component :is="getSourceIcon(source.source_name)" :size="22" stroke-width="2.5" />
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-lg" :class="getSourceBadgeClass(source.source_name)">
+                                    <component :is="getSourceIcon(source.source_name)" :size="16" />
                                 </div>
                                 <div>
-                                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1.5">{{ source.source_name }}</h4>
+                                    <h4 class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">{{ source.source_name }}</h4>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[11px] font-black text-gray-900 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-100">{{ source.total_orders }} ORDERS</span>
+                                        <span class="text-[10px] text-gray-600">{{ source.total_orders }} Orders</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="flex flex-col items-end">
-                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Conversion</span>
-                                    <span class="text-lg font-black text-blue-600 leading-none">{{ getSuccessRate(source).toFixed(0) }}%</span>
-                                </div>
+                                <span class="text-sm font-medium text-blue-600 leading-none">{{ getSuccessRate(source).toFixed(0) }}%</span>
                             </div>
                         </div>
 
                         <!-- Progress Bar -->
-                        <div class="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden mb-8 border border-gray-100">
+                        <div class="w-full h-1 bg-gray-50 rounded-full overflow-hidden mb-4">
                             <div 
-                                class="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(59,130,246,0.5)]" 
+                                class="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out" 
                                 :style="{ width: getSuccessRate(source) + '%' }"
                             ></div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-5 relative z-10">
-                            <div class="bg-gradient-to-br from-emerald-50/80 to-emerald-100/50 p-5 rounded-[2rem] border border-emerald-200/30">
-                                <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-2">Delivered</p>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-3xl font-black text-gray-900 leading-none">{{ source.delivered_count }}</span>
-                                </div>
-                                <p class="text-xs font-black text-emerald-700 mt-2">৳{{ source.delivered_revenue.toLocaleString() }}</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-emerald-50/50 p-2 rounded-md border border-emerald-100/50">
+                                <p class="text-[8px] text-emerald-600 uppercase tracking-wider mb-1">Delivered</p>
+                                <p class="text-base font-medium text-gray-800 leading-none">{{ source.delivered_count }}</p>
+                                <p class="text-[9px] text-emerald-700 mt-1">৳{{ source.delivered_revenue.toLocaleString() }}</p>
                             </div>
                             
-                            <div class="bg-gradient-to-br from-rose-50/80 to-orange-50/50 p-5 rounded-[2rem] border border-rose-200/30">
-                                <p class="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-2">Lost Deals</p>
-                                <div class="flex items-center gap-4">
+                            <div class="bg-rose-50/50 p-2 rounded-md border border-rose-100/50">
+                                <p class="text-[8px] text-rose-600 uppercase tracking-wider mb-1">Lost</p>
+                                <div class="flex items-center gap-2">
                                     <div>
-                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Cancel</p>
-                                        <p class="text-xl font-black text-rose-600 leading-none">{{ source.cancelled_count }}</p>
+                                        <p class="text-[8px] text-gray-400">Can: {{ source.cancelled_count }}</p>
                                     </div>
-                                    <div class="w-px h-10 bg-gray-200/50"></div>
+                                    <div class="w-px h-3 bg-gray-200"></div>
                                     <div>
-                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Return</p>
-                                        <p class="text-xl font-black text-amber-600 leading-none">{{ source.returned_count }}</p>
+                                        <p class="text-[8px] text-gray-400">Ret: {{ source.returned_count }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -90,104 +80,86 @@
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <!-- Total Products -->
-                <div class="stat-card group">
+                <div class="stat-card">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Products</p>
-                            <h3 class="text-3xl font-bold text-gray-900 leading-none">{{ totalProducts }}</h3>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Total Products</p>
+                            <h3 class="text-lg font-medium text-gray-800 leading-none">{{ totalProducts }}</h3>
                         </div>
-                        <div class="p-3 rounded-2xl bg-blue-50 text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white shadow-sm">
-                            <Package :size="24" stroke-width="2.5" />
+                        <div class="p-2 rounded-lg bg-blue-50 text-blue-600">
+                            <Package :size="18" />
                         </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-blue-600 bg-blue-50/50 w-fit px-2 py-1 rounded-full">
-                        <TrendingUp :size="12" class="mr-1" />
-                        <span>Inventory Active</span>
                     </div>
                 </div>
 
                 <!-- Total Stock -->
-                <div class="stat-card group">
+                <div class="stat-card">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">In Stock</p>
-                            <h3 class="text-3xl font-bold text-gray-900 leading-none">{{ totalStock }}</h3>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">In Stock</p>
+                            <h3 class="text-lg font-medium text-gray-800 leading-none">{{ totalStock }}</h3>
                         </div>
-                        <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 transition-all group-hover:bg-emerald-600 group-hover:text-white shadow-sm">
-                            <Layers :size="24" stroke-width="2.5" />
+                        <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+                            <Layers :size="18" />
                         </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-emerald-600 bg-emerald-50/50 w-fit px-2 py-1 rounded-full">
-                        <CheckCircle :size="12" class="mr-1" />
-                        <span>Ready to Ship</span>
                     </div>
                 </div>
 
                 <!-- Total Sold -->
-                <div class="stat-card group">
+                <div class="stat-card">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Sold</p>
-                            <h3 class="text-3xl font-bold text-gray-900 leading-none">{{ totalSold }}</h3>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Total Sold</p>
+                            <h3 class="text-lg font-medium text-gray-800 leading-none">{{ totalSold }}</h3>
                         </div>
-                        <div class="p-3 rounded-2xl bg-amber-50 text-amber-600 transition-all group-hover:bg-amber-600 group-hover:text-white shadow-sm">
-                            <ShoppingCart :size="24" stroke-width="2.5" />
+                        <div class="p-2 rounded-lg bg-amber-50 text-amber-600">
+                            <ShoppingCart :size="18" />
                         </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-amber-600 bg-amber-50/50 w-fit px-2 py-1 rounded-full">
-                        <TrendingUp :size="12" class="mr-1" />
-                        <span>Sales Velocity: {{ overallSellThroughRate.toFixed(1) }}%</span>
                     </div>
                 </div>
 
                 <!-- Total Value -->
-                <div class="stat-card group">
+                <div class="stat-card">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Inventory Value</p>
-                            <h3 class="text-3xl font-bold text-gray-900 leading-none">BDT {{ totalValue.toLocaleString() }}</h3>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Stock Value</p>
+                            <h3 class="text-lg font-medium text-gray-800 leading-none">৳{{ totalValue.toLocaleString() }}</h3>
                         </div>
-                        <div class="p-3 rounded-2xl bg-purple-50 text-purple-600 transition-all group-hover:bg-purple-600 group-hover:text-white shadow-sm">
-                            <DollarSign :size="24" stroke-width="2.5" />
+                        <div class="p-2 rounded-lg bg-purple-50 text-purple-600">
+                            <DollarSign :size="18" />
                         </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-xs font-medium text-purple-600 bg-purple-50/50 w-fit px-2 py-1 rounded-full">
-                        <TrendingUp :size="12" class="mr-1" />
-                        <span>Asset Value Peak</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Visualization Section (Phase 2 Additions) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <!-- Stock Distribution Chart -->
+            <!-- Visualization Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                 <div class="chart-container">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">Inventory Distribution</h3>
-                        <Layers class="text-gray-400" :size="20" />
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-800 uppercase tracking-wider">Inventory Distribution</h3>
+                        <Layers class="text-gray-400" :size="16" />
                     </div>
-                    <div class="h-[300px]">
+                    <div class="h-[220px]">
                         <VueApexCharts 
                             type="donut" 
-                            height="300" 
+                            height="220" 
                             :options="inventoryPieOptions" 
                             :series="inventoryPieSeries" 
                         />
                     </div>
                 </div>
 
-                <!-- Sell-Through Performance Chart -->
                 <div class="chart-container">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">Category Efficiency</h3>
-                        <TrendingUp class="text-gray-400" :size="20" />
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-800 uppercase tracking-wider">Category Efficiency</h3>
+                        <TrendingUp class="text-gray-400" :size="16" />
                     </div>
-                    <div class="h-[300px]">
+                    <div class="h-[220px]">
                         <VueApexCharts 
                             type="bar" 
-                            height="300" 
+                            height="220" 
                             :options="sellThroughBarOptions" 
                             :series="sellThroughBarSeries" 
                         />
@@ -197,32 +169,29 @@
 
 
             <!-- Top Performers Table -->
-            <div class="chart-container mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-gray-900 uppercase tracking-tight">Top Performing Products</h3>
-                    <div class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">High Velocity</div>
+            <div class="chart-container mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-medium text-gray-800 uppercase tracking-wider">Top Performing Products</h3>
                 </div>
-                <div class="overflow-x-auto rounded-2xl border border-gray-50">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50/50">
-                            <tr>
-                                <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Product</th>
-                                <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Category</th>
-                                <th class="text-left py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Source</th>
-                                <th class="text-center py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Stock</th>
-                                <th class="text-center py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Sold</th>
-                                <th class="text-right py-4 px-6 font-medium text-gray-500 lowercase tracking-wider">Sell-Through</th>
+                <div class="overflow-x-auto border-t border-gray-50 pt-2">
+                    <table class="w-full text-[11px]">
+                        <thead>
+                            <tr class="text-gray-400 uppercase tracking-tighter">
+                                <th class="text-left py-2 px-2 font-normal">Product</th>
+                                <th class="text-left py-2 px-2 font-normal">Category</th>
+                                <th class="text-center py-2 px-2 font-normal">Stock</th>
+                                <th class="text-center py-2 px-2 font-normal">Sold</th>
+                                <th class="text-right py-2 px-2 font-normal">Success</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            <tr v-for="product in topPerformers" :key="product.id" class="hover:bg-blue-50/30 transition-colors group">
-                                <td class="py-4 px-6 font-semibold text-gray-900 group-hover:text-blue-600">{{ product.name }}</td>
-                                <td class="py-4 px-6 text-gray-500">{{ product.category }}</td>
-                                <td class="py-4 px-6 text-center tabular-nums">{{ product.stock }}</td>
-                                <td class="py-4 px-6 text-center tabular-nums font-semibold">{{ product.sold }}</td>
-                                <td class="py-4 px-6 text-right">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm"
-                                        :class="product.sell_through_rate > 15 ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'">
+                            <tr v-for="product in topPerformers" :key="product.id" class="hover:bg-gray-50/50 transition-colors">
+                                <td class="py-2 px-2 text-gray-700">{{ product.name }}</td>
+                                <td class="py-2 px-2 text-gray-400">{{ product.category }}</td>
+                                <td class="py-2 px-2 text-center tabular-nums">{{ product.stock }}</td>
+                                <td class="py-2 px-2 text-center tabular-nums font-medium">{{ product.sold }}</td>
+                                <td class="py-2 px-2 text-right">
+                                    <span class="text-[10px] tabular-nums" :class="product.sell_through_rate > 15 ? 'text-emerald-600' : 'text-amber-600'">
                                         {{ product.sell_through_rate.toFixed(1) }}%
                                     </span>
                                 </td>
@@ -235,26 +204,19 @@
 
 
 
-                        <!-- Filters Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">
-                    Filters
-                </h2>
+            <!-- Filters Section -->
+            <div class="bg-white rounded-lg border border-gray-100 p-4 mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs font-medium text-gray-800 uppercase tracking-wider">
+                        Filters
+                    </h2>
+                </div>
 
-                <form @submit.prevent="applyFilters" class="space-y-4">
-                    <!-- Time Period Filter -->
-                    <div
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-                    >
+                <form @submit.prevent="applyFilters" class="space-y-3">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Time Period</label
-                            >
-                            <select
-                                v-model="filters.period"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Period</label>
+                            <select v-model="filters.period" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="all">All Time</option>
                                 <option value="today">Today</option>
                                 <option value="weekly">This Week</option>
@@ -264,14 +226,8 @@
                             </select>
                         </div>
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Order Status</label
-                            >
-                            <select
-                                v-model="filters.status"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Status</label>
+                            <select v-model="filters.status" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Status</option>
                                 <option value="pending">Pending</option>
                                 <option value="processing">Processing</option>
@@ -283,14 +239,8 @@
                             </select>
                         </div>
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Payment Status</label
-                            >
-                            <select
-                                v-model="filters.payment_status"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Payment</label>
+                            <select v-model="filters.payment_status" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Payments</option>
                                 <option value="paid">Paid</option>
                                 <option value="unpaid">Unpaid</option>
@@ -298,30 +248,8 @@
                             </select>
                         </div>
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Per Page</label
-                            >
-                            <select
-                                v-model="filters.per_page"
-                                @change="applyFilters"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Order Source</label
-                            >
-                            <select
-                                v-model="filters.source"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Source</label>
+                            <select v-model="filters.source" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Sources</option>
                                 <option value="website">Website</option>
                                 <option value="facebook">Facebook</option>
@@ -333,14 +261,8 @@
                             </select>
                         </div>
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Delivery Status</label
-                            >
-                            <select
-                                v-model="filters.delivery_status"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Delivery</label>
+                            <select v-model="filters.delivery_status" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Delivery</option>
                                 <option value="pending">Pending</option>
                                 <option value="processing">Processing</option>
@@ -350,90 +272,53 @@
                                 <option value="lost">Lost</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Per Page</label>
+                            <select v-model="filters.per_page" @change="applyFilters" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Custom Date Range -->
-                    <div
-                        v-if="filters.period === 'custom'"
-                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
-                    >
+                    <div v-if="filters.period === 'custom'" class="grid grid-cols-2 gap-2">
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >From Date</label
-                            >
-                            <input
-                                type="date"
-                                v-model="filters.date_from"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">From</label>
+                            <input type="date" v-model="filters.date_from" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
                         </div>
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >To Date</label
-                            >
-                            <input
-                                type="date"
-                                v-model="filters.date_to"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">To</label>
+                            <input type="date" v-model="filters.date_to" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
                         </div>
                     </div>
 
                     <!-- Additional Filters -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Customer Search</label
-                            >
-                            <input
-                                type="text"
-                                v-model="filters.customer_search"
-                                placeholder="Search by name, email, or phone"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Customer</label>
+                            <input type="text" v-model="filters.customer_search" placeholder="Name, email, or phone" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
                         </div>
-                        <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Min Total</label
-                            >
-                            <input
-                                type="number"
-                                v-model="filters.min_total"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                                >Max Total</label
-                            >
-                            <input
-                                type="number"
-                                v-model="filters.max_total"
-                                placeholder="1000"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 uppercase mb-1">Min BDT</label>
+                                <input type="number" v-model="filters.min_total" placeholder="0" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 uppercase mb-1">Max BDT</label>
+                                <input type="number" v-model="filters.max_total" placeholder="1000" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
+                            </div>
                         </div>
                     </div>
 
                     <!-- Filter Actions -->
-                    <div class="flex gap-3">
-                        <button
-                            type="submit"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                        >
-                            Apply Filters
+                    <div class="flex gap-2 justify-end">
+                        <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white rounded text-xs transition-colors hover:bg-blue-700">
+                            Apply
                         </button>
-                        <button
-                            type="button"
-                            @click="resetFilters"
-                            class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-                        >
+                        <button type="button" @click="resetFilters" class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded text-xs transition-colors hover:bg-gray-300">
                             Reset
                         </button>
                     </div>
@@ -444,109 +329,101 @@
 
 
             <!-- Orders Table -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Orders</h3>
+            <div class="bg-white rounded-lg border border-gray-100 p-4 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <h3 class="text-xs font-medium text-gray-800 uppercase tracking-wider">Orders List</h3>
                     <div class="flex gap-2">
                         <button
                             @click="exportToCSV"
-                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm"
+                            class="px-3 py-1 bg-emerald-600 text-white rounded text-[10px] hover:bg-emerald-700 transition-colors"
                         >
-                            {{
-                                selectedOrders.length > 0
-                                    ? `Export Selected (${selectedOrders.length}) to CSV`
-                                    : "Export All to CSV"
-                            }}
+                            {{ selectedOrders.length > 0 ? `CSV (${selectedOrders.length})` : "Export CSV" }}
                         </button>
                         <button
                             @click="exportToPDF"
-                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-sm"
+                            class="px-3 py-1 bg-rose-600 text-white rounded text-[10px] hover:bg-rose-700 transition-colors"
                         >
-                            Export to PDF
+                            Export PDF
                         </button>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full text-[11px]">
                         <thead>
-                            <tr class="border-b">
-                                <th
-                                    class="text-left py-3 px-4 font-medium text-gray-700"
-                                >
+                            <tr class="border-b border-gray-100 text-gray-400 uppercase tracking-tighter">
+                                <th class="text-left py-2 px-2">
                                     <input
                                         type="checkbox"
                                         v-model="selectAll"
                                         @change="toggleSelectAll"
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        class="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-200 rounded"
                                     />
                                 </th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Order #</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Date</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Customer</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Status</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Source</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Payment</th>
-                                <th class="text-right py-3 px-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Total Amount</th>
+                                <th class="text-left py-2 px-2 font-normal">Order #</th>
+                                <th class="text-left py-2 px-2 font-normal">Date</th>
+                                <th class="text-left py-2 px-2 font-normal">Customer</th>
+                                <th class="text-left py-2 px-2 font-normal">Status</th>
+                                <th class="py-2 px-2 font-normal text-center">Source</th>
+                                <th class="text-left py-2 px-2 font-normal">Payment</th>
+                                <th class="text-right py-2 px-2 font-normal">Total</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-gray-50">
                             <tr
                                 v-for="order in orders.data"
                                 :key="order.id"
-                                class="border-b hover:bg-gray-50"
+                                class="hover:bg-gray-50/50 transition-colors"
                             >
-                                <td class="py-3 px-4">
+                                <td class="py-2 px-2">
                                     <input
                                         type="checkbox"
                                         :value="order.id"
                                         v-model="selectedOrders"
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        class="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-200 rounded"
                                     />
                                 </td>
-                                <td class="py-3 px-4 font-semibold text-blue-600">#{{ order.order_number }}</td>
-                                <td class="py-3 px-4 text-xs text-gray-500 font-normal whitespace-nowrap">{{ formatDate(order.date) }}</td>
-                                <td class="py-3 px-4">
-                                    <div class="font-bold text-gray-900 leading-tight">{{ order.customer_name || order.customer?.name }}</div>
-                                    <div class="text-[10px] text-gray-400 font-semibold uppercase tracking-tighter">{{ order.customer_phone || order.customer?.phone }}</div>
+                                <td class="py-2 px-2 text-blue-600 font-medium">#{{ order.order_number }}</td>
+                                <td class="py-2 px-2 text-gray-400 whitespace-nowrap">{{ formatDate(order.date) }}</td>
+                                <td class="py-2 px-2">
+                                    <div class="text-gray-700 font-medium leading-none mb-0.5">{{ order.customer_name || order.customer?.name }}</div>
+                                    <div class="text-[9px] text-gray-400 tabular-nums">{{ order.customer_phone || order.customer?.phone }}</div>
                                 </td>
-                                <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm" :class="getStatusColor(order.status)">
+                                <td class="py-2 px-2">
+                                    <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-tight" :class="getStatusColor(order.status)">
                                         {{ order.status }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4">
-                                    <span class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
+                                <td class="py-2 px-2 text-center">
+                                    <span class="text-[9px] text-gray-500 bg-gray-100/50 px-1.5 py-0.5 rounded border border-gray-200/50">
                                         {{ order.source || 'website' }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm" :class="getPaymentStatusColor(order.payment_status)">
+                                <td class="py-2 px-2">
+                                    <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-tight" :class="getPaymentStatusColor(order.payment_status)">
                                         {{ order.payment_status }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-right font-bold text-gray-900 tabular-nums text-sm">BDT {{ order.total }}</td>
+                                <td class="py-2 px-2 text-right font-medium text-gray-800 tabular-nums">৳{{ order.total }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr class="border-t-2 border-gray-100 bg-gray-50/50">
-                                <td colspan="3" class="py-4 px-6">
-                                    <div class="space-y-1">
-                                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Revenue Overview</p>
-                                        <div class="flex items-center gap-4">
-                                            <div class="flex items-center gap-2">
-                                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                                                <span class="text-sm font-medium text-gray-600">Page Total: <span class="text-gray-900 font-semibold">BDT {{ calculateTotalAmount().toLocaleString() }}</span></span>
-                                            </div>
-                                            <div class="flex items-center gap-2 border-l border-gray-200 pl-4">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                <span class="text-sm font-medium text-gray-600">Grand Total: <span class="text-gray-900 font-bold text-lg">BDT {{ grandTotalRevenue.toLocaleString() }}</span></span>
-                                            </div>
+                            <tr class="bg-gray-50/30">
+                                <td colspan="3" class="py-3 px-2">
+                                    <div class="flex items-center gap-4 text-[10px]">
+                                        <div class="flex items-center gap-1">
+                                            <span class="text-gray-400 uppercase">Page Total:</span>
+                                            <span class="text-gray-800 font-medium">৳{{ calculateTotalAmount().toLocaleString() }}</span>
+                                        </div>
+                                        <div class="w-px h-3 bg-gray-200"></div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="text-gray-400 uppercase">Grand Total:</span>
+                                            <span class="text-blue-600 font-medium">৳{{ grandTotalRevenue.toLocaleString() }}</span>
                                         </div>
                                     </div>
                                 </td>
-                                <td colspan="4" class="py-4 px-6 text-right">
-                                    <p class="text-xs text-gray-400 font-medium italic">Calculated across {{ orders.total }} matching records</p>
+                                <td colspan="5" class="py-3 px-2 text-right">
+                                    <p class="text-[9px] text-gray-400 italic">Showing {{ orders.from }}-{{ orders.to }} of {{ orders.total }} records</p>
                                 </td>
                             </tr>
                         </tfoot>
@@ -554,24 +431,20 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="mt-6 flex items-center justify-between">
-                    <div class="text-sm text-gray-700">
-                        Showing {{ orders.from }} to {{ orders.to }} of
-                        {{ orders.total }} results
-                    </div>
-                    <div class="flex gap-2">
+                <div class="mt-4 flex items-center justify-end">
+                    <div class="flex gap-1">
                         <button
                             v-for="link in orders.links"
                             :key="link.label"
                             @click="changePage(link.url)"
                             :disabled="!link.url"
-                            class="px-3 py-1 text-sm border rounded-md"
+                            class="px-2 py-1 text-[10px] border rounded transition-colors"
                             :class="
                                 link.active
                                     ? 'bg-blue-600 text-white border-blue-600'
                                     : !link.url
-                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                    ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                             "
                             v-html="link.label"
                         ></button>
@@ -1119,21 +992,17 @@ const formatDate = (dateString) => {
 }
 
 .stat-card {
-    @apply bg-white p-6 rounded-3xl border border-gray-100 shadow-sm transition-all duration-300;
-    backdrop-filter: blur(10px);
+    @apply bg-white p-4 rounded-lg border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200;
 }
 
 .stat-card:hover {
-    @apply shadow-xl border-blue-100 -translate-y-1;
+    @apply border-gray-200;
 }
 
 .chart-container {
-    @apply bg-white p-8 rounded-3xl border border-gray-100 shadow-sm transition-all duration-300;
+    @apply bg-white p-4 rounded-lg border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200;
 }
 
-.chart-container:hover {
-    @apply shadow-lg border-blue-50;
-}
 
 /* Glassmorphism utility */
 .glass {

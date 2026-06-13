@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\Dashboard\DashboardController;
 use App\Http\Controllers\Admin\Marketing\MarketingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Admin\GeneralSetting\GeneralSettingController;
+use App\Http\Controllers\Admin\GeneralSetting\PopupSettingController;
 use App\Http\Controllers\Admin\Inventory\InventoryManagementController;
 use App\Http\Controllers\Admin\Courier\FraudcheckController;
 use App\Http\Controllers\Admin\SitePage\SitePageController;
@@ -84,10 +85,13 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     // oders
     Route::resource('/orders', OrderController::class);
     Route::get('/incomplete-orders', [OrderController::class, 'incompleteOrders'])->name('orders.incomplete');
+    Route::get('/pre-orders', [OrderController::class, 'preOrders'])->name('orders.pre-order');
     Route::get('/order-map', [OrderController::class, 'districtWiseOrders'])->name('orders.map');
 
     // customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::post('/customers/{customer}/toggle-block', [CustomerController::class, 'toggleBlock'])->name('customers.toggle-block');
     Route::get('/customers/sms-logs', [CustomerController::class, 'smsLogs'])->name('customers.sms-logs');
     Route::post('/customers/send-bulk-sms', [CustomerController::class, 'sendBulkSms'])->name('customers.send-bulk-sms');
 
@@ -129,10 +133,12 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::get('/reports/export', [InventoryManagementController::class, 'exportOrders'])->name('reports.export');
     Route::get('/reports/export-pdf', [InventoryManagementController::class, 'exportOrdersPDF'])->name('reports.export-pdf');
 
+    Route::get('/products/export-csv', [ProductController::class, 'exportCsv'])->name('products.export-csv');
     Route::resource('products', ProductController::class);
     Route::post('/products/update-order', [ProductController::class, 'updateOrder'])->name('products.update-order');
     Route::resource('product-videos', ProductVideoController::class);
     Route::post('/products/{id}/quick-edit', [ProductController::class, 'quickEdit'])->name('products.quick-edit');
+    Route::post('/products/{id}/update-stock', [ProductController::class, 'updateStock'])->name('products.update-stock');
     Route::resource('attributes', AttributeController::class);
     Route::post('/products/bulk-delete', [ProductController::class, 'bulkDeleteProducts'])->name('products.bulk-delete');
 
@@ -178,6 +184,8 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     // GeneralSetting
     Route::get('/social-links', [GeneralSettingController::class, 'socialLinks'])->name('settings.socialLinks');
     Route::get('/basic-information', [GeneralSettingController::class, 'basicInformation'])->name('settings.basicInformation');
+    Route::get('/popup-settings', [PopupSettingController::class, 'index'])->name('settings.popup');
+    Route::post('/popup-settings', [PopupSettingController::class, 'store'])->name('settings.popup.store');
     Route::post('/settings-create', [GeneralSettingController::class, 'store'])->name('settings.store');
     Route::post('/clear-cache', [GeneralSettingController::class, 'clearCache'])->name('settings.clearCache');
 
@@ -293,6 +301,15 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::put('/orders/{orderId}/advance-payment', [OrderController::class, 'verifyAdvancePayment'])->name('orders.verify-advance-payment');
     Route::put('/orders/{order}/items/{item}', [OrderController::class, 'updateItemQuantity'])->name('orders.items.update');
     Route::delete('/orders/{order}/items/{item}', [OrderController::class, 'destroyItem'])->name('orders.items.destroy');
+
+    // Facebook Entries
+    Route::group(['prefix' => 'facebook-entries', 'as' => 'facebook-entries.'], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FacebookEntryController::class, 'index'])->name('index');
+        Route::get('/history', [\App\Http\Controllers\Admin\FacebookEntryController::class, 'history'])->name('history');
+        Route::post('/', [\App\Http\Controllers\Admin\FacebookEntryController::class, 'store'])->name('store');
+        Route::get('/search-products', [\App\Http\Controllers\Admin\FacebookEntryController::class, 'searchProducts'])->name('search-products');
+        Route::get('/stats', [\App\Http\Controllers\Admin\FacebookEntryController::class, 'getStats'])->name('stats');
+    });
 });
 
 // Public endpoint: pixel config for frontend (no auth needed)

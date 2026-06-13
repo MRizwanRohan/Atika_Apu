@@ -149,11 +149,10 @@ class CategoryService
     public function deleteCategory(Category $category)
     {
         try {
-            // Check if category is used in products or orders
-            $productsCount = \DB::table('products')->where('category_id', $category->id)->count();
+            $productsCount = \DB::table('category_product')->where('category_id', $category->id)->count();
             $ordersCount = \DB::table('order_items')
-                ->join('products', 'order_items.product_id', '=', 'products.id')
-                ->where('products.category_id', $category->id)
+                ->join('category_product', 'order_items.product_id', '=', 'category_product.product_id')
+                ->where('category_product.category_id', $category->id)
                 ->count();
 
             // Note: Images are NOT deleted for soft-deleted categories

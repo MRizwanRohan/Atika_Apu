@@ -115,6 +115,7 @@ const handleClose = () => {
 
             <!-- Main Cart Content -->
             <div class="flex-1 flex flex-col h-full bg-white dark:bg-gray-900">
+                <!-- <pre>{{ cart }}</pre> -->
                 <!-- Header -->
                 <div class="px-6 py-6 flex items-center justify-between border-b border-gray-50 dark:border-gray-800">
                     <div>

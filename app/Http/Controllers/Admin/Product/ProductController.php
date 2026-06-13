@@ -18,6 +18,7 @@ use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\Category;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
 {
@@ -44,6 +45,65 @@ class ProductController extends Controller
             'products' => $products,
             'categories' => $categories,
         ]);
+    }
+
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        $products = $this->productService->getAdminProductsQuery($request)->get();
+        $fileName = 'products-' . now()->format('Y-m-d-H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ];
+
+        return response()->streamDownload(function () use ($products) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Name',
+                'Category',
+                'SubCategory',
+                'SubChildCategory',
+                'Brand',
+                'Unit',
+                'ProductType',
+                'Description',
+                'SellingType',
+                'PurchasePrice',
+                'RegularPrice',
+                'DiscountPrice',
+                'WholesalePrice',
+                'MinimumQty',
+                'OpeningStock',
+                'Weight(Kg)',
+            ]);
+
+            foreach ($products as $product) {
+                [$category, $subCategory, $subChildCategory] = $this->resolveCategoryLevels($product->category);
+
+                fputcsv($handle, [
+                    $product->name,
+                    $category,
+                    $subCategory,
+                    $subChildCategory,
+                    $product->brand?->brand_name ?? '',
+                    'Piece',
+                    $product->type === 'simple' ? 'single' : $product->type,
+                    trim(strip_tags($product->short_description ?: $product->description ?: '')),
+                    'retail',
+                    $product->unit_cost ?? 0,
+                    $product->previous_price ?? $product->price ?? 0,
+                    $product->price ?? 0,
+                    0,
+                    0,
+                    $product->stock ?? 0,
+                    0,
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, $headers);
     }
 
     /**
@@ -148,7 +208,7 @@ class ProductController extends Controller
             $categories = $this->productService->getAllCategories();
             $brands = $this->productService->getAllBrands();
 
-            $product = $product->load('variations.attributes.value.attribute');
+            $product = $product->load(['categories', 'variations.attributes.value.attribute']);
 
             return Inertia::render('Admin/Product/Edit', [
                 'product' => $product,
@@ -222,7 +282,29 @@ class ProductController extends Controller
 
 
 
+    public function updateStock(Request $request, $id)
+    {
+        $request->validate([
+            'type' => 'required|in:simple,variable',
+            'stock' => 'required_if:type,simple|integer|min:0',
+            'variations' => 'required_if:type,variable|array',
+            'variations.*.id' => 'required|exists:product_variations,id',
+            'variations.*.stock' => 'required|integer|min:0',
+        ]);
+
+        $result = $this->productService->updateProductStock($id, $request->all());
+
+        if ($result['success']) {
+            $this->clearAllProductCaches();
+            return redirect()->back()->with('success', 'Stock updated successfully!');
+        }
+
+        return redirect()->back()->with('error', 'Failed to update stock: ' . ($result['error'] ?? 'Unknown error'));
+    }
+
+
     public function quickEdit(Request $request, $id)
+
     {
         $request->validate([
             'status' => 'required|in:Published,Unpublished',
@@ -337,6 +419,27 @@ class ProductController extends Controller
         }
 
         return redirect()->back()->with('error', 'Failed to update order');
+    }
+
+    private function resolveCategoryLevels(?Category $category): array
+    {
+        if (! $category) {
+            return ['', '', ''];
+        }
+
+        $lineage = [];
+        $current = $category;
+
+        while ($current) {
+            array_unshift($lineage, $current->name);
+            $current = $current->parentRecursive;
+        }
+
+        return [
+            $lineage[0] ?? '',
+            $lineage[1] ?? '',
+            $lineage[2] ?? '',
+        ];
     }
 
 

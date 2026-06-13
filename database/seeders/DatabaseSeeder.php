@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Run the roles and permissions seeder first
         $this->call(RolesAndPermissionsSeeder::class);
+        $this->call(DeliveryZoneSeeder::class);
 
         // Create admin user with admin role
         $admin = User::create([

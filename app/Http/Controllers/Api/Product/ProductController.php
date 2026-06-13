@@ -32,7 +32,7 @@ class ProductController extends Controller
 
     public function getRecommended()
     {
-        $products = Product::with(['category', 'variations.attributes.value.attribute'])->where('status', 'Published')
+        $products = Product::with(['categories', 'variations.attributes.value.attribute'])->where('status', 'Published')
             ->orderBy('sold_stock', 'desc')
             ->take(6)
             ->get();
@@ -46,7 +46,7 @@ class ProductController extends Controller
 
         $products = Cache::remember($cacheKey, 1800, function () use ($remark) {
             return Product::where('remarks', $remark)
-                ->with(['category', 'variations.attributes.value.attribute'])
+                ->with(['categories', 'variations.attributes.value.attribute'])
                 ->paginate(10);
         });
 
@@ -58,7 +58,7 @@ class ProductController extends Controller
     {
         return Cache::remember('products.category_grouped', 1800, function () {
             // Load products with necessary relations (not reviews)
-            $products = Product::with('category', 'variations.attributes.value.attribute')
+            $products = Product::with('categories', 'variations.attributes.value.attribute')
                 ->where('status', 'Published')
                 ->get();
 
@@ -102,7 +102,7 @@ class ProductController extends Controller
         return Cache::remember($cacheKey, 1800, function () use ($productId) {
             try {
                 // Find the main product
-                $product = Product::with('category', 'variations.attributes.value.attribute', 'campaigns', 'brand')->findOrFail($productId);
+                $product = Product::with('categories', 'variations.attributes.value.attribute', 'campaigns', 'brand')->findOrFail($productId);
 
                 if (!$product) {
                     return response()->json([
@@ -112,10 +112,13 @@ class ProductController extends Controller
                 }
 
                 // Get related products based on category
-                $relatedProducts = Product::where('category_id', $product->category_id)
+                $categoryIds = $product->categories->pluck('id');
+                $relatedProducts = Product::whereHas('categories', function ($q) use ($categoryIds) {
+                        $q->whereIn('categories.id', $categoryIds);
+                    })
                     ->where('id', '!=', $productId) // Exclude current product
                     ->where('status', 'Published')
-                    ->with(['category', 'variations.attributes.value.attribute'])
+                    ->with(['categories', 'variations.attributes.value.attribute'])
                     ->take(10)
                     ->get();
 
@@ -138,7 +141,7 @@ class ProductController extends Controller
 
     public function filter(Request $request)
     {
-        $query = Product::with(['category.parentRecursive',  'variations.attributes.value.attribute', 'brand', 'campaigns'])->where('status', 'published');
+        $query = Product::with(['categories.parentRecursive',  'variations.attributes.value.attribute', 'brand', 'campaigns'])->where('status', 'published');
 
         // Filter by category slug OR by category and all its descendants
         if ($request->has('category_slug')) {
@@ -153,10 +156,12 @@ class ProductController extends Controller
 
 
                 // Filter products by these category IDs
-                $query->whereIn('category_id', $categoryIds);
+                $query->whereHas('categories', function ($q) use ($categoryIds) {
+                    $q->whereIn('categories.id', $categoryIds);
+                });
             } else {
                 // If category not found, fallback to direct slug matching
-                $query->whereHas('category', function ($q) use ($categorySlug) {
+                $query->whereHas('categories', function ($q) use ($categorySlug) {
                     $q->where('slug', $categorySlug);
                 });
             }
@@ -165,7 +170,9 @@ class ProductController extends Controller
         // Alternative: Allow explicit filter by multiple category IDs
         if ($request->has('category_ids')) {
             $categoryIds = $request->category_ids;
-            $query->whereIn('category_id', $categoryIds);
+            $query->whereHas('categories', function ($q) use ($categoryIds) {
+                $q->whereIn('categories.id', (array)$categoryIds);
+            });
         }
 
         // Filter by brand id
@@ -267,7 +274,7 @@ class ProductController extends Controller
     //letest products
     public function latestProducts()
     {
-        $products = Product::with(['category', 'variations.attributes.value.attribute', 'campaigns'])->where('status', 'published')->latest()->paginate(40);
+        $products = Product::with(['categories', 'variations.attributes.value.attribute', 'campaigns'])->where('status', 'published')->latest()->paginate(40);
         return response()->json([
             'status' => 'success',
             'data' => $products,
@@ -277,7 +284,7 @@ class ProductController extends Controller
 
     public function flashSalesProducts()
     {
-        $products = Product::with(['category', 'variations.attributes.value.attribute', 'campaigns'])
+        $products = Product::with(['categories', 'variations.attributes.value.attribute', 'campaigns'])
             ->where('status', 'published')
             ->where('remarks', 'Hot') // Filter for Hot products
             ->latest()
@@ -313,7 +320,7 @@ class ProductController extends Controller
     // only previous_price products
     public function previousPriceProducts()
     {
-        $products = Product::with(['category', 'variations.attributes.value.attribute', 'campaigns'])
+        $products = Product::with(['categories', 'variations.attributes.value.attribute', 'campaigns'])
             ->where('status', 'published')
             ->where('previous_price', '>', 0)
             ->latest()

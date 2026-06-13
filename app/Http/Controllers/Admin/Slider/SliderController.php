@@ -37,8 +37,8 @@ class SliderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
+            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
             'link' => 'nullable|url',
             'bg_color' => 'nullable|string|max:7' // Assuming hex color like #ffffff
         ]);
@@ -87,8 +87,8 @@ class SliderController extends Controller
     public function update(Request $request, Slider $slider)
     {
         $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
+            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
             'link' => 'nullable|url',
             'bg_color' => 'nullable|string|max:7'
         ]);
