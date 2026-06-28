@@ -150,7 +150,7 @@
                                 <Check size="14" />
                             </div>
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">SID: {{ $page.props.flash.tracking_id }}</p>
+                                <p class="text-lg font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">SID: {{ $page.props.flash.tracking_id }}</p>
                                 <p class="text-sm text-emerald-700/80 dark:text-emerald-300">Consignment Success</p>
                             </div>
                         </div>

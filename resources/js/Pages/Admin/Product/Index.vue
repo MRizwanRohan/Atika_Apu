@@ -18,7 +18,11 @@
                         {{ isExporting ? "EXPORTING..." : "EXPORT CSV" }}
                     </button>
                     <Link
-                        :href="route('admin.products.create')"
+                        :href="
+                            route('admin.products.create', {
+                                return_to: currentIndexUrl,
+                            })
+                        "
                         class="h-8 px-3 flex items-center gap-1.5 bg-gray-900 border border-gray-800 text-white rounded-lg text-[11px] font-[600] tracking-tight hover:bg-black transition-all shadow-sm"
                     >
                         <Plus size="14" stroke-width="3" />
@@ -123,7 +127,7 @@
                 >
                     <template #item="{ element: item }">
                         <div
-                            @click="router.visit(route('admin.products.edit', item.id))"
+                            @click="router.visit(productEditUrl(item.id))"
                             class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-blue-300 transition-all shadow-sm mb-1 cursor-pointer active:scale-[0.99]"
                         >
                             <div class="py-2 px-2 md:p-4 relative">
@@ -196,7 +200,7 @@
                                                     <Settings size="16" />
                                                 </button>
                                                 <Link
-                                                    :href="route('admin.products.edit', item.id)"
+                                                    :href="productEditUrl(item.id)"
                                                     @click.stop
                                                     class="p-1.5 text-gray-400 hover:text-indigo-600 rounded transition-colors"
                                                 >
@@ -818,6 +822,27 @@ watch(
 // Computed
 const currentPage = computed(() => props.products.current_page);
 const lastPage = computed(() => props.products.last_page);
+const currentIndexUrl = computed(() => {
+    const params = {
+        page: currentPage.value,
+        per_page: perPage.value,
+    };
+
+    if (searchQuery.value) {
+        params.search = searchQuery.value;
+    }
+
+    if (selectedCategory.value) {
+        params.category_id = selectedCategory.value;
+    }
+
+    return route("admin.products.index", params);
+});
+const productEditUrl = (productId) =>
+    route("admin.products.edit", {
+        product: productId,
+        return_to: currentIndexUrl.value,
+    });
 
 // Methods
 const openDeleteModal = (id) => {

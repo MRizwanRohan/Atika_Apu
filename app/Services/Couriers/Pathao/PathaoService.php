@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\CourierSetting;
 use App\Events\OrderUpdated;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class PathaoService
 {
@@ -157,46 +158,58 @@ class PathaoService
             throw new \Exception('Courier settings not found', 404);
         }
 
-        // Prevent duplicate dispatch for orders already sent to Pathao
-        if ($order->is_courier && $order->courier_name === 'pathao') {
-            throw new \Exception('This order has already been sent to Pathao.');
+        $lock = Cache::lock('courier_order_' . $order->id, 30);
+        try {
+            if (!$lock->get()) {
+                throw new \Exception('This order is currently being processed for courier dispatch. Please wait.');
+            }
+
+            // Refresh order state under lock
+            $order = Order::with(['items.product', 'items.productVariation'])->find($order->id);
+
+            // Prevent duplicate dispatch for orders already sent to a courier
+            if ($order->is_courier || !empty($order->tracking_number) || !empty($order->consignment_id)) {
+                throw new \Exception('This order has already been sent to a courier.');
+            }
+
+            $itemQuantity = $order->items->sum('quantity');
+            $itemWeight = $order->items->sum(function ($item) {
+                return $item->quantity * 0.5;
+            });
+
+            $itemDescription = $order->items->map(function ($item) {
+                return "{$item->product->name} (Qty: {$item->quantity})";
+            })->implode(', ');
+
+            $itemDescription = $itemDescription ?: 'Cloth items';
+
+            $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
+
+            $payload = [
+                'store_id' => $settings->StoreId,
+                'merchant_order_id' => $order->order_number,
+                'recipient_name' => $order->customer_name ?? 'Unknown Customer',
+                'recipient_phone' => $order->customer_phone ?? '01887573015',
+                'recipient_address' => $address,
+                'delivery_type' => 48,
+                'item_type' => 2,
+                'special_instruction' => $specialInstruction,
+                'item_quantity' => $itemQuantity,
+                'item_weight' => $itemWeight,
+                'item_description' => $itemDescription,
+                'amount_to_collect' => (float) ($order->total - ($order->paid_amount ?? 0)),
+            ];
+
+            $response = $this->makeRequest('POST', '/aladdin/api/v1/orders', $payload);
+
+            if (isset($response['code']) && $response['code'] === 200) {
+                $this->updateOrderWithPathaoDetails($order->id, [], $response['data']);
+            }
+
+            return $response;
+        } finally {
+            $lock->release();
         }
-
-        $itemQuantity = $order->items->sum('quantity');
-        $itemWeight = $order->items->sum(function ($item) {
-            return $item->quantity * 0.5;
-        });
-
-        $itemDescription = $order->items->map(function ($item) {
-            return "{$item->product->name} (Qty: {$item->quantity})";
-        })->implode(', ');
-
-        $itemDescription = $itemDescription ?: 'Cloth items';
-
-        $address = 'District:' . $order->shipping_district . ' Thana:' . $order->shipping_thana . ' Address:' . $order->shipping_address;
-
-        $payload = [
-            'store_id' => $settings->StoreId,
-            'merchant_order_id' => $order->order_number,
-            'recipient_name' => $order->customer_name ?? 'Unknown Customer',
-            'recipient_phone' => $order->customer_phone ?? '01887573015',
-            'recipient_address' => $address,
-            'delivery_type' => 48,
-            'item_type' => 2,
-            'special_instruction' => $specialInstruction,
-            'item_quantity' => $itemQuantity,
-            'item_weight' => $itemWeight,
-            'item_description' => $itemDescription,
-            'amount_to_collect' => (float) ($order->total - ($order->paid_amount ?? 0)),
-        ];
-
-        $response = $this->makeRequest('POST', '/aladdin/api/v1/orders', $payload);
-
-        if (isset($response['code']) && $response['code'] === 200) {
-            $this->updateOrderWithPathaoDetails($order->id, [], $response['data']);
-        }
-
-        return $response;
     }
 
 

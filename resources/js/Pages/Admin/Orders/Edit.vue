@@ -31,6 +31,7 @@ import {
     Shield,
     Eye,
     CheckCircle2,
+    FileText,
 } from "lucide-vue-next";
 import FraudCheckerModal from "@/Components/Couriers/FraudCheckerModal.vue";
 import PaymentVerifyModal from "@/Components/Order/PaymentVerifyModal.vue";
@@ -941,6 +942,16 @@ const submitForm = () => {
                             Dup {{ order.duplicate_percentage }}%
                         </span>
                     </div>
+                </div>
+                <div class="flex items-center gap-2 pr-1">
+                    <a
+                        :href="route('admin.orders.invoice', { order: order.id })"
+                        target="_blank"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all shadow-xs"
+                    >
+                        <FileText class="w-3.5 h-3.5" />
+                        <span>Invoice</span>
+                    </a>
                 </div>
             </div>
 

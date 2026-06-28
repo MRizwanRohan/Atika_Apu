@@ -23,6 +23,8 @@
                 </div>
             </div>
 
+            <!-- <pre>{{ orders }}</pre> -->
+
 
             <!-- Source-wise Performance Summary -->
             <div class="mb-6">
@@ -80,7 +82,7 @@
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <!-- Total Products -->
                 <div class="stat-card">
                     <div class="flex items-center justify-between">
@@ -135,7 +137,7 @@
             </div>
 
             <!-- Visualization Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <!-- <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                 <div class="chart-container">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-medium text-gray-800 uppercase tracking-wider">Inventory Distribution</h3>
@@ -165,11 +167,11 @@
                         />
                     </div>
                 </div>
-            </div>
+            </div> -->
 
 
             <!-- Top Performers Table -->
-            <div class="chart-container mb-6">
+            <!-- <div class="chart-container mb-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-medium text-gray-800 uppercase tracking-wider">Top Performing Products</h3>
                 </div>
@@ -199,24 +201,26 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </div> -->
 
 
 
 
             <!-- Filters Section -->
-            <div class="bg-white rounded-lg border border-gray-100 p-4 mb-6">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-xs font-medium text-gray-800 uppercase tracking-wider">
+            <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                         Filters
                     </h2>
                 </div>
 
-                <form @submit.prevent="applyFilters" class="space-y-3">
-                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                <form @submit.prevent="applyFilters" class="space-y-4">
+                    <!-- Unified Responsive Filter Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        <!-- Period -->
                         <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Period</label>
-                            <select v-model="filters.period" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Period</label>
+                            <select v-model="filters.period" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="all">All Time</option>
                                 <option value="today">Today</option>
                                 <option value="weekly">This Week</option>
@@ -225,31 +229,49 @@
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
+
+                        <!-- Custom Date Range -->
+                        <template v-if="filters.period === 'custom'">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">From</label>
+                                <input type="date" v-model="filters.date_from" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">To</label>
+                                <input type="date" v-model="filters.date_to" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white" />
+                            </div>
+                        </template>
+                        
+                        <!-- Status -->
                         <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Status</label>
-                            <select v-model="filters.status" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Status</label>
+                            <select v-model="filters.status" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="processing">Processing</option>
-                                <option value="shipped">Shipped</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="cancelled">Cancelled</option>
-                                <option value="on_hold">On Hold</option>
-                                <option value="confirmed">Confirmed</option>
+                                <option 
+                                    v-for="status in ORDER_STATUS_OPTIONS" 
+                                    :key="status.value" 
+                                    :value="status.value"
+                                >
+                                    {{ status.label }}
+                                </option>
                             </select>
                         </div>
+
+                        <!-- Payment -->
                         <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Payment</label>
-                            <select v-model="filters.payment_status" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Payment</label>
+                            <select v-model="filters.payment_status" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Payments</option>
                                 <option value="paid">Paid</option>
                                 <option value="unpaid">Unpaid</option>
                                 <option value="partial">Partial</option>
                             </select>
                         </div>
+
+                        <!-- Source -->
                         <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Source</label>
-                            <select v-model="filters.source" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Source</label>
+                            <select v-model="filters.source" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="">All Sources</option>
                                 <option value="website">Website</option>
                                 <option value="facebook">Facebook</option>
@@ -260,195 +282,110 @@
                                 <option value="manual">Manual</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Delivery</label>
-                            <select v-model="filters.delivery_status" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
-                                <option value="">All Delivery</option>
-                                <option value="pending">Pending</option>
-                                <option value="processing">Processing</option>
-                                <option value="shipped">Shipped</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="returned">Returned</option>
-                                <option value="lost">Lost</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Per Page</label>
-                            <select v-model="filters.per_page" @change="applyFilters" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
+
+                        <!-- Per Page -->
+                        <!-- <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Per Page</label>
+                            <select v-model="filters.per_page" @change="applyFilters" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30">
                                 <option value="10">10</option>
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </select>
-                        </div>
-                    </div>
+                        </div> -->
 
-                    <!-- Custom Date Range -->
-                    <div v-if="filters.period === 'custom'" class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">From</label>
-                            <input type="date" v-model="filters.date_from" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
+                        <!-- Customer Search -->
+                        <div class="col-span-2 sm:col-span-1 md:col-span-2">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Customer</label>
+                            <input type="text" v-model="filters.customer_search" placeholder="Name, email, or phone" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
                         </div>
-                        <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">To</label>
-                            <input type="date" v-model="filters.date_to" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
-                        </div>
-                    </div>
 
-                    <!-- Additional Filters -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <!-- Min BDT -->
                         <div>
-                            <label class="block text-[10px] text-gray-400 uppercase mb-1">Customer</label>
-                            <input type="text" v-model="filters.customer_search" placeholder="Name, email, or phone" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Min BDT</label>
+                            <input type="number" v-model="filters.min_total" placeholder="0" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[10px] text-gray-400 uppercase mb-1">Min BDT</label>
-                                <input type="number" v-model="filters.min_total" placeholder="0" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
-                            </div>
-                            <div>
-                                <label class="block text-[10px] text-gray-400 uppercase mb-1">Max BDT</label>
-                                <input type="number" v-model="filters.max_total" placeholder="1000" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
-                            </div>
+
+                        <!-- Max BDT -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Max BDT</label>
+                            <input type="number" v-model="filters.max_total" placeholder="1000" class="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 bg-gray-50/30" />
                         </div>
                     </div>
 
                     <!-- Filter Actions -->
-                    <div class="flex gap-2 justify-end">
-                        <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white rounded text-xs transition-colors hover:bg-blue-700">
-                            Apply
-                        </button>
-                        <button type="button" @click="resetFilters" class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded text-xs transition-colors hover:bg-gray-300">
+                    <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                        <button type="button" @click="resetFilters" class="flex-1 sm:flex-none px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">
                             Reset
+                        </button>
+                        <button type="submit" class="flex-1 sm:flex-none px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">
+                            Apply
                         </button>
                     </div>
                 </form>
             </div>
 
+            <!-- <pre>{{ orders }}</pre> -->
 
 
 
-            <!-- Orders Table -->
-            <div class="bg-white rounded-lg border border-gray-100 p-4 mb-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-                    <h3 class="text-xs font-medium text-gray-800 uppercase tracking-wider">Orders List</h3>
-                    <div class="flex gap-2">
-                        <button
-                            @click="exportToCSV"
-                            class="px-3 py-1 bg-emerald-600 text-white rounded text-[10px] hover:bg-emerald-700 transition-colors"
-                        >
-                            {{ selectedOrders.length > 0 ? `CSV (${selectedOrders.length})` : "Export CSV" }}
-                        </button>
-                        <button
-                            @click="exportToPDF"
-                            class="px-3 py-1 bg-rose-600 text-white rounded text-[10px] hover:bg-rose-700 transition-colors"
-                        >
-                            Export PDF
-                        </button>
+            <!-- Export & Financial Summary Card -->
+            <div class="bg-white rounded-xl border border-gray-100 p-4 sm:p-6 mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Left: Financial Metrics Summary -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filtered Financial Summary</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Grand Total Revenue Card -->
+                            <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 flex flex-col justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Grand Total Revenue</span>
+                                <span class="text-xl font-bold text-gray-800 tabular-nums">৳{{ grandTotalRevenue.toLocaleString() }}</span>
+                            </div>
+                            
+                            <!-- Grand Total Paid Card -->
+                            <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50 flex flex-col justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Grand Total Paid</span>
+                                <span class="text-xl font-bold text-gray-800 tabular-nums">৳{{ grandTotalPaid.toLocaleString() }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Record Count info -->
+                        <div class="text-xs text-gray-500 bg-gray-50/50 p-3 rounded-lg border border-gray-100/50 flex items-center justify-between">
+                            <span class="font-medium text-gray-600">Total Filtered Records</span>
+                            <span class="font-bold text-gray-800 font-mono">{{ orders.total }} orders</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-[11px]">
-                        <thead>
-                            <tr class="border-b border-gray-100 text-gray-400 uppercase tracking-tighter">
-                                <th class="text-left py-2 px-2">
-                                    <input
-                                        type="checkbox"
-                                        v-model="selectAll"
-                                        @change="toggleSelectAll"
-                                        class="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-200 rounded"
-                                    />
-                                </th>
-                                <th class="text-left py-2 px-2 font-normal">Order #</th>
-                                <th class="text-left py-2 px-2 font-normal">Date</th>
-                                <th class="text-left py-2 px-2 font-normal">Customer</th>
-                                <th class="text-left py-2 px-2 font-normal">Status</th>
-                                <th class="py-2 px-2 font-normal text-center">Source</th>
-                                <th class="text-left py-2 px-2 font-normal">Payment</th>
-                                <th class="text-right py-2 px-2 font-normal">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            <tr
-                                v-for="order in orders.data"
-                                :key="order.id"
-                                class="hover:bg-gray-50/50 transition-colors"
+                    <!-- Right: Quick Export Actions -->
+                    <div class="flex flex-col justify-center space-y-4">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Report Export Actions</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Export CSV Button -->
+                            <button
+                                @click="exportToCSV"
+                                class="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm text-xs font-bold uppercase tracking-wider transition-all"
                             >
-                                <td class="py-2 px-2">
-                                    <input
-                                        type="checkbox"
-                                        :value="order.id"
-                                        v-model="selectedOrders"
-                                        class="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-200 rounded"
-                                    />
-                                </td>
-                                <td class="py-2 px-2 text-blue-600 font-medium">#{{ order.order_number }}</td>
-                                <td class="py-2 px-2 text-gray-400 whitespace-nowrap">{{ formatDate(order.date) }}</td>
-                                <td class="py-2 px-2">
-                                    <div class="text-gray-700 font-medium leading-none mb-0.5">{{ order.customer_name || order.customer?.name }}</div>
-                                    <div class="text-[9px] text-gray-400 tabular-nums">{{ order.customer_phone || order.customer?.phone }}</div>
-                                </td>
-                                <td class="py-2 px-2">
-                                    <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-tight" :class="getStatusColor(order.status)">
-                                        {{ order.status }}
-                                    </span>
-                                </td>
-                                <td class="py-2 px-2 text-center">
-                                    <span class="text-[9px] text-gray-500 bg-gray-100/50 px-1.5 py-0.5 rounded border border-gray-200/50">
-                                        {{ order.source || 'website' }}
-                                    </span>
-                                </td>
-                                <td class="py-2 px-2">
-                                    <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-tight" :class="getPaymentStatusColor(order.payment_status)">
-                                        {{ order.payment_status }}
-                                    </span>
-                                </td>
-                                <td class="py-2 px-2 text-right font-medium text-gray-800 tabular-nums">৳{{ order.total }}</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-gray-50/30">
-                                <td colspan="3" class="py-3 px-2">
-                                    <div class="flex items-center gap-4 text-[10px]">
-                                        <div class="flex items-center gap-1">
-                                            <span class="text-gray-400 uppercase">Page Total:</span>
-                                            <span class="text-gray-800 font-medium">৳{{ calculateTotalAmount().toLocaleString() }}</span>
-                                        </div>
-                                        <div class="w-px h-3 bg-gray-200"></div>
-                                        <div class="flex items-center gap-1">
-                                            <span class="text-gray-400 uppercase">Grand Total:</span>
-                                            <span class="text-blue-600 font-medium">৳{{ grandTotalRevenue.toLocaleString() }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td colspan="5" class="py-3 px-2 text-right">
-                                    <p class="text-[9px] text-gray-400 italic">Showing {{ orders.from }}-{{ orders.to }} of {{ orders.total }} records</p>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="mt-4 flex items-center justify-end">
-                    <div class="flex gap-1">
-                        <button
-                            v-for="link in orders.links"
-                            :key="link.label"
-                            @click="changePage(link.url)"
-                            :disabled="!link.url"
-                            class="px-2 py-1 text-[10px] border rounded transition-colors"
-                            :class="
-                                link.active
-                                    ? 'bg-blue-600 text-white border-blue-600'
-                                    : !link.url
-                                    ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                            "
-                            v-html="link.label"
-                        ></button>
+                                <Download :size="14" />
+                                <span>Export CSV</span>
+                            </button>
+                            
+                            <!-- Export PDF Button -->
+                            <!-- <button
+                                @click="exportToPDF"
+                                class="flex items-center justify-center gap-2 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm text-xs font-bold uppercase tracking-wider transition-all"
+                            >
+                                <FileText :size="14" />
+                                <span>Export PDF</span>
+                            </button> -->
+                        </div>
+                        <p class="text-[10px] text-gray-400 text-center lg:text-left">
+                            Export actions will automatically apply all filters selected above to generate the exported file.
+                        </p>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -462,6 +399,7 @@ import { ref, reactive, onMounted, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import { jsPDF } from "jspdf";
 import VueApexCharts from "vue3-apexcharts";
+import { ORDER_STATUS_OPTIONS } from "@/Components/Order/statusOptions.js";
 import { 
     Package, 
     ShoppingCart, 
@@ -486,6 +424,7 @@ import {
 const props = defineProps({
     orders: Object,
     grandTotalRevenue: Number,
+    grandTotalPaid: Number,
     totalProducts: Number,
     totalVariations: Number,
     totalStock: Number,
@@ -515,32 +454,119 @@ const filters = reactive({
 const selectedOrders = ref([]);
 const selectAll = ref(false);
 
+// Process Category Data for Donut Chart (Top 5 + Others)
+const processedPieData = computed(() => {
+    const categories = Object.entries(props.productsByCategory || {});
+    if (categories.length === 0) return { labels: [], series: [] };
+
+    // Sort by stock descending
+    categories.sort((a, b) => b[1].stock - a[1].stock);
+
+    const topLimit = 5;
+    if (categories.length <= topLimit + 1) {
+        return {
+            labels: categories.map(c => c[0]),
+            series: categories.map(c => c[1].stock)
+        };
+    }
+
+    const topCategories = categories.slice(0, topLimit);
+    const otherCategories = categories.slice(topLimit);
+
+    const otherStock = otherCategories.reduce((sum, c) => sum + c[1].stock, 0);
+
+    const labels = topCategories.map(c => c[0]);
+    const series = topCategories.map(c => c[1].stock);
+
+    if (otherStock > 0) {
+        labels.push("Others");
+        series.push(otherStock);
+    }
+
+    return { labels, series };
+});
+
+// Process Category Data for Bar Chart (Top 10 sorted by Sell-Through Rate)
+const processedBarData = computed(() => {
+    const categories = Object.entries(props.productsByCategory || {});
+    if (categories.length === 0) return { categories: [], seriesData: [] };
+
+    // Sort by sell_through_rate descending and limit to top 10
+    const sortedCategories = categories
+        .filter(c => (c[1].stock + c[1].sold) > 0)
+        .sort((a, b) => b[1].sell_through_rate - a[1].sell_through_rate)
+        .slice(0, 10);
+
+    return {
+        categories: sortedCategories.map(c => c[0]),
+        seriesData: sortedCategories.map(c => parseFloat(c[1].sell_through_rate.toFixed(1)))
+    };
+});
+
 // Chart Configurations
 const inventoryPieOptions = computed(() => ({
     chart: { type: 'donut', fontFamily: 'Inter, sans-serif', toolbar: { show: false } },
-    labels: Object.keys(props.productsByCategory),
-    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
-    legend: { position: 'bottom' },
-    plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Categories' } } } } },
+    labels: processedPieData.value.labels,
+    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280'],
+    legend: { 
+        position: 'bottom',
+        fontSize: '10px',
+        labels: { colors: '#4b5563' },
+        markers: { radius: 12 }
+    },
+    plotOptions: { 
+        pie: { 
+            donut: { 
+                size: '70%', 
+                labels: { 
+                    show: true, 
+                    total: { 
+                        show: true, 
+                        label: 'Top Categories',
+                        fontSize: '11px',
+                        color: '#9ca3af',
+                        formatter: function (w) {
+                            return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                        }
+                    } 
+                } 
+            } 
+        } 
+    },
     dataLabels: { enabled: false }
 }));
 
-const inventoryPieSeries = computed(() => 
-    Object.values(props.productsByCategory).map(cat => cat.stock)
-);
+const inventoryPieSeries = computed(() => processedPieData.value.series);
 
 const sellThroughBarOptions = computed(() => ({
-    chart: { type: 'bar', toolbar: { show: false } },
+    chart: { 
+        type: 'bar', 
+        fontFamily: 'Inter, sans-serif',
+        toolbar: { show: false } 
+    },
     plotOptions: { bar: { borderRadius: 4, horizontal: true } },
     colors: ['#3b82f6'],
-    xaxis: { categories: Object.keys(props.productsByCategory) },
-    title: { text: 'Sell-Through Rate (%)', align: 'center', style: { fontSize: '14px', fontWeight: 600 } },
+    xaxis: { 
+        categories: processedBarData.value.categories,
+        labels: { style: { fontSize: '9px', colors: '#6b7280' } }
+    },
+    yaxis: {
+        labels: { 
+            style: { fontSize: '9px', colors: '#4b5563', fontWeight: 500 },
+            maxWidth: 100
+        }
+    },
+    title: { 
+        text: 'Top 10 Categories by Sell-Through Rate (%)', 
+        align: 'center', 
+        style: { fontSize: '11px', fontWeight: 600, color: '#374151' } 
+    },
     grid: { borderColor: '#f1f1f1' }
 }));
 
 const sellThroughBarSeries = computed(() => [{
     name: 'Sell-Through Rate',
-    data: Object.values(props.productsByCategory).map(cat => parseFloat(cat.sell_through_rate.toFixed(1)))
+    data: processedBarData.value.seriesData
 }]);
 
 // Initialize filters with URL parameters on mount
@@ -615,6 +641,20 @@ const calculateTotalAmount = () => {
     );
 };
 
+// Calculate total paid amount of selected orders
+const calculateTotalPaidAmount = () => {
+    const ordersToSum =
+        selectedOrders.value.length > 0
+            ? props.orders.data.filter((order) =>
+                  selectedOrders.value.includes(order.id)
+              )
+            : props.orders.data;
+    return ordersToSum.reduce(
+        (total, order) => total + parseFloat(order.paid_amount || 0),
+        0
+    );
+};
+
 // Export to CSV function
 const exportToCSV = () => {
     // If no orders selected, export ALL data across ALL pages via backend
@@ -640,8 +680,21 @@ const exportToCSV = () => {
         "Date",
         "Customer Name",
         "Customer Phone",
+        "Address",
+        "District",
+        "Thana",
         "Status",
+        "Source",
         "Payment Status",
+        "Payment Method",
+        "Transaction ID",
+        "Courier Name",
+        "Tracking Number",
+        "Products",
+        "Subtotal",
+        "Shipping Cost",
+        "Discount",
+        "Paid Amount",
         "Total Amount",
     ];
 
@@ -650,23 +703,53 @@ const exportToCSV = () => {
         // Add headers
         headers.join(","),
         // Add data rows
-        ...selectedData.map((order) =>
-            [
+        ...selectedData.map((order) => {
+            const productDetails = (order.items || []).map(item => {
+                let name = item.product?.name || "Deleted Product";
+                let qty = item.quantity;
+                let variationStr = "";
+                if (item.variation && item.variation.attributes) {
+                    const attrs = Object.entries(item.variation.attributes)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(", ");
+                    if (attrs) {
+                        variationStr = ` (${attrs})`;
+                    }
+                }
+                return `${name} x ${qty}${variationStr}`;
+            }).join("; ");
+
+            return [
                 `"#${order.order_number}"`,
                 `"${formatDate(order.date)}"`,
-                `"${order.customer_name || order.customer?.name}"`,
-                `"${order.customer_phone || order.customer?.phone}"`,
+                `"${order.customer_name || order.customer?.name || 'N/A'}"`,
+                `"${order.customer_phone || order.customer?.phone || 'N/A'}"`,
+                `"${(order.customer?.address || order.shipping_address || 'N/A').replace(/"/g, '""')}"`,
+                `"${order.customer?.district || order.shipping_district || 'N/A'}"`,
+                `"${order.customer?.thana || order.shipping_thana || 'N/A'}"`,
                 `"${order.status}"`,
+                `"${order.source || 'website'}"`,
                 `"${order.payment_status}"`,
+                `"${order.payment_method || 'N/A'}"`,
+                `"${order.transaction_id || 'N/A'}"`,
+                `"${order.courier_name || 'N/A'}"`,
+                `"${order.tracking_number || 'N/A'}"`,
+                `"${productDetails.replace(/"/g, '""')}"`,
+                `"BDT ${order.subtotal || 0}"`,
+                `"BDT ${order.shipping_cost || 0}"`,
+                `"BDT ${order.discount_total || 0}"`,
+                `"BDT ${order.paid_amount || 0}"`,
                 `"BDT ${order.total}"`,
             ].join(",")
-        ),
+        }),
     ].join("\n");
 
-    // Add Grand Total row for context (Big Tech Standard)
-    if (selectedOrders.value.length === 0) {
-        csvContent += `\n\n"","","","","","GRAND TOTAL (All Filtered Pages)","BDT ${props.grandTotalRevenue}"`;
-    }
+    // Add Grand Total row for context
+    const grandTotalRow = Array(17).fill('""');
+    grandTotalRow.push('"GRAND TOTAL"');
+    grandTotalRow.push(`"BDT ${calculateTotalPaidAmount()}"`);
+    grandTotalRow.push(`"BDT ${calculateTotalAmount()}"`);
+    csvContent += `\n\n${grandTotalRow.join(",")}`;
 
     // Create and download CSV file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -677,14 +760,9 @@ const exportToCSV = () => {
         link.setAttribute("href", url);
 
         // Generate filename based on selection
-        const filename =
-            selectedOrders.value.length > 0
-                ? `selected_orders_${selectedOrders.value.length}_${
-                      new Date().toISOString().split("T")[0]
-                  }.csv`
-                : `all_orders_${selectedData.length}_${
-                      new Date().toISOString().split("T")[0]
-                  }.csv`;
+        const filename = `selected_orders_${selectedOrders.value.length}_${
+            new Date().toISOString().split("T")[0]
+        }.csv`;
 
         link.setAttribute("download", filename);
         link.style.visibility = "hidden";
@@ -740,24 +818,35 @@ const exportToPDF = () => {
         "Order #",
         "Date",
         "Customer",
-        "Status",
-        "Payment",
-        "Total",
+        "Products",
+        "Payment & Courier",
+        "Amount",
     ];
-    const columnWidths = [25, 35, 55, 25, 25, 20];
+    const columnWidths = [25, 20, 45, 45, 30, 25]; // total: 190
     const startX = margin;
 
-    const drawTableRow = (rowData, isHeader = false, rowHeight = 10) => {
+    const drawTableRow = (rowData, isHeader = false) => {
+        // Calculate maximum lines
+        let maxLines = 1;
+        rowData.forEach((cellData, idx) => {
+            if (typeof cellData === "string") {
+                const lines = doc.splitTextToSize(cellData, columnWidths[idx] - 4);
+                if (lines.length > maxLines) {
+                    maxLines = lines.length;
+                }
+            }
+        });
+        const rowHeight = isHeader ? 10 : Math.max(12, maxLines * 4.5 + 4);
+
         let currentX = startX;
 
         // Draw each cell
         rowData.forEach((cellData, index) => {
             const cellWidth = columnWidths[index];
 
-            // IMPORTANT: Set colors BEFORE drawing each cell
-            doc.setFillColor(255, 255, 255); // White background
-            doc.setDrawColor(0, 0, 0); // Black border
-            doc.setTextColor(0, 0, 0); // Black text
+            doc.setFillColor(255, 255, 255);
+            doc.setDrawColor(0, 0, 0);
+            doc.setTextColor(0, 0, 0);
 
             if (isHeader) {
                 doc.setFont("helvetica", "bold");
@@ -765,25 +854,18 @@ const exportToPDF = () => {
                 doc.setFont("helvetica", "normal");
             }
 
-            // Fill cell with white background and draw border
             doc.rect(currentX, y, cellWidth, rowHeight, "FD");
 
-            // Add text with proper padding
             const textX = currentX + 2;
-            const textY = y + 7;
+            const textY = y + 5;
 
-            if (typeof cellData === "string" && cellData.includes("\n")) {
-                // Handle multi-line text
-                const lines = cellData.split("\n");
+            if (typeof cellData === "string") {
+                const lines = doc.splitTextToSize(cellData, cellWidth - 4);
                 lines.forEach((line, lineIndex) => {
-                    doc.text(line, textX, textY + lineIndex * 4, {
-                        maxWidth: cellWidth - 4,
-                    });
+                    doc.text(line, textX, textY + lineIndex * 4);
                 });
             } else {
-                doc.text(String(cellData), textX, textY, {
-                    maxWidth: cellWidth - 4,
-                });
+                doc.text(String(cellData), textX, textY);
             }
 
             currentX += cellWidth;
@@ -808,18 +890,49 @@ const exportToPDF = () => {
 
     // Draw table rows
     selectedData.forEach((order, index) => {
-        checkPageBreak(15);
+        const productDetails = (order.items || []).map(item => {
+            let name = item.product?.name || "Deleted Product";
+            let qty = item.quantity;
+            let variationStr = "";
+            if (item.variation && item.variation.attributes) {
+                const attrs = Object.entries(item.variation.attributes)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(", ");
+                if (attrs) {
+                    variationStr = ` (${attrs})`;
+                }
+            }
+            return `${name} x ${qty}${variationStr}`;
+        }).join("\n");
+
+        const paymentCourierStr = `Status: ${order.payment_status}\nMethod: ${order.payment_method || 'N/A'}\nCourier: ${order.courier_name || 'N/A'}\nTrack: ${order.tracking_number || 'N/A'}`;
+
+        const customerStr = `${order.customer?.name || order.customer_name || 'N/A'}\n${order.customer?.phone || order.customer_phone || 'N/A'}\n${order.customer?.address || order.shipping_address || 'N/A'}`;
 
         const row = [
-            `#${order.order_number}`,
+            `#${order.order_number}\nSource: ${order.source || 'website'}`,
             formatDate(order.date),
-            `${order.customer_name || order.customer?.name}\n${order.customer_phone || order.customer?.phone}`,
-            order.status,
-            order.payment_status,
-            `BDT ${order.total}`,
+            customerStr,
+            productDetails,
+            paymentCourierStr,
+            `Total: BDT ${order.total}\nPaid: BDT ${order.paid_amount || 0}`,
         ];
 
-        drawTableRow(row, false, 12);
+        // Calculate height to check page break
+        let maxLines = 1;
+        row.forEach((cellData, idx) => {
+            if (typeof cellData === "string") {
+                const lines = doc.splitTextToSize(cellData, columnWidths[idx] - 4);
+                if (lines.length > maxLines) {
+                    maxLines = lines.length;
+                }
+            }
+        });
+        const rowHeight = Math.max(12, maxLines * 4.5 + 4);
+
+        checkPageBreak(rowHeight + 10);
+
+        drawTableRow(row, false);
     });
 
     // Total Amount section
@@ -833,14 +946,14 @@ const exportToPDF = () => {
     const tableWidth = columnWidths.reduce((a, b) => a + b, 0);
     doc.rect(startX, y, tableWidth, 20, "FD");
     doc.text(
-        `Current Page Total: BDT ${calculateTotalAmount().toLocaleString()}`,
+        `Current Page: Total BDT ${calculateTotalAmount().toLocaleString()} | Paid BDT ${calculateTotalPaidAmount().toLocaleString()}`,
         startX + 5,
         y + 8
     );
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.text(
-        `GRAND TOTAL (ALL PAGES): BDT ${props.grandTotalRevenue.toLocaleString()}`,
+        `GRAND TOTAL (ALL PAGES): Total BDT ${props.grandTotalRevenue.toLocaleString()} | Paid BDT ${(props.grandTotalPaid || 0).toLocaleString()}`,
         startX + 5,
         y + 16
     );

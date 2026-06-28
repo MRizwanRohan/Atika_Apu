@@ -8,6 +8,7 @@ defineProps({
     attributeValues: Array,
     categories: Array,
     brands: Array,
+    returnTo: String,
 });
 </script>
 
@@ -20,6 +21,7 @@ defineProps({
             :attribute-values="attributeValues"
             :categories="categories"
             :brands="brands"
+            :return-to="returnTo"
         />
     </AdminLayout>
 </template>

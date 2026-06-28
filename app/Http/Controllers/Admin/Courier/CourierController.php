@@ -308,48 +308,42 @@ class CourierController extends Controller
     /**
      * View courier dashboard with reports
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $stats = [
-            'total' => $this->getOrderByStatus(null),
-            'dhaka' => $this->getOrderByStatus('Dhaka'),
-            'outside' => $this->getOrderByStatus('outside'),
+            'total' => $this->getOrderByStatus(null, $request),
+            'dhaka' => $this->getOrderByStatus('Dhaka', $request),
+            'outside' => $this->getOrderByStatus('outside', $request),
         ];
 
         return Inertia::render('Admin/Courier/Dashboard', [
             'stats' => $stats,
-            'locations' => $this->districtWiseOrders()
+            'locations' => $this->districtWiseOrders($request),
+            'filters' => [
+                'period' => $request->input('period', 'all'),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+            ]
         ]);
     }
 
-    private function districtWiseOrders()
+    private function districtWiseOrders(Request $request = null)
     {
-        $districtCounts = \Illuminate\Support\Facades\DB::table('orders')
-            ->select('shipping_district', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total_orders'))
+        $query = \Illuminate\Support\Facades\DB::table('orders')
+            ->select('shipping_district as district', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total_orders'))
             ->where('is_courier', 1)
-            ->whereNotNull('shipping_district')
-            ->groupBy('shipping_district')
+            ->whereNotNull('shipping_district');
+
+        if ($request) {
+            $this->applyDateFilters($query, $request);
+        }
+
+        return $query->groupBy('shipping_district')
+            ->orderByRaw('COUNT(*) DESC')
             ->get();
-
-        // Load district coordinates
-        $geoData = collect(json_decode(file_get_contents(public_path('jsondata/bd_locations.js')), true));
-
-        // Merge coordinates with counts
-        $locations = $districtCounts->map(function ($item) use ($geoData) {
-            $match = $geoData->firstWhere('district', $item->shipping_district);
-
-            return [
-                'district' => $item->shipping_district,
-                'total_orders' => $item->total_orders,
-                'lat' => $match['lat'] ?? null,
-                'lng' => $match['lng'] ?? null,
-            ];
-        });
-
-        return $locations;
     }
 
-    private function getOrderByStatus($district = null)
+    private function getOrderByStatus($district = null, Request $request = null)
     {
         $query = Order::where('is_courier', 1);
 
@@ -359,10 +353,36 @@ class CourierController extends Controller
             $query->where('shipping_district', '!=', 'Dhaka');
         }
 
+        if ($request) {
+            $this->applyDateFilters($query, $request);
+        }
+
         return $query->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
             ->groupBy('status')
             ->get()
             ->pluck('count', 'status')
             ->toArray();
+    }
+
+    private function applyDateFilters($query, Request $request)
+    {
+        $period = $request->input('period', 'all');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+
+        if ($period === 'today') {
+            $query->whereDate('created_at', today());
+        } elseif ($period === 'weekly') {
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($period === 'monthly') {
+            $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($period === 'custom') {
+            if ($dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+        }
     }
 }

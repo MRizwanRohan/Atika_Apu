@@ -230,7 +230,6 @@ class OrderController extends Controller
                 'bkash' => 'BKash',
                 'nagad' => 'Nagad',
                 'rocket' => 'Rocket',
-                'bank_transfer' => 'Bank Transfer'
             ];
 
             // Get order statuses for dropdown
@@ -943,6 +942,29 @@ class OrderController extends Controller
         $pdf = Pdf::loadView('invoices.bulk', ['orders' => $orders]);
 
         return $pdf->download('bulk-invoices.pdf');
+    }
+
+    public function singleInvoice(Order $order)
+    {
+        $order->load([
+            'items.product',
+            'items.productVariation',
+            'items.productVariation.attributes.value' => function ($query) {
+                $query->withTrashed();
+            },
+            'items.productVariation.attributes.value.attribute' => function ($query) {
+                $query->withTrashed();
+            }
+        ]);
+
+        $settings = GeneralSetting::select('app_name', 'address', 'store_email', 'store_phone_number')->first();
+        $logo = Media::select('logo')->first();
+
+        return view('invoices.single-print', [
+            'order' => $order,
+            'settings' => $settings,
+            'logo' => $logo
+        ]);
     }
 
 

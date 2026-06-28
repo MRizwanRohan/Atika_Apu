@@ -54,13 +54,13 @@ class CategoryService
             // Check if soft-deleted category with same name exists
             $existingCategory = Category::withTrashed()
                 ->where('name', $data['name'])
-                ->where('parent_id', $data['parent_id'] ?? null)
                 ->first();
 
             if ($existingCategory && $existingCategory->trashed()) {
                 // Restore soft-deleted category
                 $existingCategory->restore();
                 $existingCategory->update([
+                    'parent_id' => $data['parent_id'] ?? null,
                     'image' => $imagePath ?? $existingCategory->image,
                     'icon' => $iconPath ?? $existingCategory->icon,
                     'order' => $data['order'] ?? 0,

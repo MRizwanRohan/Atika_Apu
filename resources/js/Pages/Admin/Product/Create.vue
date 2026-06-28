@@ -6,13 +6,14 @@ import ProductForm from '@/Components/Product/ProductForm.vue';
 defineProps({
   attributeValues: Array,
   categories: Array,
-  brands: Array
+  brands: Array,
+  returnTo: String,
 });
 </script>
 
 <template>
   <Head title="Create Product" />
   <AdminLayout>
-    <ProductForm :attribute-values="attributeValues" :categories="categories" :brands="brands" />
+    <ProductForm :attribute-values="attributeValues" :categories="categories" :brands="brands" :return-to="returnTo" />
   </AdminLayout>
 </template>

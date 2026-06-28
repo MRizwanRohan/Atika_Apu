@@ -47,8 +47,8 @@ public function generateReport(Request $request)
         'sort_direction' => $sortDirection,
     ]);
 
-    // 1b. Calculate Grand Total Revenue (All Filtered Results - Big Tech Standard)
-    $grandTotalRevenue = \App\Models\Order::query()
+    // 1b. Calculate Grand Total Revenue & Paid Amount (All Filtered Results - Big Tech Standard)
+    $grandTotalQuery = \App\Models\Order::query()
         ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
         ->when($filters['payment_status'], fn($q) => $q->where('payment_status', $filters['payment_status']))
         ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
@@ -56,15 +56,18 @@ public function generateReport(Request $request)
         ->when($filters['customer_search'], function($q) use ($filters) {
             $q->whereHas('customer', function($cq) use ($filters) {
                 $cq->where('name', 'like', "%{$filters['customer_search']}%")
-                   ->orWhere('email', 'like', "%{$filters['customer_search']}%");
+                   ->orWhere('email', 'like', "%{$filters['customer_search']}%")
+                   ->orWhere('phone', 'like', "%{$filters['customer_search']}%");
             });
         })
         ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
         ->when($filters['max_total'], fn($q) => $q->where('total', '<=', $filters['max_total']))
         ->when($filters['order_number'], fn($q) => $q->where('order_number', 'like', "%{$filters['order_number']}%"))
         ->when($filters['source'], fn($q) => $q->where('source', $filters['source']))
-        ->when($filters['delivery_status'], fn($q) => $q->where('delivery_status', $filters['delivery_status']))
-        ->sum('total');
+        ->when($filters['delivery_status'], fn($q) => $q->where('delivery_status', $filters['delivery_status']));
+
+    $grandTotalRevenue = $grandTotalQuery->sum('total');
+    $grandTotalPaid = $grandTotalQuery->sum('paid_amount');
 
     // 2. Extract Inventory Stats (Cached for 10 minutes)
     $report = \Cache::remember('inventory_dashboard_report', 600, function () {
@@ -151,6 +154,7 @@ public function generateReport(Request $request)
     return Inertia::render('Admin/Reports/Index', array_merge([
         'orders' => $orders,
         'grandTotalRevenue' => (float) $grandTotalRevenue,
+        'grandTotalPaid' => (float) $grandTotalPaid,
         'sourceStats' => $sourceStats,
         'overallSellThroughRate' => ($report['totalStock'] + $report['totalSold']) > 0 
             ? ($report['totalSold'] / ($report['totalStock'] + $report['totalSold'])) * 100 
@@ -174,7 +178,15 @@ public function exportOrders(Request $request)
     ];
 
     $orders = \App\Models\Order::query()
-        ->with('customer')
+        ->with([
+            'customer',
+            'items.product',
+            'items.productVariation.attributeValues' => function($q) {
+                $q->withTrashed()->with(['attribute' => function($a) {
+                    $a->withTrashed();
+                }]);
+            }
+        ])
         ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
         ->when($filters['payment_status'], fn($q) => $q->where('payment_status', $filters['payment_status']))
         ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
@@ -182,7 +194,8 @@ public function exportOrders(Request $request)
         ->when($filters['customer_search'], function($q) use ($filters) {
             $q->whereHas('customer', function($cq) use ($filters) {
                 $cq->where('name', 'like', "%{$filters['customer_search']}%")
-                   ->orWhere('email', 'like', "%{$filters['customer_search']}%");
+                   ->orWhere('email', 'like', "%{$filters['customer_search']}%")
+                   ->orWhere('phone', 'like', "%{$filters['customer_search']}%");
             });
         })
         ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
@@ -204,25 +217,84 @@ public function exportOrders(Request $request)
 
     $callback = function() use($orders) {
         $file = fopen('php://output', 'w');
-        fputcsv($file, ['Order #', 'Date', 'Customer Name', 'Customer Phone', 'Status', 'Payment Status', 'Total Amount']);
+        fputcsv($file, [
+            'Order #',
+            'Date',
+            'Customer Name',
+            'Customer Phone',
+            'Address',
+            'District',
+            'Thana',
+            'Status',
+            'Source',
+            'Payment Status',
+            'Payment Method',
+            'Transaction ID',
+            'Courier Name',
+            'Tracking Number',
+            'Products',
+            'Subtotal',
+            'Shipping Cost',
+            'Discount',
+            'Paid Amount',
+            'Total Amount'
+        ]);
 
         $grandTotal = 0;
+        $grandPaidTotal = 0;
         foreach ($orders as $order) {
+            $productDetails = [];
+            foreach ($order->items as $item) {
+                $pName = $item->product->name ?? 'Deleted Product';
+                $pQty = $item->quantity;
+                $vAttrs = [];
+                if ($item->productVariation && $item->productVariation->attributeValues) {
+                    foreach ($item->productVariation->attributeValues as $val) {
+                        if ($val->attribute) {
+                            $vAttrs[] = "{$val->attribute->name}: {$val->value}";
+                        }
+                    }
+                }
+                $vStr = count($vAttrs) > 0 ? ' (' . implode(', ', $vAttrs) . ')' : '';
+                $productDetails[] = "{$pName} x {$pQty}{$vStr}";
+            }
+            $productsString = implode('; ', $productDetails);
+
             $row = [
                 '#' . $order->order_number,
                 $order->created_at->format('Y-m-d H:i'),
                 $order->customer_name ?? ($order->customer->name ?? 'N/A'),
                 $order->customer_phone ?? ($order->customer->phone ?? 'N/A'),
+                $order->shipping_address ?? ($order->customer->address ?? 'N/A'),
+                $order->shipping_district ?? ($order->customer->district ?? 'N/A'),
+                $order->shipping_thana ?? ($order->customer->thana ?? 'N/A'),
                 $order->status,
+                $order->source ?? 'website',
                 $order->payment_status,
+                $order->payment_method ?? 'N/A',
+                $order->transaction_id ?? 'N/A',
+                $order->courier_name ?? 'N/A',
+                $order->tracking_number ?? 'N/A',
+                $productsString,
+                'BDT ' . ($order->subtotal ?? 0),
+                'BDT ' . ($order->shipping_cost ?? 0),
+                'BDT ' . ($order->discount_total ?? 0),
+                'BDT ' . ($order->paid_amount ?? 0),
                 'BDT ' . $order->total,
             ];
             fputcsv($file, $row);
             $grandTotal += $order->total;
+            $grandPaidTotal += $order->paid_amount;
         }
 
         fputcsv($file, []); // Empty line
-        fputcsv($file, ['', '', '', '', '', 'GRAND TOTAL', 'BDT ' . $grandTotal]);
+        
+        $grandTotalRow = array_fill(0, 17, '');
+        $grandTotalRow[17] = 'GRAND TOTAL';
+        $grandTotalRow[18] = 'BDT ' . $grandPaidTotal;
+        $grandTotalRow[19] = 'BDT ' . $grandTotal;
+        fputcsv($file, $grandTotalRow);
+        
         fclose($file);
     };
 
@@ -245,7 +317,15 @@ public function exportOrdersPDF(Request $request)
     ];
 
     $orders = \App\Models\Order::query()
-        ->with('customer')
+        ->with([
+            'customer',
+            'items.product',
+            'items.productVariation.attributeValues' => function($q) {
+                $q->withTrashed()->with(['attribute' => function($a) {
+                    $a->withTrashed();
+                }]);
+            }
+        ])
         ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
         ->when($filters['payment_status'], fn($q) => $q->where('payment_status', $filters['payment_status']))
         ->when($filters['date_from'], fn($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
@@ -253,7 +333,8 @@ public function exportOrdersPDF(Request $request)
         ->when($filters['customer_search'], function($q) use ($filters) {
             $q->whereHas('customer', function($cq) use ($filters) {
                 $cq->where('name', 'like', "%{$filters['customer_search']}%")
-                   ->orWhere('email', 'like', "%{$filters['customer_search']}%");
+                   ->orWhere('email', 'like', "%{$filters['customer_search']}%")
+                   ->orWhere('phone', 'like', "%{$filters['customer_search']}%");
             });
         })
         ->when($filters['min_total'], fn($q) => $q->where('total', '>=', $filters['min_total']))
@@ -268,27 +349,68 @@ public function exportOrdersPDF(Request $request)
 
     // Create a simple HTML view for PDF
     $html = '<html><head><style>
-        body { font-family: sans-serif; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 12px; }
+        body { font-family: sans-serif; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 10px; word-wrap: break-word; vertical-align: top; }
         th { background-color: #f8f9fa; font-weight: bold; }
-        .footer { margin-top: 20px; text-align: right; font-weight: bold; font-size: 16px; border-top: 2px solid #000; padding-top: 10px; }
+        .footer { margin-top: 20px; text-align: right; font-weight: bold; font-size: 14px; border-top: 2px solid #000; padding-top: 10px; }
         .header { text-align: center; margin-bottom: 20px; }
     </style></head><body>';
     
     $html .= '<div class="header"><h1>Inventory Sales Report</h1><p>Full Filtered Report - Generated on: '.date('Y-m-d').'</p></div>';
     
-    $html .= '<table><thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Status</th><th>Payment</th><th style="text-align: right;">Total</th></tr></thead><tbody>';
+    $html .= '<table><thead><tr>
+        <th style="width: 15%;">Order & Source</th>
+        <th style="width: 12%;">Date</th>
+        <th style="width: 23%;">Customer & Address</th>
+        <th style="width: 25%;">Products</th>
+        <th style="width: 15%;">Payment & Courier</th>
+        <th style="width: 10%; text-align: right;">Total</th>
+    </tr></thead><tbody>';
     
     foreach ($orders as $order) {
         $name = $order->customer_name ?? ($order->customer->name ?? 'N/A');
         $phone = $order->customer_phone ?? ($order->customer->phone ?? 'N/A');
+        $address = $order->shipping_address ?? ($order->customer->address ?? 'N/A');
+        $district = $order->shipping_district ?? ($order->customer->district ?? '');
+        $thana = $order->shipping_thana ?? ($order->customer->thana ?? '');
+        
+        $locationParts = array_filter([$address, $thana, $district]);
+        $fullAddress = implode(', ', $locationParts);
+        if (empty($fullAddress)) {
+            $fullAddress = 'N/A';
+        }
+
+        $productDetails = [];
+        foreach ($order->items as $item) {
+            $pName = $item->product->name ?? 'Deleted Product';
+            $pQty = $item->quantity;
+            $vAttrs = [];
+            if ($item->productVariation && $item->productVariation->attributeValues) {
+                foreach ($item->productVariation->attributeValues as $val) {
+                    if ($val->attribute) {
+                        $vAttrs[] = "{$val->attribute->name}: {$val->value}";
+                    }
+                }
+            }
+            $vStr = count($vAttrs) > 0 ? ' (' . implode(', ', $vAttrs) . ')' : '';
+            $productDetails[] = "<li>{$pName} x {$pQty}{$vStr}</li>";
+        }
+        $productsHtml = count($productDetails) > 0 ? '<ul style="margin: 0; padding-left: 15px;">' . implode('', $productDetails) . '</ul>' : 'N/A';
+
+        $source = $order->source ?? 'website';
+        
+        $paymentCourier = "<strong>Status:</strong> {$order->payment_status}<br>" .
+                         "<strong>Method:</strong> " . ($order->payment_method ?? 'N/A') . "<br>" .
+                         "<strong>Courier:</strong> " . ($order->courier_name ?? 'N/A') . "<br>" .
+                         "<strong>Track:</strong> " . ($order->tracking_number ?? 'N/A');
+
         $html .= "<tr>
-            <td>#{$order->order_number}</td>
-            <td>{$order->created_at->format('M d, Y')}</td>
-            <td>{$name}<br><small style='color: #666;'>{$phone}</small></td>
-            <td>{$order->status}</td>
-            <td>{$order->payment_status}</td>
+            <td>#{$order->order_number}<br><small style='color: #666;'>Source: {$source}</small></td>
+            <td>{$order->created_at->format('M d, Y')}<br><small style='color: #666;'>{$order->created_at->format('H:i')}</small></td>
+            <td><strong>{$name}</strong><br>{$phone}<br><small style='color: #555;'>{$fullAddress}</small></td>
+            <td>{$productsHtml}</td>
+            <td>{$paymentCourier}</td>
             <td style='text-align: right; font-weight: bold;'>BDT ".number_format($order->total)."</td>
         </tr>";
     }

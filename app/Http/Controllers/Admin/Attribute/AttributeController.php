@@ -18,9 +18,9 @@ class AttributeController extends Controller
      */
     public function index()
     {
-        $attrList = Attribute::global()->with(['values' => function ($query) {
-    $query->orderBy('value', 'asc');
-}])->get();
+        $attrList = Attribute::with(['product', 'values' => function ($query) {
+            $query->orderBy('value', 'asc');
+        }])->get();
 
 
         return Inertia::render('Admin/Attribute/Index', [
@@ -140,14 +140,14 @@ public function store(Request $request)
      */
     public function edit($id)
     {
-        $attribute = Attribute::global()->with(['values' => function ($query) {
-    $query->orderBy('value', 'asc');
-}])->findOrFail($id);
+        $attribute = Attribute::with(['values' => function ($query) {
+            $query->orderBy('value', 'asc');
+        }])->findOrFail($id);
 
         return Inertia::render('Admin/Attribute/Index', [
-            'attrList' => Attribute::global()->with(['values' => function ($query) {
-    $query->orderBy('value', 'asc');
-}])->get(),
+            'attrList' => Attribute::with(['product', 'values' => function ($query) {
+                $query->orderBy('value', 'asc');
+            }])->get(),
             'editingAttribute' => $attribute
         ]);
     }

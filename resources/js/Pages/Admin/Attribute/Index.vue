@@ -283,9 +283,19 @@ const editAttr = (id) => {
                                     <div>
                                         <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">{{ attr.name }}</h3>
                                         <div class="flex items-center gap-2 mt-0.5">
-                                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">#{{ attr.id }}</span>
-                                            <div class="w-1 h-1 rounded-full bg-gray-300"></div>
                                             <span class="text-[10px] text-indigo-500/70 font-bold uppercase tracking-widest">{{ attr.values.length }} Values</span>
+                                            <template v-if="attr.product_id">
+                                                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                                                <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest" :title="attr.product ? attr.product.name : 'Product ID: ' + attr.product_id">
+                                                    Custom ({{ attr.product ? (attr.product.name.length > 25 ? attr.product.name.substring(0, 25) + '...' : attr.product.name) : 'ID: ' + attr.product_id }})
+                                                </span>
+                                            </template>
+                                            <template v-else>
+                                                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                                                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest">
+                                                    Global
+                                                </span>
+                                            </template>
                                         </div>
                                     </div>
                                 </div>

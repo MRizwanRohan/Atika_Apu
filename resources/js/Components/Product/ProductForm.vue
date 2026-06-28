@@ -51,9 +51,14 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    returnTo: {
+        type: String,
+        default: "",
+    },
 });
 
 const isEditMode = computed(() => !!props.product);
+const indexUrl = computed(() => props.returnTo || route("admin.products.index"));
 const isLayoutReady = ref(false);
 const editor = ClassicEditor;
 
@@ -349,6 +354,7 @@ const form = useForm({
     meta_title: "",
     meta_description: "",
     variations: [],
+    return_to: props.returnTo,
 });
 
 const page = usePage();
@@ -763,6 +769,7 @@ const submit = () => {
 
         return {
             ...data,
+            return_to: props.returnTo,
             stock: isNaN(normalizedStock) ? 0 : normalizedStock,
             fake_sold_count:
                 data.fake_sold_count === "" || data.fake_sold_count == null
@@ -780,7 +787,7 @@ const submit = () => {
             toast.success(
                 isEditMode.value ? "Product updated!" : "Product created!",
             );
-            router.get(route("admin.products.index"));
+            router.get(indexUrl.value);
         },
         onError: (errors) => {
             if (Object.keys(errors).length > 0) {
@@ -832,7 +839,7 @@ const scrollTo = (id) => {
             <div class="w-full mx-auto flex items-center justify-between">
                 <div class="flex items-center gap-2 md:gap-4">
                     <button
-                        @click="router.visit(route('admin.products.index'))"
+                        @click="router.visit(indexUrl)"
                         class="p-2 hover:bg-gray-100 rounded-xl transition-colors"
                     >
                         <ArrowLeft class="w-5 h-5 text-gray-700" />

@@ -25,20 +25,28 @@ class CourierController extends Controller
 
     public function createOrder(Request $request): JsonResponse
     {
+        $id = $request->input('oders_id'); // Get ID from request body
+        Log::info('Received order ID', ['id' => $id]);
+        if (!$id) {
+            return response()->json(['message' => 'Order ID is required'], 400);
+        }
+
+        $lock = Cache::lock('courier_order_' . $id, 30);
         try {
-            $id = $request->input('oders_id'); // Get ID from request body
-            Log::info('Received order ID', ['id' => $id]);
-            if (!$id) {
-                return response()->json(['message' => 'Order ID is required'], 400);
+            if (!$lock->get()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This order is currently being processed for courier dispatch. Please wait.',
+                ], 422);
             }
 
             $order = Order::findOrFail($id);
 
             // Prevent duplicate consignment for already-sent orders
-            if ($order->is_courier && $order->courier_name === 'steadfast') {
+            if ($order->is_courier || !empty($order->tracking_number) || !empty($order->consignment_id)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This order has already been sent to Steadfast.',
+                    'message' => 'This order has already been sent to a courier.',
                 ], 422);
             }
 
@@ -122,8 +130,10 @@ class CourierController extends Controller
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'An unexpected error occurred'
+                'message' => 'An unexpected error occurred: ' . $e->getMessage()
             ], 500);
+        } finally {
+            $lock->release();
         }
     }
 
@@ -135,14 +145,24 @@ class CourierController extends Controller
         $errors = [];
 
         foreach ($orderIds as $orderId) {
+            $lock = Cache::lock('courier_order_' . $orderId, 30);
             try {
-                $order = Order::findOrFail($orderId);
-
-                // Skip orders already dispatched to Steadfast to prevent duplicate consignments
-                if ($order->is_courier && $order->courier_name === 'steadfast') {
+                if (!$lock->get()) {
                     $errors[] = [
                         'order_id' => $orderId,
-                        'message'  => 'Order already sent to Steadfast (skipped)',
+                        'message'  => 'Order is currently being processed for courier dispatch. Please wait. (skipped)',
+                        'skipped'  => true,
+                    ];
+                    continue;
+                }
+
+                $order = Order::findOrFail($orderId);
+
+                // Skip orders already dispatched to prevent duplicate consignments
+                if ($order->is_courier || !empty($order->tracking_number) || !empty($order->consignment_id)) {
+                    $errors[] = [
+                        'order_id' => $orderId,
+                        'message'  => 'Order already sent to a courier (skipped)',
                         'skipped'  => true,
                     ];
                     continue;
@@ -218,6 +238,8 @@ class CourierController extends Controller
                     'order_id' => $orderId,
                     'message' => 'Unexpected error: ' . $e->getMessage()
                 ];
+            } finally {
+                $lock->release();
             }
         }
 

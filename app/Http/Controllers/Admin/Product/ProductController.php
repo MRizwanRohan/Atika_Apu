@@ -109,7 +109,7 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         try {
             $attributeValues = $this->productService->getAllAttributesForProduct();
@@ -120,6 +120,7 @@ class ProductController extends Controller
                 'attributeValues' => $attributeValues,
                 'categories' => $categories,
                 'brands'=> $brands,
+                'returnTo' => $this->getSafeProductIndexReturnUrl($request->query('return_to')),
                 'errors' => session('errors') ? session('errors')->getBag('default')->getMessages() : [],
             ]);
         } catch (\Exception $e) {
@@ -148,7 +149,7 @@ class ProductController extends Controller
                 $this->clearAllProductCaches();
 
                 return redirect()
-                    ->route('admin.products.index')
+                    ->to($this->getSafeProductIndexReturnUrl($request->input('return_to')) ?? route('admin.products.index'))
                     ->with('success', 'Product created successfully!');
             }
 
@@ -185,6 +186,28 @@ class ProductController extends Controller
         }
     }
 
+    private function getSafeProductIndexReturnUrl(?string $returnTo): ?string
+    {
+        if (!$returnTo) {
+            return null;
+        }
+
+        $indexPath = parse_url(route('admin.products.index'), PHP_URL_PATH);
+        $returnPath = parse_url($returnTo, PHP_URL_PATH);
+
+        if ($returnPath !== $indexPath) {
+            return null;
+        }
+
+        $returnHost = parse_url($returnTo, PHP_URL_HOST);
+
+        if ($returnHost && $returnHost !== request()->getHost()) {
+            return null;
+        }
+
+        return $returnTo;
+    }
+
 
     /**
      * Display the specified resource.
@@ -201,7 +224,7 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit(Request $request, Product $product)
     {
         try {
             $attributeValues = $this->productService->getAllAttributesForProduct($product->id);
@@ -215,6 +238,7 @@ class ProductController extends Controller
                 'attributeValues' => $attributeValues,
                 'categories'=> $categories,
                 'brands'=> $brands,
+                'returnTo' => $this->getSafeProductIndexReturnUrl($request->query('return_to')),
                 'errors' => session('errors') ? session('errors')->getBag('default')->getMessages() : [],
             ]);
         } catch (\Exception $e) {
@@ -247,7 +271,7 @@ class ProductController extends Controller
                 }
 
                 return redirect()
-                    ->route('admin.products.index')
+                    ->to($this->getSafeProductIndexReturnUrl($request->input('return_to')) ?? route('admin.products.index'))
                     ->with('success', 'Product updated successfully!');
             }
 

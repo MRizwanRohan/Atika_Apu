@@ -19,12 +19,17 @@ import {
     Clock,
     Package,
     Search,
+    Download,
 } from "lucide-vue-next";
 import CourierSelectionModal from "@/Components/Couriers/CourierSelectionModal.vue";
 import DeleteModal from "@/Components/Modal/DeleteModal.vue";
 import { toast } from "@steveyuowo/vue-hot-toast";
 import axios from "axios";
 import StatusDropdown from "@/Components/Order/StatusDropdown.vue";
+import {
+    ORDER_STATUS_OPTIONS,
+    getOrderStatusLabel,
+} from "@/Components/Order/statusOptions";
 import FraudCheckerModal from "@/Components/Couriers/FraudCheckerModal.vue";
 import AdminNotesModal from "@/Components/Order/AdminNotesModal.vue";
 import PartialDeliveryModal from "@/Components/Order/PartialDeliveryModal.vue";
@@ -165,7 +170,7 @@ const initFilters = () => {
         sort_by: url.searchParams.get("sort_by") || "created_at",
         sort_direction: url.searchParams.get("sort_direction") || "desc",
         source: url.searchParams.get("source") || "",
-        is_pre_order: url.searchParams.get("is_pre_order") || "",
+        is_pre_order: url.searchParams.get("is_pre_order") || "no",
     };
 };
 
@@ -372,34 +377,8 @@ const downloadBulkInvoice = async () => {
     }
 };
 
-// Status and payment status options
-const statusOptions = [
-    "pending",
-    "processing",
-    "completed",
-    "cancelled",
-    "incomplete",
-    "on_hold",
-    "confirmed",
-    "partially_delivered",
-];
 const paymentStatusOptions = ["unpaid", "paid", "refunded", "partially_paid"];
-const availableStatuses = [
-    "pending",
-    "processing",
-    "cancelled",
-    "shipped",
-    "delivered",
-    "returned",
-    "incomplete",
-    "on_hold",
-    "confirmed",
-    "partially_delivered",
-    "received_china",
-    "received_bd_airport",
-    "received_bd_warehouse",
-    "purchase_ok",
-];
+const availableStatuses = ORDER_STATUS_OPTIONS.map((option) => option.value);
 
 // Helper to determine if a date string is today (date portion only)
 const isToday = (dateString) => {
@@ -463,7 +442,7 @@ const resetFilters = () => {
         sort_by: "created_at",
         sort_direction: "desc",
         source: "",
-        is_pre_order: "",
+        is_pre_order: "no",
     };
     currentPage.value = 1;
     applyFilters();
@@ -1008,6 +987,23 @@ const getStatusBadgeClass = (status) => {
         </div>
         <div class="order_management p-1 rounded-lg">
 
+            <!-- Page Header with Reports & Exports Link -->
+            <div class="flex items-center justify-between mb-4 px-2 mt-1">
+                <div>
+                    <h1 class="text-base font-bold text-gray-800 tracking-tight uppercase">Order Management</h1>
+                </div>
+                <div>
+                    <Link 
+                        :href="route('admin.reports.generateReport')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg shadow-sm transition-all"
+                        title="Reports & Exports"
+                    >
+                        <Download class="w-3.5 h-3.5" />
+                        <span>Reports</span>
+                    </Link>
+                </div>
+            </div>
+
             <!-- Status Horizontal Scroll (Minimalist Chips) -->
 
 
@@ -1076,7 +1072,7 @@ const getStatusBadgeClass = (status) => {
                         <option value="">All Status</option>
                         <template v-for="status in availableStatuses" :key="status">
                             <option v-if="status !== 'incomplete'" :value="status">
-                                {{ status.replace('_', ' ') }}
+                                {{ getOrderStatusLabel(status) }}
                             </option>
                         </template>
                     </select>
@@ -1154,13 +1150,13 @@ const getStatusBadgeClass = (status) => {
                     >
                 </button> -->
 
-                <!-- <button
+                <button
                     v-if="selectedOrders.length > 0"
                     @click="printBulkInvoice"
                     class="px-4 py-2 bg-purple-500 text-white rounded-md text-sm font-medium hover:bg-purple-600"
                 >
                     Print {{ selectedOrders.length }} Invoices
-                </button> -->
+                </button>
             </div>
 
             <!-- Per Page Filter -->

@@ -84,6 +84,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
 
     // oders
     Route::resource('/orders', OrderController::class);
+    Route::get('/orders/{order}/invoice', [OrderController::class, 'singleInvoice'])->name('orders.invoice');
     Route::get('/incomplete-orders', [OrderController::class, 'incompleteOrders'])->name('orders.incomplete');
     Route::get('/pre-orders', [OrderController::class, 'preOrders'])->name('orders.pre-order');
     Route::get('/order-map', [OrderController::class, 'districtWiseOrders'])->name('orders.map');

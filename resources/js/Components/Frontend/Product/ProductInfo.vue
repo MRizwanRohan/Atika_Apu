@@ -171,7 +171,8 @@ const selectAttribute = (key, value) => {
 watch(selectedAttributes, () => {
     const variation = selectedVariation.value;
     const colorSelection = selectedAttributes.value["color"] || selectedAttributes.value["colour"];
-    const attributeImage = colorSelection?.image || null;
+    const designSelection = selectedAttributes.value["design"] || selectedAttributes.value["designs"];
+    const attributeImage = colorSelection?.image || designSelection?.image || null;
     emit("variation-change", { variation, attributeImage });
 }, { deep: true });
 
@@ -304,8 +305,8 @@ const messengerLink = computed(() => {
                 <span class="text-xs font-semibold text-gray-900 block">{{ attribute.name }}</span>
 
                 <div class="flex flex-wrap gap-3">
-                    <!-- Color Swatches (Circular) -->
-                    <template v-if="attribute.key.toLowerCase() === 'color' || attribute.key.toLowerCase() === 'colour'">
+                    <!-- Color & Design Swatches (Circular) -->
+                    <template v-if="['color', 'colour', 'design', 'designs'].includes(attribute.key.toLowerCase())">
                         <div
                             v-for="value in attribute.values"
                             :key="value.id"
@@ -327,7 +328,10 @@ const messengerLink = computed(() => {
                                 <div v-if="value.image" class="w-full h-full rounded-full overflow-hidden">
                                     <img :src="value.image" class="w-full h-full object-cover" />
                                 </div>
-                                <div v-else :style="{ backgroundColor: value.color || '#eee' }" class="w-full h-full rounded-full border border-black/5"></div>
+                                <div v-else-if="value.color" :style="{ backgroundColor: value.color }" class="w-full h-full rounded-full border border-black/5"></div>
+                                <div v-else class="w-full h-full rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-500 uppercase">
+                                    {{ value.value.substring(0, 2) }}
+                                </div>
                             </button>
                         </div>
                     </template>
