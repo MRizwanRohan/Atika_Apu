@@ -151,7 +151,14 @@ const handleCartClick = (e) => {
         <!-- Product Image Section -->
         <div class="relative block aspect-square overflow-hidden">
             <!-- Badges -->
-            <div class="absolute top-2 right-2 z-20">
+            <div class="absolute top-2 right-2 z-20 flex flex-col items-end gap-1">
+                <!-- Free Delivery Badge -->
+                <div
+                    v-if="product.is_free_delivery && !isOutOfStock"
+                    class="bg-emerald-600 text-white px-2 py-0.5 text-[10px] font-bold rounded-full shadow-sm"
+                >
+                    Free Delivery
+                </div>
                 <!-- Discount Badge -->
                 <div
                     v-if="

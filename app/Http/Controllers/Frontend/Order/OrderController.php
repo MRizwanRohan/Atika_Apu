@@ -74,11 +74,14 @@ class OrderController extends Controller
                 'items' => 'required|array|min:1',
             ]);
 
+            $shippingCost = $this->calculateOrderShippingCost(
+                $validated['items'],
+                $validated['shipping_district'],
+                $validated['shipping_thana']
+            );
+
             $request->merge([
-                'shipping_cost' => $this->resolveDeliveryCharge(
-                    $validated['shipping_district'],
-                    $validated['shipping_thana']
-                ),
+                'shipping_cost' => $shippingCost,
             ]);
         } else {
             $request->validate([
@@ -87,6 +90,19 @@ class OrderController extends Controller
                 'shipping_address' => 'required|string|max:500',
                 'items' => 'required|array|min:1',
             ]);
+
+            $district = $request->input('shipping_district');
+            $thana = $request->input('shipping_thana');
+            if ($district) {
+                $shippingCost = $this->calculateOrderShippingCost(
+                    $request->input('items', []),
+                    $district,
+                    $thana
+                );
+                $request->merge([
+                    'shipping_cost' => $shippingCost,
+                ]);
+            }
         }
 
         try {
@@ -248,6 +264,19 @@ class OrderController extends Controller
         $allowedOrders = $request->session()->get('order_access_numbers', []);
         $allowedOrders[] = $orderNumber;
         $request->session()->put('order_access_numbers', array_values(array_unique($allowedOrders)));
+    }
+
+    private function calculateOrderShippingCost(array $items, string $district, ?string $thana = null): float
+    {
+        $productIds = array_filter(array_column($items, 'product_id'));
+        if (!empty($productIds)) {
+            $products = \App\Models\Product::whereIn('id', $productIds)->get();
+            if ($products->isNotEmpty() && $products->every(fn($p) => (bool) $p->is_free_delivery)) {
+                return 0.00;
+            }
+        }
+
+        return $this->resolveDeliveryCharge($district, $thana);
     }
 
     private function resolveDeliveryCharge(string $district, ?string $thana = null): float

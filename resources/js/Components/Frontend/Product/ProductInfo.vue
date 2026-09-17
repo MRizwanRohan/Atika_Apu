@@ -287,6 +287,13 @@ const messengerLink = computed(() => {
                 <span v-else class="bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-200 shadow-sm shadow-emerald-50">In Stock</span>
             </div>
 
+            <div v-if="product.is_free_delivery" class="flex items-center gap-1.5">
+                <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+                <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                    <Truck :size="14" /> Free Delivery
+                </span>
+            </div>
+
             <div v-if="product.product_code" class="flex items-center gap-1">
                 <span class="font-normal">Code:</span>
                 <span class="text-gray-900 font-semibold">{{ product.product_code }}</span>
@@ -426,23 +433,29 @@ const messengerLink = computed(() => {
                         'border rounded-2xl p-4 flex items-center gap-4 transition-all duration-300',
                         isPreOrderMode 
                             ? 'border-red-300 bg-gradient-to-r from-red-50/80 via-rose-50/40 to-red-50/50 shadow-md shadow-red-100/50' 
-                            : 'border-gray-200 bg-gray-50/50'
+                            : product.is_free_delivery
+                                ? 'border-emerald-200 bg-emerald-50/50 shadow-sm shadow-emerald-50'
+                                : 'border-gray-200 bg-gray-50/50'
                     ]"
                 >
                     <div 
                         :class="[
                             'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300',
-                            isPreOrderMode ? 'bg-red-600 text-white shadow-sm shadow-red-200' : 'bg-white text-gray-400'
+                            isPreOrderMode 
+                                ? 'bg-red-600 text-white shadow-sm shadow-red-200' 
+                                : product.is_free_delivery
+                                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-200'
+                                    : 'bg-white text-gray-400'
                         ]"
                     >
-                        <Truck :size="24" :class="isPreOrderMode ? 'text-white' : 'text-gray-400'" />
+                        <Truck :size="24" :class="isPreOrderMode || product.is_free_delivery ? 'text-white' : 'text-gray-400'" />
                     </div>
                     <div class="text-sm flex-1">
                         <div class="flex items-center justify-between gap-2">
                             <span 
                                 :class="[
                                     'font-semibold uppercase text-[10px] tracking-wider block',
-                                    isPreOrderMode ? 'text-red-600 font-bold' : 'text-gray-400'
+                                    isPreOrderMode ? 'text-red-600 font-bold' : product.is_free_delivery ? 'text-emerald-700 font-bold' : 'text-gray-400'
                                 ]"
                             >
                                 Estimated Delivery
@@ -457,9 +470,18 @@ const messengerLink = computed(() => {
                                 </span>
                                 Pre-Order
                             </span>
+                            <span 
+                                v-else-if="product.is_free_delivery" 
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            >
+                                Free Delivery
+                            </span>
                         </div>
                         <span v-if="isPreOrderMode" class="font-semibold text-gray-900 text-sm leading-tight block mt-1">
                             20-30 days delivery • 50% advance (৳{{ formatPrice(pricing.main * 0.5) }})
+                        </span>
+                        <span v-else-if="product.is_free_delivery" class="font-semibold text-emerald-700 text-base block mt-0.5">
+                            Free Shipping (৳0) • 3-5 Working Days
                         </span>
                         <span v-else class="font-semibold text-gray-900 text-base block mt-0.5">3-5 Working Days</span>
                     </div>

@@ -830,7 +830,7 @@ onMounted(async () => {
                 </div>
             </div>
 
-            <div class="flex flex-col lg:flex-row h-full">
+            <div class="flex flex-col lg:flex-row items-start h-full">
                 <!-- Products Section -->
                 <div class="w-full xl:w-2/3 p-1">
                     <!-- Search and Filters -->
@@ -1136,7 +1136,7 @@ onMounted(async () => {
 
                 <!-- Cart Section -->
                 <div
-                    class="w-full xl:w-1/3 bg-white border-l shadow-lg relative"
+                    class="w-full xl:w-1/3 bg-white border-l shadow-lg relative lg:sticky lg:top-2 self-start max-h-[calc(100vh-60px)] overflow-y-auto z-20"
                 >
                     <!-- Cart Loading Overlay -->
                     <div

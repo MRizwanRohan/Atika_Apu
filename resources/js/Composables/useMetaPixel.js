@@ -52,10 +52,6 @@ export function initMetaPixel(id) {
     /* eslint-enable */
 
     window.fbq('init', pixelId);
-
-    if (shouldTrackMetaPixel()) {
-        window.fbq('track', 'PageView'); // Initial page load
-    }
 }
 
 /**
@@ -171,6 +167,13 @@ function trackViewContent(product, price) {
     function trackPurchase(order, metaEventId) {
         if (!isReady() || !order) return;
 
+        // Session storage guard to prevent duplicate firing on page reload
+        const storageKey = `meta_pur_fired_${order.order_number}`;
+        if (typeof window !== 'undefined' && sessionStorage.getItem(storageKey)) {
+            console.log(`[MetaPixel] Purchase event already fired for order ${order.order_number}`);
+            return;
+        }
+
         // Use server-generated ID for deduplication; fallback to client-generated
         const eventId = metaEventId || generateEventId('pur');
 
@@ -186,6 +189,10 @@ function trackViewContent(product, price) {
             order_id:     order.order_number,
             num_items:    order.items?.length || 0,
         }, { eventID: eventId });
+
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem(storageKey, 'true');
+        }
     }
 
     /**

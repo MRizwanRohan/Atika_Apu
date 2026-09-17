@@ -14,12 +14,23 @@ class CourierHttpClient
         private CourierConfigInterface $config
     ) {}
 
+    private function buildUrl(string $endpoint): string
+    {
+        $baseUrl = rtrim((string) $this->config->getBaseUrl(), '/');
+        if (empty($baseUrl)) {
+            $baseUrl = 'https://portal.packzy.com/api/v1';
+        }
+        $endpoint = '/' . ltrim($endpoint, '/');
+        return $baseUrl . $endpoint;
+    }
+
     public function post(string $endpoint, array $data = []): array
     {
         try {
+            $url = $this->buildUrl($endpoint);
             $response = Http::withHeaders($this->config->getHeaders())
                 ->timeout(30)
-                ->post($this->config->getBaseUrl() . $endpoint, $data);
+                ->post($url, $data);
 
             return $this->handleResponse($response);
         } catch (\Exception $e) {
@@ -33,9 +44,10 @@ class CourierHttpClient
     public function get(string $endpoint): array
     {
         try {
+            $url = $this->buildUrl($endpoint);
             $response = Http::withHeaders($this->config->getHeaders())
                 ->timeout(30)
-                ->get($this->config->getBaseUrl() . $endpoint);
+                ->get($url);
 
             return $this->handleResponse($response);
         } catch (\Exception $e) {

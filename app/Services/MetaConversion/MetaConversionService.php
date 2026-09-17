@@ -21,8 +21,7 @@ class MetaConversionService implements MetaConversionInterface
      */
     public function generateEventId(string $orderNumber, string $eventName): string
     {
-        $minuteSlot = date('YmdHi'); // floor to current minute
-        return hash('sha256', $orderNumber . $eventName . $minuteSlot);
+        return hash('sha256', $orderNumber . '_' . $eventName);
     }
 
     /**

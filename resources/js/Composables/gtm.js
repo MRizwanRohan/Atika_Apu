@@ -170,6 +170,12 @@ export const trackLandingBeginCheckout = (pageData) => {
 export const trackPurchase = (order) => {
   if (!order || !order.items || !Array.isArray(order.items)) return;
 
+  const storageKey = `gtm_pur_fired_${order.order_number}`;
+  if (typeof window !== 'undefined' && sessionStorage.getItem(storageKey)) {
+    console.log(`[GTM] Purchase event already fired for order ${order.order_number}`);
+    return;
+  }
+
   console.log("trackPurchase data:", order);
 
   const gtmData = {
@@ -225,6 +231,10 @@ export const trackPurchase = (order) => {
   console.log("GTM Purchase Data:", gtmData);
 
   pushToDataLayer(gtmData); // Send the data to the data layer
+
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(storageKey, 'true');
+  }
 };
 
 

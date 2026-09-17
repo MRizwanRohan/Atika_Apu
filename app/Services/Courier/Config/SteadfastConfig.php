@@ -39,7 +39,11 @@ class SteadfastConfig implements CourierConfigInterface
 
     public function getBaseUrl(): string
     {
-        return config('courier.steadfast.base_url', 'https://portal.packzy.com/api/v1');
+        $url = config('courier.steadfast.base_url');
+        if (empty($url)) {
+            $url = 'https://portal.packzy.com/api/v1';
+        }
+        return rtrim($url, '/');
     }
 
     public function getHeaders(): array
