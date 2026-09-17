@@ -1309,7 +1309,7 @@ onMounted(() => {
                                 <button
                                     @click="submitOrder"
                                     :disabled="form.processing"
-                                    class="hidden sm:flex w-full bg-primary text-white font-medium py-3.5 rounded-lg shadow-[0_10px_20px_rgba(249,115,22,0.15)] hover:bg-primary transition-all items-center justify-center uppercase tracking-[0.1em] text-sm animate-rsi-shaker"
+                                    class="hidden sm:flex w-full bg-primary text-white font-medium py-3.5 rounded-lg shadow-[0_10px_20px_rgba(249,115,22,0.15)] hover:bg-primary transition-all items-center justify-center uppercase tracking-[0.1em] text-sm"
                                 >
                                     {{
                                         form.processing
@@ -1335,7 +1335,7 @@ onMounted(() => {
                                     <button
                                         @click="submitOrder"
                                         :disabled="form.processing"
-                                        class="flex-1 bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center uppercase tracking-wider text-sm animate-rsi-shaker"
+                                        class="flex-1 bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center uppercase tracking-wider text-sm"
                                     >
                                         {{
                                             form.processing

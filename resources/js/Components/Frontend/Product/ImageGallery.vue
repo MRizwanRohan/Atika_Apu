@@ -1,8 +1,79 @@
 <template>
     <div class="w-full mx-auto">
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col-reverse md:flex-row gap-4 md:items-start">
+            <!-- Vertical/Horizontal Thumbnail Gallery -->
+            <div class="relative group flex-shrink-0 w-full md:w-24">
+                <!-- Scroll Up Button (Desktop only) -->
+                <button
+                    v-if="canScrollUp"
+                    @click="scrollThumbnails('up')"
+                    class="hidden md:flex absolute top-0 left-0 right-0 z-10 bg-white/90 hover:bg-white border-b border-gray-100 py-1 items-center justify-center text-gray-500 hover:text-black transition-colors rounded-t-2xl shadow-sm"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                    </svg>
+                </button>
+
+                <div
+                    ref="thumbnailContainer"
+                    class="flex md:flex-col gap-3 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto scrollbar-hide pb-2 md:pb-0 md:py-6 md:max-h-[500px]"
+                    @scroll="checkScroll"
+                >
+                    <button
+                        v-for="(media, index) in allMedia"
+                        :key="index"
+                        @click="handleThumbnailClick(index)"
+                        class="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0"
+                        :class="
+                            index === activeIndex
+                                ? 'border-primary shadow-md scale-[1.02]'
+                                : 'border-gray-100 hover:border-gray-200'
+                        "
+                    >
+                        <img
+                            v-if="media.type === 'image'"
+                            :src="media.src"
+                            :alt="`Thumbnail ${index + 1}`"
+                            class="w-full h-full object-cover p-1"
+                        />
+                        <div
+                            v-else
+                            class="w-full h-full bg-gray-50 flex items-center justify-center relative"
+                        >
+                            <img
+                                v-if="media.type === 'youtube' && media.thumbnail"
+                                :src="media.thumbnail"
+                                class="w-full h-full object-cover p-1"
+                            />
+                            <video
+                                v-else-if="media.type === 'video'"
+                                :src="media.src"
+                                class="w-full h-full object-cover"
+                                muted
+                            />
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/10">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M4 2v20l18-10L4 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Scroll Down Button (Desktop only) -->
+                <button
+                    v-if="canScrollDown"
+                    @click="scrollThumbnails('down')"
+                    class="hidden md:flex absolute bottom-0 left-0 right-0 z-10 bg-white/90 hover:bg-white border-t border-gray-100 py-1 items-center justify-center text-gray-500 hover:text-black transition-colors rounded-b-2xl shadow-sm"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+
             <!-- Main Image Display -->
-            <div class="w-full">
+            <div class="flex-1 w-full">
                 <div
                     class="relative w-full aspect-square border border-gray-100 bg-white rounded-sm overflow-hidden shadow-sm"
                 >
@@ -10,7 +81,8 @@
                     <div
                         v-if="activeMedia"
                         ref="imageContainer"
-                        class="relative w-full h-full cursor-zoom-in"
+                        class="relative w-full h-full"
+                        :class="{ 'cursor-zoom-in': activeMedia.type === 'image' }"
                         @mousemove="handleMouseMove"
                         @mouseleave="handleMouseLeave"
                         @touchstart="handleTouchStart"
@@ -26,9 +98,21 @@
                             :style="zoomStyle"
                         />
 
+                        <!-- YouTube Video -->
+                        <iframe
+                            v-else-if="activeMedia.type === 'youtube'"
+                            :key="activeMedia.src"
+                            :src="activeMedia.src"
+                            title="YouTube video player"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                            class="w-full h-full object-cover"
+                        ></iframe>
+
                         <!-- Video -->
                         <video
-                            v-else
+                            v-else-if="activeMedia.type === 'video'"
                             :key="activeMedia.src"
                             :src="activeMedia.src"
                             controls
@@ -61,48 +145,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Horizontal Thumbnail Gallery -->
-            <div class="relative group">
-                <div
-                    ref="thumbnailContainer"
-                    class="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
-                >
-                    <button
-                        v-for="(media, index) in allMedia"
-                        :key="index"
-                        @click="handleThumbnailClick(index)"
-                        class="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0"
-                        :class="
-                            index === activeIndex
-                                ? 'border-orange-500 shadow-md scale-[1.02]'
-                                : 'border-gray-100 hover:border-gray-200'
-                        "
-                    >
-                        <img
-                            v-if="media.type === 'image'"
-                            :src="media.src"
-                            :alt="`Thumbnail ${index + 1}`"
-                            class="w-full h-full object-cover p-1"
-                        />
-                        <div
-                            v-else
-                            class="w-full h-full bg-gray-50 flex items-center justify-center relative"
-                        >
-                            <video
-                                :src="media.src"
-                                class="w-full h-full object-cover"
-                                muted
-                            />
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/10">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M4 2v20l18-10L4 2z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </template>
@@ -111,8 +153,9 @@
 import { ref, computed, watch, nextTick, onMounted } from "vue";
 
 interface Media {
-    type: "image" | "video";
+    type: "image" | "video" | "youtube";
     src: string;
+    thumbnail?: string;
     isVariation: boolean;
 }
 
@@ -158,6 +201,14 @@ const checkScroll = () => {
     canScrollDown.value = scrollTop + clientHeight < scrollHeight - 1;
 };
 
+// Extract YouTube video ID if URL is a YouTube link
+const getYoutubeId = (url: string) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+};
+
 // Combine all media sources
 const allMedia = computed<Media[]>(() => {
     const media: Media[] = [];
@@ -176,7 +227,21 @@ const allMedia = computed<Media[]>(() => {
     });
 
     if (props.video) {
-        media.push({ type: "video", src: props.video, isVariation: false });
+        const ytId = getYoutubeId(props.video);
+        if (ytId) {
+            media.push({
+                type: "youtube",
+                src: `https://www.youtube.com/embed/${ytId}?autoplay=1`,
+                thumbnail: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+                isVariation: false,
+            });
+        } else {
+            media.push({
+                type: "video",
+                src: props.video,
+                isVariation: false,
+            });
+        }
     }
 
     return media;
@@ -283,7 +348,7 @@ const handleThumbnailClick = (index: number) => {
 };
 
 const handleMouseMove = (event: MouseEvent) => {
-    if (!imageContainer.value) return;
+    if (!imageContainer.value || activeMedia.value?.type !== 'image') return;
     const rect = imageContainer.value.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;

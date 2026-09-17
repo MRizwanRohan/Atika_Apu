@@ -298,11 +298,21 @@ const messengerLink = computed(() => {
                 <span class="font-normal text-white">Sold:</span>
                 <span class="text-white font-semibold">{{ (Number(product.fake_sold_count || 0) + Number(product.sold_stock || 0)) }}</span>
             </div>
-        </div>        <!-- Attributes Grid (2 Columns) -->
-        <div v-if="availableAttributes.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <div v-for="attribute in availableAttributes" :key="attribute.key" 
-                class="border border-gray-200 rounded-2xl p-4 space-y-3 bg-white">
-                <span class="text-xs font-semibold text-gray-900 block">{{ attribute.name }}</span>
+        </div>        <!-- Attributes Selector Section (Premium layout) -->
+        <div v-if="availableAttributes.length > 0" class="space-y-6 mt-3 border-t border-b border-gray-100 py-6">
+            <div v-for="attribute in availableAttributes" :key="attribute.key" class="space-y-3">
+                <!-- Label & Selection Info -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-gray-800 uppercase tracking-wider">{{ attribute.name }}</span>
+                        <span v-if="!selectedAttributes[attribute.key]" class="text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">
+                            Required
+                        </span>
+                    </div>
+                    <span v-if="selectedAttributes[attribute.key]" class="text-xs font-medium text-gray-500">
+                        Selected: <span class="font-bold text-gray-900">{{ selectedAttributes[attribute.key].value }}</span>
+                    </span>
+                </div>
 
                 <div class="flex flex-wrap gap-3">
                     <!-- Color & Design Swatches (Circular) -->
@@ -313,17 +323,17 @@ const messengerLink = computed(() => {
                             class="group relative"
                         >
                             <!-- Tooltip -->
-                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-semibold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-gray-950 text-white text-[10px] font-semibold rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap pointer-events-none z-50">
                                 {{ value.value }}
-                                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900"></div>
+                                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-950"></div>
                             </div>
 
                             <button
                                 @click="selectAttribute(attribute.key, value)"
-                                class="w-11 h-11 rounded-full border-2 transition-all duration-300 p-0.5"
+                                class="w-12 h-12 rounded-full border-2 transition-all duration-300 p-0.5 relative flex items-center justify-center focus:outline-none"
                                 :class="selectedAttributes[attribute.key]?.id === value.id 
-                                    ? 'border-orange-500 scale-105' 
-                                    : 'border-gray-200 hover:border-gray-200'"
+                                    ? 'border-primary ring-2 ring-primary/30 ring-offset-2 scale-105' 
+                                    : 'border-gray-200 hover:border-gray-400 hover:scale-105'"
                             >
                                 <div v-if="value.image" class="w-full h-full rounded-full overflow-hidden">
                                     <img :src="value.image" class="w-full h-full object-cover" />
@@ -332,6 +342,12 @@ const messengerLink = computed(() => {
                                 <div v-else class="w-full h-full rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-500 uppercase">
                                     {{ value.value.substring(0, 2) }}
                                 </div>
+                                
+                                <!-- Premium Checkmark Overlay for selected item -->
+                                <span v-if="selectedAttributes[attribute.key]?.id === value.id" 
+                                      class="absolute -top-1 -right-1 bg-primary text-white w-4 h-4 rounded-full flex items-center justify-center shadow-md border border-white">
+                                    <Check :size="10" stroke-width="3" />
+                                </span>
                             </button>
                         </div>
                     </template>
@@ -342,10 +358,10 @@ const messengerLink = computed(() => {
                             v-for="value in attribute.values"
                             :key="value.id"
                             @click="selectAttribute(attribute.key, value)"
-                            class="px-4 py-2 rounded-xl border text-xs font-semibold transition-all duration-200"
+                            class="px-5 py-2.5 rounded-xl border text-xs font-bold transition-all duration-200 relative min-w-[3.5rem] text-center focus:outline-none"
                             :class="selectedAttributes[attribute.key]?.id === value.id
-                                ? 'border-orange-500 bg-orange-50 text-orange-600'
-                                : 'border-gray-200 hover:border-gray-200 text-gray-500 bg-white'"
+                                ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
+                                : 'border-gray-200 hover:border-gray-400 text-gray-700 bg-white hover:bg-gray-50'"
                         >
                             {{ value.value }}
                         </button>

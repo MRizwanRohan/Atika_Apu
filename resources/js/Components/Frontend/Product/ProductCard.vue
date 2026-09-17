@@ -120,7 +120,6 @@ const isPreOrderMode = computed(
     () => props.product.stock <= 0 && props.product.is_pre_order,
 );
 
-
 const handleCartClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -226,7 +225,7 @@ const handleCartClick = (e) => {
 
             <!-- Price Section -->
             <div class="flex items-baseline gap-2">
-                <span class="text-[18px] font-bold text-[#a855f7]">
+                <span class="text-[18px] font-bold text-primary">
                     ৳{{ formatPrice(pricing.main) }}
                 </span>
                 <span
@@ -250,7 +249,7 @@ const handleCartClick = (e) => {
                 <button
                     @click="handleCartClick"
                     :disabled="isAddingToCart"
-                    class="p-1.5 text-[#a855f7] transition-colors group/cart disabled:opacity-50 relative z-40"
+                    class="p-1.5 text-primary transition-colors group/cart disabled:opacity-50 relative z-40"
                     :title="
                         product.type === 'variable'
                             ? 'Select Options'

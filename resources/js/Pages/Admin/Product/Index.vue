@@ -132,20 +132,15 @@
                         >
                             <div class="py-2 px-2 md:p-4 relative">
                                 <div class="flex gap-2">
-                                    <!-- Image & Drag (Hidden on mobile if needed, but keeping for now) -->
-                                    <!-- <div
-                                        class="flex flex-col items-center gap-2"
-                                    >
-                                        <div class="relative">
-                                            <input
-                                                type="checkbox"
-                                                :checked="isSelected(item.id)"
-                                                @change="toggleSelection(item.id)"
-                                                @click.stop
-                                                class="w-4 h-4 rounded border-gray-200 text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                        </div>
-                                    </div> -->
+                                    <!-- Selection Checkbox -->
+                                    <div class="flex items-center self-center pr-1" @click.stop>
+                                        <input
+                                            type="checkbox"
+                                            :checked="isSelected(item.id)"
+                                            @change="toggleSelection(item.id)"
+                                            class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                        />
+                                    </div>
 
                                     <!-- Image -->
                                     <img
@@ -196,6 +191,7 @@
                                                 <button
                                                     @click.stop="openQuickEditModal(item)"
                                                     class="p-1.5 text-gray-400 hover:text-indigo-600 rounded transition-colors"
+                                                    title="Quick Edit"
                                                 >
                                                     <Settings size="16" />
                                                 </button>
@@ -203,9 +199,17 @@
                                                     :href="productEditUrl(item.id)"
                                                     @click.stop
                                                     class="p-1.5 text-gray-400 hover:text-indigo-600 rounded transition-colors"
+                                                    title="Edit"
                                                 >
                                                     <SquarePen size="16" />
                                                 </Link>
+                                                <button
+                                                    @click.stop="openDeleteModal(item.id)"
+                                                    class="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2Icon size="16" />
+                                                </button>
                                             </div>
                                         </div>
 
@@ -442,6 +446,7 @@
 
             <!-- Delete Confirmation Modal -->
             <DeleteModal
+                v-if="productToDelete"
                 :item-id="productToDelete"
                 item-name="product"
                 route-name="admin.products.destroy"

@@ -50,7 +50,7 @@ const swiperBreakpoints = {
     <section class="py-2 lg:py-10 bg-white">
         <div class="container mx-auto px-2">
             <!-- Section Header -->
-            <div class="text-center hidden lg:block mb-10">
+            <!-- <div class="text-center hidden lg:block mb-10">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                     Explore Popular Categories
                 </h2>
@@ -58,7 +58,7 @@ const swiperBreakpoints = {
                     Find your preferred item in the highlighted product
                     selection.
                 </p>
-            </div>
+            </div> -->
 
             <!-- Categories Slider -->
             <div class="relative px-4 md:px-8">

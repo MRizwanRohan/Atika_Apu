@@ -17,7 +17,7 @@ import {
     PhHeart,
     PhGift,
     PhCube,
-    PhShoppingCartSimple
+    PhShoppingCartSimple,
 } from "@phosphor-icons/vue";
 
 const props = defineProps({
@@ -89,21 +89,25 @@ const cleantopnotice = (html) => {
     <header class="sticky top-0 z-50 bg-white shadow-sm font-sans">
         <!-- Top Notice -->
         <div
-            
             class="hidden lg:block bg-primary text-white py-1.5 overflow-hidden"
         >
-            <div class="container mx-auto px-4 flex items-center justify-between">
-                <div v-if="cleantopnotice(settings?.generalSettings?.top_notice)"
+            <div
+                class="container mx-auto px-4 flex items-center justify-between"
+            >
+                <div
+                    v-if="cleantopnotice(settings?.generalSettings?.top_notice)"
                     class="text-[10px] w-2/3 sm:text-xs tracking-widest text-white"
                     v-html="settings?.generalSettings?.top_notice"
                 ></div>
-                
+
                 <div class="flex items-center justify-end w-full gap-6">
                     <Link
                         href="/order/track"
                         class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <PhTruck class="w-4 h-4 group-hover:scale-110 transition-transform"  />
+                        <PhTruck
+                            class="w-4 h-4 group-hover:scale-110 transition-transform"
+                        />
                         <span>Track Order</span>
                     </Link>
 
@@ -111,7 +115,9 @@ const cleantopnotice = (html) => {
                         :href="route('pre-order-lead.form')"
                         class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <PhCube class="w-4 h-4 group-hover:scale-110 transition-transform"  />
+                        <PhCube
+                            class="w-4 h-4 group-hover:scale-110 transition-transform"
+                        />
                         <span>Pre Order</span>
                     </Link>
 
@@ -119,7 +125,9 @@ const cleantopnotice = (html) => {
                         href="/offers"
                         class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
                     >
-                        <PhGift class="w-4 h-4 group-hover:scale-110 transition-transform"  />
+                        <PhGift
+                            class="w-4 h-4 group-hover:scale-110 transition-transform"
+                        />
                         <span>Offers</span>
                     </Link>
                 </div>
@@ -146,13 +154,20 @@ const cleantopnotice = (html) => {
                             :alt="siteName"
                             class="w-[130px] object-contain"
                         />
-                        <div v-else class="text-2xl font-black tracking-tighter">
-                            <span class="text-gray-900">Smart</span><span class="text-primary">Gear</span>
+                        <div
+                            v-else
+                            class="text-2xl font-black tracking-tighter"
+                        >
+                            <span class="text-gray-900">Smart</span
+                            ><span class="text-primary">Gear</span>
                         </div>
                     </Link>
 
                     <!-- Search Bar (Centered) -->
-                    <div v-if="route().current() !== 'order.create'" class="flex-1 max-w-2xl px-4">
+                    <div
+                        v-if="route().current() !== 'order.create'"
+                        class="flex-1 max-w-2xl px-4"
+                    >
                         <SearchBar />
                     </div>
 
@@ -164,11 +179,19 @@ const cleantopnotice = (html) => {
                                 :href="route('user.dashboard')"
                                 class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
                             >
-                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all">
-                                    <PhUser class="w-5 h-5"  />
+                                <div
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all"
+                                >
+                                    <PhUser class="w-5 h-5" />
                                 </div>
-                                <span class="text-[10px] font-medium uppercase tracking-tight">
-                                    {{ user ? user.name.split(' ')[0] : 'Login/Register' }}
+                                <span
+                                    class="text-[10px] font-medium uppercase tracking-tight"
+                                >
+                                    {{
+                                        user
+                                            ? user.name.split(" ")[0]
+                                            : "Login/Register"
+                                    }}
                                 </span>
                             </Link>
 
@@ -256,15 +279,20 @@ const cleantopnotice = (html) => {
                             @click="toggleCartSidebar"
                             class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
                         >
-                            <div class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all">
-                                <PhShoppingCartSimple class="w-5 h-5"  />
+                            <div
+                                class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all"
+                            >
+                                <PhShoppingCartSimple class="w-5 h-5" />
                                 <span
                                     class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
                                 >
                                     {{ cartCount }}
                                 </span>
                             </div>
-                            <span class="text-[10px] font-medium uppercase tracking-tight">Cart</span>
+                            <span
+                                class="text-[10px] font-medium uppercase tracking-tight"
+                                >Cart</span
+                            >
                         </button>
                     </div>
                 </div>
@@ -278,7 +306,36 @@ const cleantopnotice = (html) => {
                             class="p-1 -ml-1 text-gray-900 transition-transform active:scale-95"
                             aria-label="Menu"
                         >
-                            <svg data-v-c6900758="" data-v-68fa2a2f="" xmlns="http://www.w3.org/2000/svg" width="30" height="16" viewBox="0 0 30 16" fill="currentColor"><rect data-v-c6900758="" data-v-68fa2a2f="" width="30" height="1.5"></rect><rect data-v-c6900758="" data-v-68fa2a2f="" y="7" width="20" height="1.5"></rect><rect data-v-c6900758="" data-v-68fa2a2f="" y="14" width="30" height="1.5"></rect></svg>
+                            <svg
+                                data-v-c6900758=""
+                                data-v-68fa2a2f=""
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="30"
+                                height="16"
+                                viewBox="0 0 30 16"
+                                fill="currentColor"
+                            >
+                                <rect
+                                    data-v-c6900758=""
+                                    data-v-68fa2a2f=""
+                                    width="30"
+                                    height="1.5"
+                                ></rect>
+                                <rect
+                                    data-v-c6900758=""
+                                    data-v-68fa2a2f=""
+                                    y="7"
+                                    width="20"
+                                    height="1.5"
+                                ></rect>
+                                <rect
+                                    data-v-c6900758=""
+                                    data-v-68fa2a2f=""
+                                    y="14"
+                                    width="30"
+                                    height="1.5"
+                                ></rect>
+                            </svg>
                         </button>
 
                         <Link
@@ -303,7 +360,7 @@ const cleantopnotice = (html) => {
                             class="relative p-1 -mr-1 text-gray-900 transition-transform active:scale-95"
                             aria-label="Cart"
                         >
-                            <PhShoppingCartSimple class="w-7 h-7"  />
+                            <PhShoppingCartSimple class="w-7 h-7" />
                             <span
                                 v-if="cartCount > 0"
                                 class="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
@@ -314,7 +371,10 @@ const cleantopnotice = (html) => {
                     </div>
 
                     <!-- Row 2: Full Width Search -->
-                    <div v-if="route().current() !== 'order.create'" class="w-full">
+                    <div
+                        v-if="route().current() !== 'order.create'"
+                        class="w-full"
+                    >
                         <SearchBar
                             placeholder="Search products, models, brands..."
                         />
@@ -343,7 +403,7 @@ const cleantopnotice = (html) => {
                     @click="isSearchOpen = false"
                     class="absolute top-6 right-6 p-2 bg-gray-50 rounded-full text-gray-500 hover:text-black transition-colors"
                 >
-                    <PhX class="w-6 h-6"  />
+                    <PhX class="w-6 h-6" />
                 </button>
                 <div class="max-w-xl mx-auto space-y-6">
                     <div class="text-center">

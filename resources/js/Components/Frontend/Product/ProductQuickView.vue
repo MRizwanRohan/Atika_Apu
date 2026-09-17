@@ -4,7 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { useCart } from "@/Composables/useCart";
 import { useCartSidebar } from "@/Composables/useCartSidebar";
 import { useWishlist } from "@/Composables/useWishlist";
-import { X, Plus, Minus, ShoppingCart } from "lucide-vue-next";
+import { X, Plus, Minus, ShoppingCart, Check } from "lucide-vue-next";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 const props = defineProps({
     product: {
@@ -66,7 +66,11 @@ const availableAttributes = computed(() => {
                     id: attr.value.id,
                     value: attr.value.value,
                     color: attr.value.color,
+                    image: variation.image_path || null,
                 });
+            } else if (variation.image_path && !valuesMap.get(attr.value.id).image) {
+                const existing = valuesMap.get(attr.value.id);
+                existing.image = variation.image_path;
             }
         });
     });
@@ -471,56 +475,78 @@ onUnmounted(() => {
                                 <!-- Attributes Selection -->
                                 <div
                                     v-if="availableAttributes.length > 0"
-                                    class="space-y-2 pt-2"
+                                    class="space-y-4 pt-4 border-t border-gray-100 mt-4"
                                 >
                                     <div
                                         v-for="attr in availableAttributes"
                                         :key="attr.key"
-                                        class="space-y-2"
+                                        class="space-y-2.5"
                                     >
                                         <div
                                             class="flex justify-between items-center"
                                         >
-                                            <label
-                                                class="text-sm font-bold text-gray-900 uppercase tracking-wide"
-                                            >
-                                                {{ attr.name }}:
-                                                <span
-                                                    v-if="
-                                                        selectedAttributes[
-                                                            attr.key
-                                                        ]
-                                                    "
-                                                    class="font-normal"
-                                                >
-                                                    {{
-                                                        selectedAttributes[
-                                                            attr.key
-                                                        ].value
-                                                    }}
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-xs font-bold text-gray-800 uppercase tracking-wider">{{ attr.name }}</span>
+                                                <span v-if="!selectedAttributes[attr.key]" class="text-[9px] bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">
+                                                    Required
                                                 </span>
-                                            </label>
+                                            </div>
+                                            <span v-if="selectedAttributes[attr.key]" class="text-xs font-medium text-gray-500">
+                                                Selected: <span class="font-bold text-gray-900">{{ selectedAttributes[attr.key].value }}</span>
+                                            </span>
                                         </div>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button
-                                                v-for="val in attr.values"
-                                                :key="val.id"
-                                                @click="
-                                                    selectAttribute(
-                                                        attr.key,
-                                                        val,
-                                                    )
-                                                "
-                                                class="px-4 py-2 text-sm font-medium border transition-all duration-200"
-                                                :class="
-                                                    selectedAttributes[attr.key]
-                                                        ?.id === val.id
-                                                        ? 'bg-gray-900 border-gray-900 text-white'
-                                                        : 'bg-white border-gray-300 text-gray-900 hover:border-gray-900'
-                                                "
-                                            >
-                                                {{ val.value }}
-                                            </button>
+                                        <div class="flex flex-wrap gap-2.5">
+                                            <!-- Color & Design Swatches (Circular) -->
+                                            <template v-if="['color', 'colour', 'design', 'designs'].includes(attr.key.toLowerCase())">
+                                                <div
+                                                    v-for="val in attr.values"
+                                                    :key="val.id"
+                                                    class="group relative"
+                                                >
+                                                    <!-- Tooltip -->
+                                                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-gray-950 text-white text-[10px] font-semibold rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap pointer-events-none z-50">
+                                                        {{ val.value }}
+                                                        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-950"></div>
+                                                    </div>
+
+                                                    <button
+                                                        @click="selectAttribute(attr.key, val)"
+                                                        class="w-10 h-10 rounded-full border-2 transition-all duration-300 p-0.5 relative flex items-center justify-center focus:outline-none"
+                                                        :class="selectedAttributes[attr.key]?.id === val.id 
+                                                            ? 'border-primary ring-2 ring-primary/30 ring-offset-2 scale-105' 
+                                                            : 'border-gray-200 hover:border-gray-400 hover:scale-105'"
+                                                    >
+                                                        <div v-if="val.image" class="w-full h-full rounded-full overflow-hidden">
+                                                            <img :src="val.image" class="w-full h-full object-cover" />
+                                                        </div>
+                                                        <div v-else-if="val.color" :style="{ backgroundColor: val.color }" class="w-full h-full rounded-full border border-black/5"></div>
+                                                        <div v-else class="w-full h-full rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-500 uppercase">
+                                                            {{ val.value.substring(0, 2) }}
+                                                        </div>
+                                                        
+                                                        <!-- Premium Checkmark Overlay for selected item -->
+                                                        <span v-if="selectedAttributes[attr.key]?.id === val.id" 
+                                                              class="absolute -top-1 -right-1 bg-primary text-white w-4 h-4 rounded-full flex items-center justify-center shadow-md border border-white">
+                                                            <Check :size="10" stroke-width="3" />
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </template>
+
+                                            <!-- Standard Pickers (Size, Storage, etc.) -->
+                                            <template v-else>
+                                                <button
+                                                    v-for="val in attr.values"
+                                                    :key="val.id"
+                                                    @click="selectAttribute(attr.key, val)"
+                                                    class="px-4 py-2 rounded-xl border text-xs font-bold transition-all duration-200 relative min-w-[3rem] text-center focus:outline-none"
+                                                    :class="selectedAttributes[attr.key]?.id === val.id
+                                                        ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
+                                                        : 'border-gray-200 hover:border-gray-400 text-gray-700 bg-white hover:bg-gray-50'"
+                                                >
+                                                    {{ val.value }}
+                                                </button>
+                                            </template>
                                         </div>
                                     </div>
                                 </div>

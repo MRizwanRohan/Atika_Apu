@@ -210,7 +210,7 @@ const isPreOrderMode = computed(() => {
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-16">
                     <!-- Left Column: Image Gallery -->
-                    <div class="lg:col-span-5">
+                    <div class="lg:col-span-6">
                         <div class="sticky top-24">
                             <ImageGallery
                                 :images="productImages"
@@ -228,7 +228,7 @@ const isPreOrderMode = computed(() => {
                     </div>
 
                     <!-- Right Column: Product Info -->
-                    <div class="lg:col-span-7">
+                    <div class="lg:col-span-6">
                         <ProductInfo
                             :product="product"
                             @variation-change="handleVariationChange"
