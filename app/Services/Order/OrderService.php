@@ -681,7 +681,7 @@ class OrderService implements OrderInterface
      */
     protected function generateUniqueOrderNumber(): string
     {
-        return 'TNM-' . now()->format('His') . '-' . Str::random(4);
+        return 'CRT-' . now()->format('His') . '-' . Str::random(4);
     }
 
     // clear cart
