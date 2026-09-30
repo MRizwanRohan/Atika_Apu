@@ -216,6 +216,14 @@ class OrderService implements OrderInterface
 
         $order = Order::create([
             'order_number' => $this->generateUniqueOrderNumber(),
+            // Save customer signals at checkout; later admin actions must not
+            // replace them with the administrator's IP, browser or cookies.
+            'meta_tracking_context' => request()->routeIs('order.store') ? array_filter([
+                'client_ip_address' => request()->ip(),
+                'client_user_agent' => request()->userAgent(),
+                'fbp' => request()->cookie('_fbp'),
+                'fbc' => request()->cookie('_fbc'),
+            ]) : null,
             'user_id' => $validatedData['user_id'] ?? null,
             'session_id' => $validatedData['session_id'] ?? null,
             'cart_id' => $cartId,

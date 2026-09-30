@@ -6,9 +6,10 @@ use App\Events\OrderCreated;
 use App\Models\TrackingSettings;
 use App\Services\MetaConversion\MetaConversionService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 
-class SendMetaConversionOnOrderCreated
+class SendMetaConversionOnOrderCreated implements ShouldHandleEventsAfterCommit
 {
     public function __construct(private MetaConversionService $metaService) {}
 

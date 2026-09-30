@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'meta_tracking_context',
         'user_id',
         'session_id',
         'cart_id',
@@ -55,7 +56,10 @@ class Order extends Model
         'payment_verification_status'
     ];
 
+    protected $hidden = ['meta_tracking_context'];
+
     protected $casts = [
+        'meta_tracking_context' => 'array',
         'shipping_cost' => 'decimal:2',
         'date' => 'datetime',
         'total' => 'decimal:2',

@@ -63,6 +63,7 @@ class MetaEventLog extends Model
             'status'   => 'sent',
             'response' => $response,
             'sent_at'  => now(),
+            'error_message' => null,
         ]);
     }
 
@@ -75,7 +76,6 @@ class MetaEventLog extends Model
             'status'        => 'failed',
             'error_message' => $errorMessage,
             'response'      => $response,
-            'attempts'      => $this->attempts + 1,
         ]);
     }
 }

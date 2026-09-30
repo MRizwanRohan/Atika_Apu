@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Exclude cart_session_id cookie from encryption so it persists across login/logout
         $middleware->encryptCookies(except: [
             'cart_session_id',
+            '_fbp',
+            '_fbc',
         ]);
 
         // Register middleware aliases

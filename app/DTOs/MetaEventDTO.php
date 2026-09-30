@@ -96,7 +96,7 @@ class MetaEventDTO
     private static function buildContents(Order $order): array
     {
         if (!$order->relationLoaded('items')) {
-            $order->load('items.product');
+            $order->load('items');
         }
 
         return $order->items->map(function ($item) {

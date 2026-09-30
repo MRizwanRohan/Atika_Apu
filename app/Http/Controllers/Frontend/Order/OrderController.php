@@ -118,6 +118,7 @@ class OrderController extends Controller
             }
 
             $this->storeOrderAccess($request, $order->order_number);
+            $request->session()->flash('meta_purchase_order', $order->order_number);
 
             // Clear Cart after successful complete order
             $userId = auth()->id();
@@ -172,8 +173,13 @@ class OrderController extends Controller
         // Browser-side pixel Purchase should only fire when mode is on_order_created.
         // For on_confirmed / on_delivered, CAPI fires later (server-side only).
         $settings = \App\Models\TrackingSettings::getSettings();
+        $checkoutOrder = request()->session()->pull('meta_purchase_order');
         $firePixelNow = $settings->pixel_enabled
-            && in_array($settings->purchase_fire_mode, ['on_order_created']);
+            && $settings->purchase_fire_mode === 'on_order_created'
+            && $checkoutOrder === $orderData->order_number
+            && !in_array($orderData->status, ['incomplete', 'cancelled', 'returned'], true)
+            && $orderData->payment_status !== 'refunded'
+            && (float) $orderData->total > 0;
 
         return Inertia::render('Frontend/Order/Success', [
             'order'          => $orderData,

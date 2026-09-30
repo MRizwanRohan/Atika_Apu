@@ -46,6 +46,9 @@ class SendMetaConversionEvent implements ShouldQueue
         );
 
         if (!$result['success']) {
+            if (($result['retryable'] ?? true) === false) {
+                return;
+            }
             // Only re-throw (and thus retry) if it wasn't a "already sent" or
             // "disabled" scenario — those don't need retrying.
             $nonRetryable = [

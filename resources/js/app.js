@@ -6,7 +6,7 @@ import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { createApp, h } from "vue";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
-import { initMetaPixel, shouldTrackMetaPixel } from "@/Composables/useMetaPixel";
+import { initMetaPixel, useMetaPixel } from "@/Composables/useMetaPixel";
 
 const appName = import.meta.env.VITE_APP_NAME || "";
 
@@ -18,15 +18,16 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.vue")
         ),
     setup({ el, App, props, plugin }) {
+        // Initialize before Success.vue's onMounted sends the purchase.
+        const metaPixel = props.initialPage.props.metaPixel;
+        if (metaPixel?.pixel_enabled && metaPixel.pixel_id) {
+            initMetaPixel(metaPixel.pixel_id);
+        }
+
         const vueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);
-
-        const metaPixel = props.initialPage.props.metaPixel;
-        if (metaPixel && metaPixel.pixel_enabled && metaPixel.pixel_id) {
-            initMetaPixel(metaPixel.pixel_id);
-        }
 
         return vueApp;
     },
@@ -38,11 +39,5 @@ createInertiaApp({
 
 // ── SPA PageView: track every Inertia navigation ──
 router.on('navigate', () => {
-    if (
-        shouldTrackMetaPixel() &&
-        typeof window !== 'undefined' &&
-        typeof window.fbq === 'function'
-    ) {
-        window.fbq('track', 'PageView');
-    }
+    useMetaPixel().trackPageView();
 });
