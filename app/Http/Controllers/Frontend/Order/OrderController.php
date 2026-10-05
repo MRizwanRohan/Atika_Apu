@@ -144,11 +144,16 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Order Creation Failed: ' . $e->getMessage());
             
+            $message = ($e instanceof \App\Exceptions\InsufficientStockException
+                || $e instanceof \App\Exceptions\InvalidOrderDataException)
+                ? $e->getMessage()
+                : 'We could not place your order. Please try again.';
+
             if ($isIncomplete) {
-                return response()->json(['error' => $e->getMessage()], 422);
+                return response()->json(['error' => $message], 422);
             }
-            
-            return redirect()->back()->withErrors(['message' => $e->getMessage()]);
+
+            return redirect()->back()->withErrors(['message' => $message]);
         }
     }
 

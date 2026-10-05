@@ -225,6 +225,9 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
 
 
 
+    Route::post('/orders/{order}/courier-status', [\App\Http\Controllers\Admin\Courier\ShipmentTrackingController::class, 'show'])
+        ->middleware('throttle:30,1')->name('orders.courier-status');
+
     //fraud check
     Route::post('/fraud-check', [FraudcheckController::class, 'fetchSuccessRate'])
         ->name('fraud-check.fetchSuccessRate');

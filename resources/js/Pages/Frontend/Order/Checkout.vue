@@ -123,7 +123,7 @@ const quoteLoading = ref(false);
 const quoteError = ref(false);
 let quoteSequence = 0;
 const pricing = computed(() => quote.value || props.cart?.data?.pricing);
-const money = value => Number(value || 0).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = value => Number(value || 0).toLocaleString('en-BD', { maximumFractionDigits: 0 });
 const subtotal = computed(() => Number(pricing.value?.qualifying_subtotal || 0));
 
 // Check if any items are pre-orders

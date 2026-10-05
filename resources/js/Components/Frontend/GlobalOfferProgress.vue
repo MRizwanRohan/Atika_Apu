@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 const props = defineProps({ pricing: Object, loading: Boolean });
-const money = value => Number(value || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 });
+const money = value => Number(value || 0).toLocaleString('en-BD', { maximumFractionDigits: 0 });
 const reward = offer => offer.reward_type === 'free_delivery' ? 'free delivery' : offer.reward_type === 'percentage' ? `${Number(offer.reward_value)}% discount` : `৳${money(offer.reward_value)} discount`;
 const next = computed(() => props.pricing?.next_milestone);
 const applied = computed(() => props.pricing?.applied_offers || []);

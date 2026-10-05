@@ -1,4 +1,5 @@
 <script setup>
+import ShipmentTrackingButton from "@/Components/Couriers/ShipmentTrackingButton.vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { ref, computed, watch, onMounted } from "vue";
@@ -1365,11 +1366,12 @@ const submitForm = () => {
                             <!-- Tracking Link -->
                             <div
                                 v-if="
-                                    order?.tracking_number &&
-                                    order?.tracking_number !== 'N/A'
+                                    order?.consignment_id || (order?.tracking_number && order?.tracking_number !== 'N/A')
                                 "
                             >
-                                <a
+                                <ShipmentTrackingButton v-if="order.courier_name === 'steadfast'" :order="order" />
+                                    <a
+                                        v-else-if="order.courier_name === 'pathao'"
                                     :href="
                                         order.courier_name === 'pathao'
                                             ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}`

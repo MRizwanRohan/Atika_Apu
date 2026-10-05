@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed, onMounted } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
+import ShipmentTrackingButton from "@/Components/Couriers/ShipmentTrackingButton.vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import {
     SquarePen,
@@ -1946,18 +1947,16 @@ const getStatusBadgeClass = (status) => {
                                             class="font-mono text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate leading-tight"
                                         >
                                             {{
-                                                order.tracking_number ||
+                                                order.consignment_id || order.tracking_number ||
                                                 "PENDING"
                                             }}
                                         </div>
                                     </div>
 
                                     <!-- Action Link -->
+                                    <ShipmentTrackingButton v-if="order.courier_name === 'steadfast'" :order="order" />
                                     <a
-                                        v-if="
-                                            order?.tracking_number &&
-                                            order?.tracking_number !== 'N/A'
-                                        "
+                                        v-else-if="order.courier_name === 'pathao'"
                                         :href="
                                             order.courier_name === 'pathao'
                                                 ? `https://merchant.pathao.com/tracking?consignment_id=${order.tracking_number}`

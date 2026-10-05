@@ -254,10 +254,10 @@ const handleClose = () => {
                     <div class="space-y-3">
                         <div class="flex justify-between items-center text-[11px] font-medium text-gray-400 uppercase tracking-widest">
                             <span>Subtotal</span>
-                            <span class="text-gray-900 dark:text-white font-bold italic text-base">৳{{ cartTotal }}</span>
+                            <span class="text-gray-900 dark:text-white font-bold italic text-base">৳{{ Number(cartTotal).toLocaleString('en-BD', { maximumFractionDigits: 0 }) }}</span>
                         </div>
-                        <div v-if="cart.pricing?.monetary_discount > 0" class="flex justify-between text-sm text-green-700 dark:text-green-400"><span>{{ cart.pricing.discount_source === 'coupon' ? 'Coupon discount' : 'Automatic discount' }}</span><span>−৳{{ Number(cart.pricing.monetary_discount).toLocaleString('en-BD') }}</span></div>
-                        <div v-if="cart.pricing?.monetary_discount > 0" class="flex justify-between text-sm font-semibold dark:text-white"><span>After discount</span><span>৳{{ Number(cart.pricing.merchandise_payable).toLocaleString('en-BD') }}</span></div>
+                        <div v-if="cart.pricing?.monetary_discount > 0" class="flex justify-between text-sm text-green-700 dark:text-green-400"><span>{{ cart.pricing.discount_source === 'coupon' ? 'Coupon discount' : 'Automatic discount' }}</span><span>−৳{{ Number(cart.pricing.monetary_discount).toLocaleString('en-BD', { maximumFractionDigits: 0 }) }}</span></div>
+                        <div v-if="cart.pricing?.monetary_discount > 0" class="flex justify-between text-sm font-semibold dark:text-white"><span>After discount</span><span>৳{{ Number(cart.pricing.merchandise_payable).toLocaleString('en-BD', { maximumFractionDigits: 0 }) }}</span></div>
                         <p class="text-xs text-gray-500">{{ cart.pricing?.shipping_payable === 0 ? 'Free delivery' : 'Delivery calculated at checkout' }}</p>
                     </div>
                     

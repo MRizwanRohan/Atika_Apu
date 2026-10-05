@@ -132,6 +132,15 @@ class GlobalOfferTest extends TestCase
         $this->assertSame(1000.0, $quote['grand_total']);
     }
 
+    public function test_automatic_discount_rounds_to_whole_taka_before_total(): void
+    {
+        $this->offer();
+        $pricing = (new GlobalOfferService)->evaluate(1485);
+        $this->assertEquals(149, $pricing['global_discount']);
+        $this->assertEquals(1336, $pricing['merchandise_payable']);
+        $this->assertEquals(149, $pricing['applied_offers'][0]['saving']);
+    }
+
     private function checkoutFixture(): array
     {
         Schema::create('cart_items', function (Blueprint $table) {

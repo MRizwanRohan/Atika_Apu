@@ -54,7 +54,12 @@ class GlobalOfferService
             if ($offer->reward_type === 'percentage' && $offer->maximum_discount !== null) {
                 $saving = min($saving, (int) round((float) $offer->maximum_discount * 100));
             }
-            $saving = min($base, max(0, $saving));
+            // Automatic discounts are rounded to the nearest whole taka before saving the order.
+            $saving = (int) round($saving / 100) * 100;
+            $saving = min((int) floor($base / 100) * 100, max(0, $saving));
+            if ($offer->maximum_discount !== null) {
+                $saving = min($saving, (int) floor((float) $offer->maximum_discount) * 100);
+            }
             if ($eligible && $offer->reward_type === 'free_delivery' && ! $free) {
                 $free = $offer;
             }
