@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import GlobalOfferProgress from '@/Components/Frontend/GlobalOfferProgress.vue';
+import { Link, router } from '@inertiajs/vue3';
 import { useCart } from '@/Composables/useCart';
 import { useCartSidebar } from '@/Composables/useCartSidebar';
 import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
@@ -66,9 +67,34 @@ const getLowestPrice = (product) => {
     return parseFloat(product.price);
 };
 
+// Refresh scheduled/admin-edited rewards while the cart is visible.
+let refreshTimer;
+let rewardBoundaryTimer;
+const refreshRewards = () => {
+    if (isCartSidebarOpen.value && !isLoading.value) {
+        router.reload({ only: ['cart', 'cartCount', 'cartTotal'], preserveScroll: true });
+    }
+};
+watch(() => cart.value?.pricing?.next_refresh_at, (boundary) => {
+    if (typeof window === 'undefined') return;
+    clearTimeout(rewardBoundaryTimer);
+    const delay = boundary ? new Date(boundary).getTime() - Date.now() + 300 : 0;
+    if (delay > 0 && delay < 2147483647) rewardBoundaryTimer = setTimeout(refreshRewards, delay);
+}, { immediate: true });
+onMounted(() => {
+    window.addEventListener('focus', refreshRewards);
+    refreshTimer = setInterval(refreshRewards, 60000);
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('focus', refreshRewards);
+    clearInterval(refreshTimer);
+    clearTimeout(rewardBoundaryTimer);
+});
+
 // Handle body scroll when sidebar opens/closes
 watch(isCartSidebarOpen, (newVal) => {
     if (newVal) {
+        refreshRewards();
         document.body.style.overflow = 'hidden';
     } else {
         document.body.style.overflow = '';
@@ -224,11 +250,15 @@ const handleClose = () => {
 
                 <!-- Footer -->
                 <div v-if="cart && cartItems.length > 0" class="border-t border-gray-50 dark:border-gray-800 p-6 bg-white dark:bg-gray-900 space-y-5">
+                    <GlobalOfferProgress :pricing="cart.pricing" :loading="isLoading" />
                     <div class="space-y-3">
                         <div class="flex justify-between items-center text-[11px] font-medium text-gray-400 uppercase tracking-widest">
                             <span>Subtotal</span>
                             <span class="text-gray-900 dark:text-white font-bold italic text-base">৳{{ cartTotal }}</span>
                         </div>
+                        <div v-if="cart.pricing?.monetary_discount > 0" class="flex justify-between text-sm text-green-700 dark:text-green-400"><span>{{ cart.pricing.discount_source === 'coupon' ? 'Coupon discount' : 'Automatic discount' }}</span><span>−৳{{ Number(cart.pricing.monetary_discount).toLocaleString('en-BD') }}</span></div>
+                        <div v-if="cart.pricing?.monetary_discount > 0" class="flex justify-between text-sm font-semibold dark:text-white"><span>After discount</span><span>৳{{ Number(cart.pricing.merchandise_payable).toLocaleString('en-BD') }}</span></div>
+                        <p class="text-xs text-gray-500">{{ cart.pricing?.shipping_payable === 0 ? 'Free delivery' : 'Delivery calculated at checkout' }}</p>
                     </div>
                     
                     <div class="space-y-3">

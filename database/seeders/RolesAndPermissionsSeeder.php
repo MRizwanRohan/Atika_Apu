@@ -39,6 +39,7 @@ class RolesAndPermissionsSeeder extends Seeder
             // legacy permission used by route middleware
             'manage_user_roles',
             'admin.coupons.index',
+            'admin.global-offers.index',
             'admin.campaigns.index',
             'admin.corporate-clients.index',
             'admin.landing-pages.index',
@@ -98,6 +99,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'admin.products.index',
             'admin.inventory.getAllProductsStock',
             'admin.coupons.index',
+            'admin.global-offers.index',
         ]);
 
         // Create customer role for regular users (no admin permissions)

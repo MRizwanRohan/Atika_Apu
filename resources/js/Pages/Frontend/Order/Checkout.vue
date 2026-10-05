@@ -8,7 +8,8 @@ import {
     onBeforeUnmount,
 } from "vue";
 import checkoutLocations from "../../../../../public/jsondata/checkout_locations.json";
-import { useForm, usePage, Head, Link } from "@inertiajs/vue3";
+import { useForm, usePage, Head, Link, router } from "@inertiajs/vue3";
+import GlobalOfferProgress from "@/Components/Frontend/GlobalOfferProgress.vue";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import { useCart } from "@/Composables/useCart";
 import { useToast } from "@/Composables/useToast";
@@ -68,6 +69,7 @@ const form = useForm({
     coupon_code: props.cart?.data?.coupon_code || null,
     discount_type: props.cart?.data?.coupon_type || null,
     discount_amount: props.cart?.data?.coupon_value || 0,
+    quote_total: null,
     items: [],
 });
 
@@ -116,13 +118,13 @@ watch(
     { deep: true },
 );
 
-// Calculate subtotal from cart
-const subtotal = computed(() => {
-    if (!props.cart?.data?.items) return 0;
-    return props.cart.data.items.reduce((sum, item) => {
-        return sum + parseFloat(item.price) * item.quantity;
-    }, 0);
-});
+const quote = ref(null);
+const quoteLoading = ref(false);
+const quoteError = ref(false);
+let quoteSequence = 0;
+const pricing = computed(() => quote.value || props.cart?.data?.pricing);
+const money = value => Number(value || 0).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const subtotal = computed(() => Number(pricing.value?.qualifying_subtotal || 0));
 
 // Check if any items are pre-orders
 const hasPreOrderItems = computed(() => {
@@ -130,11 +132,8 @@ const hasPreOrderItems = computed(() => {
     return props.cart.data.items.some((item) => item.is_pre_order);
 });
 
-// Calculate total
-const total = computed(() => {
-    const discount = props.cart?.data?.discount || 0;
-    return subtotal.value + form.shipping_cost - parseFloat(discount);
-});
+// Only confirmed server quotes determine the payable amount.
+const total = computed(() => Number(pricing.value?.grand_total ?? pricing.value?.merchandise_payable ?? 0));
 
 // Calculate suggested advance payment
 const advancePaymentAmount = computed(() => {
@@ -221,35 +220,50 @@ const applyCoupon = () => {
     });
 };
 
-// Fetch dynamic shipping cost from API
+// Refresh the complete server quote; discard responses for older cart/address states.
 const fetchShippingCost = async () => {
-    // If every item in the cart has is_free_delivery === true, shipping is 0
-    const items = props.cart?.data?.items || [];
-    const allFree =
-        items.length > 0 && items.every((it) => !!it.is_free_delivery);
-    if (allFree) {
-        form.shipping_cost = 0;
-        return;
-    }
-
-    if (!form.shipping_district) {
-        form.shipping_cost = 0;
-        return;
-    }
-
+    const sequence = ++quoteSequence;
+    quoteLoading.value = true;
+    quoteError.value = false;
+    quote.value = null;
     try {
         const response = await axios.get(route("order.delivery-charge.get"), {
-            params: {
-                district: form.shipping_district,
-                thana: form.shipping_thana,
-                union: form.shipping_union,
-            },
+            params: { district: form.shipping_district, thana: form.shipping_thana },
         });
-        form.shipping_cost = response.data.charge;
+        if (sequence !== quoteSequence) return;
+        quote.value = response.data.pricing;
+        form.shipping_cost = response.data.charge ?? 0;
+        form.quote_total = response.data.pricing.grand_total;
     } catch (error) {
-        console.error("Failed to fetch shipping cost", error);
+        if (sequence !== quoteSequence) return;
+        quoteError.value = true;
+        form.quote_total = null;
+    } finally {
+        if (sequence === quoteSequence) quoteLoading.value = false;
     }
 };
+const refreshCheckout = () => router.reload({
+    only: ['cart', 'cartCount', 'cartTotal'],
+    onSuccess: () => fetchShippingCost(),
+});
+let offerRefreshTimer;
+let offerBoundaryTimer;
+watch(() => pricing.value?.next_refresh_at, (boundary) => {
+    if (typeof window === 'undefined') return;
+    clearTimeout(offerBoundaryTimer);
+    const delay = boundary ? new Date(boundary).getTime() - Date.now() + 300 : 0;
+    if (delay > 0 && delay < 2147483647) offerBoundaryTimer = setTimeout(fetchShippingCost, delay);
+}, { immediate: true });
+onMounted(() => {
+    window.addEventListener('focus', refreshCheckout);
+    offerRefreshTimer = setInterval(refreshCheckout, 60000);
+});
+onBeforeUnmount(() => {
+    ++quoteSequence;
+    window.removeEventListener('focus', refreshCheckout);
+    clearInterval(offerRefreshTimer);
+    clearTimeout(offerBoundaryTimer);
+});
 
 // Watch location changes for dynamic shipping cost
 watch(
@@ -338,6 +352,11 @@ onBeforeUnmount(() => {
 
 // Form submission handler
 const submitOrder = () => {
+    if (quoteLoading.value || quoteError.value || form.quote_total === null) {
+        toast.warning("Please wait for your order total to update.");
+        if (!quoteLoading.value) fetchShippingCost();
+        return;
+    }
     // Client-side phone validation only (UI)
     if (!isPhoneValid.value) {
         phoneTouched.value = true;
@@ -376,6 +395,7 @@ const submitOrder = () => {
             }
         },
         onError: (errors) => {
+            refreshCheckout();
             console.error("Order submission failed:", errors);
             if (errors.message) {
                 toast.error(errors.message);
@@ -1134,6 +1154,8 @@ onMounted(() => {
                                     </div>
                                 </div>
 
+                                <GlobalOfferProgress :pricing="pricing" :loading="quoteLoading" />
+                                <p v-if="quoteError" class="text-sm text-red-600">Could not update your total. <button type="button" class="underline" @click="fetchShippingCost">Retry</button></p>
                                 <!-- Summary -->
                                 <div
                                     class="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-gray-100"
@@ -1147,7 +1169,7 @@ onMounted(() => {
                                         >
                                         <span
                                             class="text-xs sm:text-sm font-normal text-gray-900"
-                                            >{{ subtotal.toLocaleString() }}.00
+                                            >{{ money(subtotal) }}
                                             BDT</span
                                         >
                                     </div>
@@ -1160,10 +1182,11 @@ onMounted(() => {
                                         >
                                         <span
                                             class="text-xs sm:text-sm font-normal text-gray-900"
-                                            >{{ form.shipping_cost }}.00
-                                            BDT</span
+                                            >{{ pricing?.shipping_payable === 0 ? "Free" : (pricing?.shipping_quote_status === "address_required" ? "Select address" : money(form.shipping_cost) + " BDT") }}</span
                                         >
                                     </div>
+                                    <div v-if="pricing?.monetary_discount > 0" class="flex justify-between text-sm text-green-700"><span>{{ pricing.discount_source === 'coupon' ? 'Coupon discount' : 'Automatic discount' }}</span><span>−৳{{ money(pricing.monetary_discount) }}</span></div>
+                                    <p v-if="pricing?.shipping_discount > 0" class="text-xs text-green-700">Delivery saving: ৳{{ money(pricing.shipping_discount) }}</p>
                                     <div
                                         class="flex justify-between items-center pt-2 sm:pt-3 border-t border-gray-100"
                                     >
@@ -1174,8 +1197,8 @@ onMounted(() => {
                                         <span
                                             class="text-sm sm:text-base font-semibold text-gray-900"
                                             >{{
-                                                total.toLocaleString()
-                                            }}.00BDT</span
+                                                money(total)
+                                            }} BDT</span
                                         >
                                     </div>
 

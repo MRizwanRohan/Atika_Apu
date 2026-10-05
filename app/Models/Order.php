@@ -13,6 +13,7 @@ class Order extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'global_discount_total', 'shipping_discount_total', 'normal_shipping_charge', 'offer_snapshot',
         'order_number',
         'meta_tracking_context',
         'user_id',
@@ -59,6 +60,10 @@ class Order extends Model
     protected $hidden = ['meta_tracking_context'];
 
     protected $casts = [
+        'offer_snapshot' => 'array',
+        'global_discount_total' => 'decimal:2',
+        'shipping_discount_total' => 'decimal:2',
+        'normal_shipping_charge' => 'decimal:2',
         'meta_tracking_context' => 'array',
         'shipping_cost' => 'decimal:2',
         'date' => 'datetime',

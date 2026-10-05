@@ -9,6 +9,7 @@ class CartResource extends JsonResource
 {
     public function toArray($request)
     {
+        app(\App\Services\Offers\CheckoutPricingService::class)->refreshPrices($this->resource);
         $couponCode = session('applied_coupon');
         $discount = 0;
         $couponType = null;
@@ -25,22 +26,32 @@ class CartResource extends JsonResource
                 $couponData = $couponService->applyToCart($couponCode, $this->id);
                 $discount = $couponData['summary']['total_discount'] ?? 0;
                 $appliedItems = collect($couponData['items'] ?? [])->keyBy('cart_item_id');
-            } catch (\Exception $e) {
+            } catch (\App\Exceptions\CouponException $e) {
+                if ($e->getCode() >= 500) throw $e;
                 \Log::warning("Coupon $couponCode invalid, removing from session: " . $e->getMessage());
                 session()->forget('applied_coupon');
+                $couponCode = null;
+                $couponType = null;
+                $couponValue = 0;
             }
         }
 
+        $pricing = app(\App\Services\Offers\GlobalOfferService::class)->evaluate(
+            (float) $this->items->sum(fn ($item) => $item->price * $item->quantity), (float) $discount
+        );
+        $pricing = app(\App\Services\Offers\CheckoutPricingService::class)->withShipping($pricing, $this->resource, null, null);
+
         return [
+            'pricing' => $pricing,
             'id' => $this->id,
-            'total' => $this->total,
+            'total' => $pricing['qualifying_subtotal'],
             'items_count' => $this->items->count(),
-            'items' => $this->items->map(function ($item) use ($appliedItems) {
+            'items' => $this->items->map(function ($item) use ($appliedItems, $pricing) {
                 $resource = new CartItemResource($item);
                 $data = $resource->toArray(request());
                 
                 $appliedInfo = $appliedItems->get($item->id);
-                if ($appliedInfo && $appliedInfo['is_eligible']) {
+                if ($pricing['discount_source'] === 'coupon' && $appliedInfo && $appliedInfo['is_eligible']) {
                     $data['coupon_code'] = $appliedInfo['coupon_code'];
                     $data['discount_type'] = $appliedInfo['discount_type'];
                     $data['discount_amount'] = $appliedInfo['discount_amount']; // This is the value (e.g. 10)
@@ -57,7 +68,7 @@ class CartResource extends JsonResource
             'coupon_code' => $couponCode,
             'coupon_type' => $couponType,
             'coupon_value' => $couponValue,
-            'discount' => $discount,
+            'discount' => $pricing['monetary_discount'],
             'is_daily_product' => $this->items->contains(function ($item) {
                 return $item->product && $item->product->is_daily_product;
             }),

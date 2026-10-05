@@ -345,6 +345,8 @@ const downloadInvoice = () => {
                                     <span class="text-gray-500">Delivery</span>
                                     <span class="text-gray-900 font-medium">৳{{ parseFloat(order.shipping_cost || 0).toFixed(2) }}</span>
                                 </div>
+                                <p v-if="Number(order.global_discount_total) > 0" class="text-xs text-green-700">Automatic offer saving: ৳{{ Number(order.global_discount_total).toFixed(2) }} (included in discount)</p>
+                                <p v-if="Number(order.shipping_discount_total) > 0" class="text-xs text-green-700">Free delivery saving: ৳{{ Number(order.shipping_discount_total).toFixed(2) }}</p>
                                 <div v-if="parseFloat(order.discount_total || order.discount || 0) > 0" class="flex justify-between text-sm">
                                     <span class="text-green-600 font-medium">Discount</span>
                                     <span class="font-medium text-green-600">-৳{{ parseFloat(order.discount_total || order.discount || 0).toFixed(2) }}</span>

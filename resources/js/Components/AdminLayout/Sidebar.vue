@@ -456,6 +456,12 @@ const navigationItems = [
         ],
     },
     {
+        label: "Global Offer",
+        route: "admin.global-offers.index",
+        icon: TicketPercent,
+        permission: "admin.global-offers.index",
+    },
+    {
         label: "Coupons",
         route: "admin.coupons.index",
         icon: TicketPercent,

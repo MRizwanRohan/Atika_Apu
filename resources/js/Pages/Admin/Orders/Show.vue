@@ -198,6 +198,8 @@ const printInvoice = () => {
               <span class="font-medium">Discount:</span>
               <span>-৳{{ formatPrice(order?.discount_total || 0) }}</span>
             </div>
+            <div v-if="Number(order?.global_discount_total) > 0" class="flex justify-between py-2 text-sm text-green-700"><span>Automatic offer (included in discount):</span><span>৳{{ formatPrice(order.global_discount_total) }}</span></div>
+            <div v-if="Number(order?.shipping_discount_total) > 0" class="flex justify-between py-2 text-sm text-green-700"><span>Free delivery saving:</span><span>৳{{ formatPrice(order.shipping_discount_total) }}</span></div>
             <div class="flex justify-between py-2 border-t border-gray-300 font-bold">
               <span>Grand Total:</span>
               <span>৳{{ formatPrice(order?.total || 0) }}</span>

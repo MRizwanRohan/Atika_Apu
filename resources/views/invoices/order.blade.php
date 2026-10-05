@@ -360,6 +360,12 @@
                         <span>Discount:</span>
                         <span>-৳{{ number_format($order['discount_total'], 2) }}</span>
                     </div>
+                    @if(($order['global_discount_total'] ?? 0) > 0)
+                    <div class="totals-row"><span>Automatic offer (included above):</span><span>৳{{ number_format($order['global_discount_total'], 2) }}</span></div>
+                    @endif
+                    @if(($order['shipping_discount_total'] ?? 0) > 0)
+                    <div class="totals-row"><span>Free delivery saving:</span><span>৳{{ number_format($order['shipping_discount_total'], 2) }}</span></div>
+                    @endif
                     <div class="totals-row grand-total">
                         <span>Grand Total:</span>
                         <span>৳{{ number_format($order['total'], 2) }}</span>

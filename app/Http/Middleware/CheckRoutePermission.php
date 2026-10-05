@@ -70,6 +70,7 @@ class CheckRoutePermission
 
         // Coupons
         'admin.coupons.*' => 'admin.coupons.index',
+        'admin.global-offers.*' => 'admin.global-offers.index',
 
         // Campaigns
         'admin.campaigns.*' => 'admin.campaigns.index',

@@ -396,6 +396,12 @@
                             <div class="label">Discount:</div>
                             <div class="value">{{ number_format($order->discount_total, 0) }} Tk</div>
                         </div>
+                        @if(($order->global_discount_total ?? 0) > 0)
+                        <div class="totals-row"><div class="label">Automatic offer (included):</div><div class="value">{{ number_format($order->global_discount_total, 2) }} Tk</div></div>
+                        @endif
+                        @if(($order->shipping_discount_total ?? 0) > 0)
+                        <div class="totals-row"><div class="label">Free delivery saving:</div><div class="value">{{ number_format($order->shipping_discount_total, 2) }} Tk</div></div>
+                        @endif
                         <div class="totals-row">
                             <div class="label">Paid:</div>
                             <div class="value">{{ number_format($order->paid_amount ?? 0, 0) }} Tk</div>

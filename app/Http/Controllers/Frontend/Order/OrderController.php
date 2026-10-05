@@ -60,6 +60,13 @@ class OrderController extends Controller
     {
         $isIncomplete = $request->input('status') === 'incomplete';
 
+        // The storefront identity and cart are owned by the authenticated session.
+        $sessionId = $request->cookie('cart_session_id') ?? $request->session()->get('cart_session_id');
+        $request->merge(['user_id' => auth()->id(), 'session_id' => $sessionId,
+            'landing_order' => false, 'source' => 'website', 'pos_discount' => 0,
+            'discount_type' => null, 'discount_amount' => 0, 'payment_status' => 'unpaid']);
+        if (!$isIncomplete) $request->merge(['status' => 'pending']);
+
         // Conditional validation: Relaxed for incomplete orders
         if (!$isIncomplete) {
             $validated = $request->validate([
@@ -131,6 +138,9 @@ class OrderController extends Controller
             // Redirect to Success Page
             return redirect()->route('order.success', ['order' => $order->order_number]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isIncomplete) return response()->json(['errors' => $e->errors()], 422);
+            return redirect()->back()->withErrors($e->errors());
         } catch (\Exception $e) {
             Log::error('Order Creation Failed: ' . $e->getMessage());
             
@@ -242,16 +252,15 @@ class OrderController extends Controller
     }
     public function getDeliveryCharge(Request $request)
     {
-        $district = $request->query('district');
-        $thana = $request->query('thana');
-
-        if (!$district) {
-            return response()->json(['charge' => 0]);
-        }
-
-        return response()->json([
-            'charge' => $this->resolveDeliveryCharge($district, $thana),
-        ]);
+        $request->validate(['district' => 'nullable|string|max:255', 'thana' => 'nullable|string|max:255']);
+        $sessionId = $request->cookie('cart_session_id') ?? $request->session()->get('cart_session_id');
+        $cart = $this->cartService->getCart(auth()->id(), $sessionId);
+        if (!$cart || $cart->items->isEmpty()) return response()->json(['message' => 'Your cart is empty.'], 422);
+        $data = (new CartResource($cart))->toArray($request);
+        $pricing = app(\App\Services\Offers\CheckoutPricingService::class)->withShipping(
+            $data['pricing'], $cart, $request->query('district'), $request->query('thana')
+        );
+        return response()->json(['charge' => $pricing['shipping_payable'], 'pricing' => $pricing]);
     }
 
     private function canAccessOrder(Request $request, Order $order): bool

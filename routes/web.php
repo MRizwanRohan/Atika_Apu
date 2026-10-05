@@ -157,6 +157,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::get('product-groups-search-products', [ProductGroupController::class, 'searchProducts'])->name('product-groups.search-products');
 
     // copon
+    Route::resource('global-offers', \App\Http\Controllers\Admin\GlobalOfferController::class)->only(['index', 'store']);
     Route::resource('coupons', CouponController::class);
 
     Route::post('coupons/{coupon_id}/products', [CouponController::class, 'storeProductCoupon'])->name('coupons.storeProductCoupon');

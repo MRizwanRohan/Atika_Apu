@@ -90,6 +90,11 @@ class OrderService implements OrderInterface
                 // Process and save order items
                 $this->processOrderItems($order, $processedItems);
 
+                // Apply the server quote before totals/events/payment amounts are consumed.
+                if (request()->routeIs('order.store')) {
+                    $this->applyStorefrontPricing($order, $validatedData);
+                }
+
                 // Calculate and update order totals
                 $this->calculateOrderTotals($order);
 
@@ -101,8 +106,7 @@ class OrderService implements OrderInterface
                 //     'total' => $order->total
                 // ]);
 
-                $itemWithCoupon = collect($validatedData['items'])
-                    ->first(fn($item) => !empty($item['coupon_code']));
+                $itemWithCoupon = $order->items->first(fn ($item) => !empty($item->coupon_code));
 
                 // Skip coupon adjustment for incomplete orders
                 if ($itemWithCoupon && $order->status !== 'incomplete') {
@@ -156,6 +160,99 @@ class OrderService implements OrderInterface
             ]);
             throw $e;
         }
+    }
+
+    /** Final storefront quote is evaluated within the order transaction. */
+    protected function applyStorefrontPricing(Order $order, array $data): void
+    {
+        $cart = $this->cartService->getCart($order->user_id, $order->session_id);
+        if (!$cart || $cart->items->isEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['cart' => 'Your cart is empty.']);
+        }
+        $lockedItems = $cart->items()->lockForUpdate()->get();
+        if ($lockedItems->pluck('quantity', 'id')->all() !== $cart->items->pluck('quantity', 'id')->all()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['cart' => 'Your cart changed. Please refresh checkout.']);
+        }
+        if (session('applied_coupon')) {
+            \App\Models\Coupon::where('code', session('applied_coupon'))->lockForUpdate()->first();
+        }
+        $key = fn ($item) => $item['product_id'].'/'.($item['product_variation_id'] ?? 0);
+        $submitted = collect($data['items'])->mapWithKeys(fn ($item) => [$key($item) => (int) $item['quantity']])->sortKeys()->all();
+        $owned = $cart->items->mapWithKeys(fn ($item) => [$item->product_id.'/'.($item->product_variation_id ?? 0) => (int) $item->quantity])->sortKeys()->all();
+        if (count($data['items']) !== $cart->items->count() || $submitted !== $owned) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['cart' => 'Your cart changed. Refresh checkout and review your items.']);
+        }
+        $resource = (new \App\Http\Resources\Cart\CartResource($cart))->toArray(request());
+        $service = app(\App\Services\Offers\CheckoutPricingService::class);
+        $pricing = $service->withShipping($resource['pricing'], $cart, $order->shipping_district, $order->shipping_thana);
+        if ($order->status !== 'incomplete' && (!isset($data['quote_total']) || abs((float) $data['quote_total'] - (float) $pricing['grand_total']) >= 0.005)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['quote_total' => 'Your order total changed. Please review the updated amount and place your order again.']);
+        }
+        $items = $order->items;
+        if (abs((float) $items->sum('subtotal') - $pricing['qualifying_subtotal']) >= 0.005) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['quote_total' => 'Product prices changed. Please refresh checkout.']);
+        }
+        $allocations = $service->allocate($pricing['global_discount'], $items->map(fn ($item) => (float) $item->subtotal)->all());
+        foreach ($items as $index => $item) {
+            $cartLine = collect($resource['items'])->first(fn ($line) => (int) $line['product_id'] === (int) $item->product_id
+                && (int) ($line['variation_id'] ?? 0) === (int) ($item->product_variation_id ?? 0));
+            if (!$cartLine) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['cart' => 'Product options changed. Please refresh checkout.']);
+            }
+            $discount = $pricing['discount_source'] === 'coupon' ? round((float) ($cartLine['item_discount'] ?? 0), 2) : $allocations[$index];
+            $item->update([
+                'discount_type' => $discount > 0 ? 'fixed' : null,
+                'discount_amount' => $item->quantity > 0 ? $discount / $item->quantity : 0,
+                'discount_total' => $discount, 'final_price' => max(0, (float) $item->subtotal - $discount),
+                'coupon_code' => $pricing['discount_source'] === 'coupon' ? $resource['coupon_code'] : null,
+            ]);
+        }
+        // Offers are represented in line discounts, so existing reporting/refunds count them once.
+        $order->forceFill([
+            'shipping_cost' => $pricing['shipping_payable'] ?? 0,
+            'normal_shipping_charge' => $pricing['normal_shipping_charge'],
+            'shipping_discount_total' => $pricing['shipping_discount'],
+            'global_discount_total' => $pricing['global_discount'],
+            'offer_snapshot' => ['version' => 1, 'provisional' => $order->status === 'incomplete', 'entered_coupon' => $resource['coupon_code'], 'pricing' => $pricing],
+        ])->save();
+    }
+
+    /** Re-evaluate provisional offers from the stored order, independent of an admin's cart/session. */
+    protected function confirmProvisionalOffers(Order $order): void
+    {
+        if (!($order->offer_snapshot['provisional'] ?? false)) return;
+        $service = app(\App\Services\Offers\CheckoutPricingService::class);
+        $items = $order->load('items.product.campaigns', 'items.productVariation')->items;
+        $coupon = null;
+        $code = $order->offer_snapshot['entered_coupon'] ?? null;
+        if ($code) {
+            try { $coupon = $this->couponService->verifyCoupon($code); } catch (\App\Exceptions\CouponException $e) { if ($e->getCode() >= 500) throw $e; $coupon = null; }
+        }
+        $couponLines = [];
+        foreach ($items as $item) {
+            $price = $service->unitPrice($item->product, $item->productVariation);
+            $subtotal = round($price * $item->quantity, 2);
+            $eligible = $coupon && ($coupon->apply_to_all_products || $coupon->products->contains('id', $item->product_id));
+            $couponLines[] = $eligible ? round(min($subtotal, max(0, $coupon->calculateDiscount($subtotal))), 2) : 0;
+            $item->unit_price = $price;
+            $item->subtotal = $subtotal;
+        }
+        $pricing = app(\App\Services\Offers\GlobalOfferService::class)->evaluate((float) $items->sum('subtotal'), array_sum($couponLines));
+        $cart = new Cart;
+        $cart->setRelation('items', $items);
+        $pricing = $service->withShipping($pricing, $cart, $order->shipping_district, $order->shipping_thana);
+        $allocations = $service->allocate($pricing['global_discount'], $items->pluck('subtotal')->all());
+        foreach ($items as $index => $item) {
+            $discount = $pricing['discount_source'] === 'coupon' ? $couponLines[$index] : $allocations[$index];
+            $item->forceFill(['discount_type' => $discount > 0 ? 'fixed' : null, 'discount_amount' => $discount / $item->quantity,
+                'discount_total' => $discount, 'final_price' => max(0, (float) $item->subtotal - $discount),
+                'coupon_code' => $pricing['discount_source'] === 'coupon' ? $code : null])->save();
+        }
+        $order->forceFill(['shipping_cost' => $pricing['shipping_payable'] ?? 0,
+            'normal_shipping_charge' => $pricing['normal_shipping_charge'], 'shipping_discount_total' => $pricing['shipping_discount'],
+            'global_discount_total' => $pricing['global_discount'],
+            'offer_snapshot' => ['version' => 1, 'provisional' => false, 'entered_coupon' => $code, 'pricing' => $pricing]])->save();
+        $this->calculateOrderTotals($order);
     }
 
     /**
@@ -293,6 +390,7 @@ class OrderService implements OrderInterface
             'discount_type' => ['nullable', 'in:percentage,fixed'],
             // Online coupon fields (root level)
             'coupon_code' => ['nullable', 'string'],
+            'quote_total' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
@@ -414,6 +512,8 @@ class OrderService implements OrderInterface
                 $price = $activeCampaign->calculateDiscountedPrice($price);
             }
 
+            $price = app(\App\Services\Offers\CheckoutPricingService::class)->unitPrice($product, $productVariation);
+
             // Prepare processed item with resolved variation
             // Note: We only pass coupon/explicit item discounts via discount_type/discount_amount
             // Campaign discount is already applied to the unit_price above to avoid double-application later
@@ -423,8 +523,8 @@ class OrderService implements OrderInterface
                 'quantity' => $itemData['quantity'],
                 'base_unit_price' => $basePrice,
                 'unit_price' => $price,
-                'discount_type' => !empty($itemData['discount_type']) ? $itemData['discount_type'] : null,
-                'discount_amount' => (!empty($itemData['discount_amount']) && $itemData['discount_amount'] > 0) ? $itemData['discount_amount'] : 0,
+                'discount_type' => request()->routeIs('order.store') ? null : (!empty($itemData['discount_type']) ? $itemData['discount_type'] : null),
+                'discount_amount' => request()->routeIs('order.store') ? 0 : ((!empty($itemData['discount_amount']) && $itemData['discount_amount'] > 0) ? $itemData['discount_amount'] : 0),
                 'is_pre_order' => $product->is_pre_order && (($productVariation ? $productVariation->stock : $product->stock) <= 0),
                 'additional_data' => $itemData
             ];
@@ -637,6 +737,10 @@ class OrderService implements OrderInterface
             $total = 0;
         }
 
+        if (($order->offer_snapshot['pricing']['discount_source'] ?? null) === 'global_offer') {
+            $order->global_discount_total = round($discountTotal, 2);
+        }
+
         // Update order with calculated totals
         $order->update([
             'subtotal' => $subtotal,
@@ -828,6 +932,7 @@ class OrderService implements OrderInterface
             ]);
 
             return DB::transaction(function () use ($order, $validatedData) {
+                $oldStatus = $order->status;
                 // Update basic order information if provided
                 $this->updateOrderBasicInfo($order, $validatedData);
 
@@ -836,11 +941,14 @@ class OrderService implements OrderInterface
                     $this->updateOrderItems($order, $validatedData['items']);
                 }
 
+                if ($oldStatus === 'incomplete' && $order->status !== 'incomplete' && !in_array($order->status, ['cancelled', 'returned'])) {
+                    $this->confirmProvisionalOffers($order);
+                }
                 // Recalculate order totals
                 $this->calculateOrderTotals($order);
 
                 // If updating from incomplete to pending, handle stock and cart
-                if ($order->status === 'incomplete' && isset($validatedData['status']) && $validatedData['status'] === 'pending') {
+                if ($oldStatus === 'incomplete' && isset($validatedData['status']) && $validatedData['status'] === 'pending') {
                     $this->handleIncompleteToPendingTransition($order);
                 }
 
@@ -1148,7 +1256,9 @@ class OrderService implements OrderInterface
         if ($orderItem->discount_type === 'percentage' && $orderItem->discount_amount > 0) {
             $discountAmount = ($subtotal * $orderItem->discount_amount) / 100;
         } elseif ($orderItem->discount_type === 'fixed' && $orderItem->discount_amount > 0) {
-            $discountAmount = $orderItem->discount_amount * $newQuantity;
+            $discountAmount = ($orderItem->order?->offer_snapshot && $orderItem->quantity > 0)
+                ? round((float) $orderItem->discount_total / $orderItem->quantity * $newQuantity, 2)
+                : $orderItem->discount_amount * $newQuantity;
         }
 
         // Ensure discount doesn't exceed subtotal
@@ -1234,6 +1344,7 @@ class OrderService implements OrderInterface
         $activeStatuses = ['pending', 'processing', 'shipped', 'delivered', 'confirmed', 'on_hold'];
         // Statuses where stock has been returned (order cancelled/returned)
         $returningStatuses = ['cancelled', 'returned'];
+        if ($oldStatus === 'incomplete' && in_array($newStatus, $activeStatuses)) return true;
 
         // Reduce stock when transitioning FROM a returned/cancelled status TO an active status
         // This handles cases like: returned → delivered, cancelled → pending, etc.
@@ -1433,12 +1544,9 @@ class OrderService implements OrderInterface
             $this->cartService->clearCart($order->user_id, $order->session_id);
         }
 
-        // Apply coupon adjustments if any items have coupons
-        foreach ($order->items as $item) {
-            if (!empty($item->coupon_code)) {
-                $this->couponService->adjustCouponLimit($item->coupon_code);
-            }
-        }
+        // One usage per order, even when several lines use the coupon.
+        $code = $order->items->first(fn ($item) => !empty($item->coupon_code))?->coupon_code;
+        if ($code) $this->couponService->adjustCouponLimit($code);
 
         // Dispatch order created event
         event(new OrderCreated($order));
@@ -1474,47 +1582,55 @@ class OrderService implements OrderInterface
             throw new \InvalidArgumentException("Invalid status: {$newStatus}");
         }
 
-        $order = Order::with('items.product', 'items.productVariation')->findOrFail($orderId);
-        $oldStatus = $order->status;
+        return DB::transaction(function () use ($orderId, $newStatus) {
+            $order = Order::with('items.product', 'items.productVariation')->findOrFail($orderId);
+            $oldStatus = $order->status;
 
-        // Don't allow status changes from delivered except to returned
-        if ($oldStatus === 'delivered' && $newStatus !== 'returned') {
-            Log::warning('Status change not allowed', [
-                'order_id' => $orderId,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus
-            ]);
-            throw new \InvalidArgumentException("Cannot change status from delivered to {$newStatus}");
+            // Don't allow status changes from delivered except to returned
+            if ($oldStatus === 'delivered' && $newStatus !== 'returned') {
+                Log::warning('Status change not allowed', [
+                    'order_id' => $orderId,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus
+                ]);
+                throw new \InvalidArgumentException("Cannot change status from delivered to {$newStatus}");
 
-            // Removed redundant return statement
-        }
+                // Removed redundant return statement
+            }
 
-        // Don't process if status hasn't changed
-        if ($oldStatus === $newStatus) {
+            // Don't process if status hasn't changed
+            if ($oldStatus === $newStatus) {
+                return $order;
+            }
+
+            if ($oldStatus === 'incomplete' && !in_array($newStatus, ['incomplete', 'cancelled', 'returned'])) {
+                $this->confirmProvisionalOffers($order);
+                $code = $order->items->first(fn ($item) => !empty($item->coupon_code))?->coupon_code;
+                if ($code) $this->couponService->adjustCouponLimit($code);
+            }
+
+            // Process inventory changes for each order item
+            foreach ($order->items as $item) {
+                $this->adjustProductStock(
+                    $item->product,
+                    $item->productVariation,
+                    $item->quantity,
+                    $oldStatus,
+                    $newStatus,
+                    $item->is_pre_order
+                );
+            }
+
+            // Update the order status
+            $order->update(['status' => $newStatus]);
+
+            // Dispatch event so Meta CAPI and other listeners can react
+            event(new OrderUpdated($order));
+
+            $this->syncCustomer($order);
+
             return $order;
-        }
-
-        // Process inventory changes for each order item
-        foreach ($order->items as $item) {
-            $this->adjustProductStock(
-                $item->product,
-                $item->productVariation,
-                $item->quantity,
-                $oldStatus,
-                $newStatus,
-                $item->is_pre_order
-            );
-        }
-
-        // Update the order status
-        $order->update(['status' => $newStatus]);
-
-        // Dispatch event so Meta CAPI and other listeners can react
-        event(new OrderUpdated($order));
-
-        $this->syncCustomer($order);
-
-        return $order;
+        });
 
     }
 

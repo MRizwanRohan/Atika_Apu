@@ -297,7 +297,7 @@ class CouponService
                 $totalPrice = $product->price;
 
                 if ($isEligible) {
-                    $discount = $coupon->calculateDiscount($totalPrice);
+                    $discount = round(min($totalPrice, max(0, $coupon->calculateDiscount($totalPrice))), 2);
                     $discountedPrice = $totalPrice - $discount;
                     $totalDiscount += $discount;
                 } else {
@@ -427,24 +427,7 @@ class CouponService
                 $isEligible = !empty($applicableProductIds) && in_array($product->id, $applicableProductIds);
             }
 
-            // Determine unit price from variation or base product
-            $unitPrice = $item->product_variation_id
-                ? $item->variation->price + $item->product->price
-                : $product->price;
-
-            // Apply active campaign price (if any) to align with cart display
-            $discountedUnitPrice = $unitPrice;
-            if (!empty($product->campaigns)) {
-                $now = now();
-                foreach ($product->campaigns as $campaign) {
-                    $start = \Carbon\Carbon::parse($campaign->start_date);
-                    $end = \Carbon\Carbon::parse($campaign->end_date);
-                    if ($campaign->status === 'active' && $now->between($start, $end)) {
-                        $discountedUnitPrice = $campaign->calculateDiscountedPrice($unitPrice);
-                        break;
-                    }
-                }
-            }
+            $discountedUnitPrice = app(\App\Services\Offers\CheckoutPricingService::class)->unitPrice($product, $item->variation);
 
             // Calculate totals with quantity
             $totalPrice = $discountedUnitPrice * $quantity;
@@ -461,7 +444,7 @@ class CouponService
             // Only apply discount if product is eligible
             if ($isEligible) {
                 // Calculate total discount for this line (considering quantity)
-                $discount = $coupon->calculateDiscount($totalPrice);
+                $discount = round(min($totalPrice, max(0, $coupon->calculateDiscount($totalPrice))), 2);
                 $discountedPrice = $totalPrice - $discount;
 
                 // For fixed-type coupons, normalize discount_amount to be per-unit monetary value
