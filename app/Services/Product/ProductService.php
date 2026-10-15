@@ -133,30 +133,30 @@ class ProductService
 
   public function categorywithproducts(){
     $version = Product::getCacheVersion();
-    return Cache::remember("products.v{$version}.category_grouped", 1800, function () {
+    return Cache::remember("products.v{$version}.category_grouped.cards", 1800, function () {
             // Get root categories that are active, ordered by 'order'
-            $rootCategories = Category::whereNull('parent_id')
-                ->where('status', 'active')
-                ->orderBy('order', 'asc')
-                ->get();
+            $categories = Category::where('status', 'active')
+                ->orderBy('order')->get(['id', 'parent_id', 'name', 'slug']);
+            $children = $categories->groupBy('parent_id');
+            $rootCategories = $categories->whereNull('parent_id');
 
             $grouped = [];
 
             foreach ($rootCategories as $root) {
                 // Get all descendant category IDs (active ones)
-                $ids = $this->getAllDescendantCategoryIds($root->id);
+                $ids = $this->descendantIdsFromTree($root->id, $children);
 
                 // Fetch products for these categories
-                $products = Product::whereHas('categories', function($q) use ($ids) {
+                $products = Product::select(Product::CARD_COLUMNS)->whereHas('categories', function($q) use ($ids) {
                         $q->whereIn('categories.id', $ids);
                     })
                     ->where('status', 'Published')
-                    ->with(['categories', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
+                    ->with(['variations.attributes.value.attribute', 'campaigns'])
                     ->withAvg('reviews', 'rating')
                     ->withCount('reviews')
                     ->orderBy('created_at', 'desc')
                     ->take(8)
-                    ->get();
+                    ->get()->each(fn ($product) => $product->setAppends(['avg_rating', 'reviews_count', 'responsive_image']));
 
                 if ($products->isNotEmpty()) {
                     $grouped[] = [
@@ -168,14 +168,14 @@ class ProductService
             }
 
             // Optional: Include Uncategorized products at the end
-            $uncategorized = Product::whereDoesntHave('categories')
+            $uncategorized = Product::select(Product::CARD_COLUMNS)->whereDoesntHave('categories')
                 ->where('status', 'Published')
-                ->with(['categories', 'variations.attributes.value.attribute'])
+                ->with(['variations.attributes.value.attribute'])
                 ->withAvg('reviews', 'rating')
                 ->withCount('reviews')
                 ->orderBy('created_at', 'desc')
                 ->take(8)
-                ->get();
+                ->get()->each(fn ($product) => $product->setAppends(['avg_rating', 'reviews_count', 'responsive_image']));
 
             if ($uncategorized->isNotEmpty()) {
                 $grouped[] = [
@@ -529,6 +529,19 @@ class ProductService
   /**
    * Recursive helper to collect category and descendant ids (active children only)
    */
+  private function descendantIdsFromTree($categoryId, $children): array
+  {
+    $ids = [];
+    $pending = [$categoryId];
+    while ($pending) {
+      $id = array_pop($pending);
+      if (isset($ids[$id])) continue;
+      $ids[$id] = $id;
+      foreach ($children->get($id, collect()) as $child) $pending[] = $child->id;
+    }
+    return array_values($ids);
+  }
+
   private function getAllDescendantCategoryIds($categoryId)
   {
     $categoryIds = [$categoryId];

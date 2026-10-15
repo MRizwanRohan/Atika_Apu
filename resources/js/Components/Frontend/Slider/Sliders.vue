@@ -21,7 +21,7 @@
                         :navigation="false"
                         class="main-slider rounded-2xl overflow-hidden shadow-sm h-full"
                     >
-                        <swiper-slide v-for="slider in sliders" :key="slider.id">
+                        <swiper-slide v-for="(slider, index) in sliders" :key="slider.id">
                             <Link
                                 v-if="slider.Link"
                                 :href="slider.Link"
@@ -30,11 +30,21 @@
                                 <picture>
                                     <source
                                         v-if="slider.mobile_image"
-                                        :srcset="slider.mobile_image"
+                                        :srcset="slider.responsive_mobile_image?.srcset || slider.mobile_image"
+                                        sizes="100vw"
+                                        :width="slider.responsive_mobile_image?.width"
+                                        :height="slider.responsive_mobile_image?.height"
                                         media="(max-width: 768px)"
                                     />
                                     <img
                                         :src="slider.image"
+                                        :srcset="slider.responsive_image?.srcset"
+                                        sizes="(min-width: 1280px) 1200px, 100vw"
+                                        :width="slider.responsive_image?.width"
+                                        :height="slider.responsive_image?.height"
+                                        :fetchpriority="index === 0 ? 'high' : 'auto'"
+                                        :loading="index === 0 ? 'eager' : 'lazy'"
+                                        decoding="async"
                                         :alt="'G&G Motion Slide ' + slider.id"
                                         class="w-full h-full object-cover block"
                                     />
@@ -44,11 +54,21 @@
                                 <picture>
                                     <source
                                         v-if="slider.mobile_image"
-                                        :srcset="slider.mobile_image"
+                                        :srcset="slider.responsive_mobile_image?.srcset || slider.mobile_image"
+                                        sizes="100vw"
+                                        :width="slider.responsive_mobile_image?.width"
+                                        :height="slider.responsive_mobile_image?.height"
                                         media="(max-width: 768px)"
                                     />
                                     <img
                                         :src="slider.image"
+                                        :srcset="slider.responsive_image?.srcset"
+                                        sizes="(min-width: 1280px) 1200px, 100vw"
+                                        :width="slider.responsive_image?.width"
+                                        :height="slider.responsive_image?.height"
+                                        :fetchpriority="index === 0 ? 'high' : 'auto'"
+                                        :loading="index === 0 ? 'eager' : 'lazy'"
+                                        decoding="async"
                                         :alt="'G&G Motion Slide ' + slider.id"
                                         class="w-full h-full object-cover block"
                                     />

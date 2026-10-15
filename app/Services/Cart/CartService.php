@@ -140,7 +140,7 @@ class CartService
 
         // Refresh cart with relationships
         $cart->refresh();
-        $cart->load('items.product', 'items.variation.attributes.attribute', 'items.variation.attributes.value');
+        $cart->loadMissing('items.product', 'items.variation.attributes.attribute', 'items.variation.attributes.value');
 
         return $cart;
     }

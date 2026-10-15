@@ -9,6 +9,8 @@ class InstagramFeed extends Model
 {
     use HasFactory;
 
+    protected $appends = ['responsive_image'];
+
     protected $fillable = [
         'image',
         'link',
@@ -22,5 +24,10 @@ class InstagramFeed extends Model
     public function scopeActive($query)
     {
         return $query->where('status', true);
+    }
+
+    public function getResponsiveImageAttribute(): array
+    {
+        return app(\App\Support\ResponsiveImages::class)->attributes($this->image);
     }
 }

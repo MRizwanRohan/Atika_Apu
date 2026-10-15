@@ -1,10 +1,10 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue';
 import GlobalOfferProgress from '@/Components/Frontend/GlobalOfferProgress.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { useCart } from '@/Composables/useCart';
 import { useCartSidebar } from '@/Composables/useCartSidebar';
-import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
+const ProductQuickView = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductQuickView.vue"));
 import { Plus, Minus, Trash2 } from 'lucide-vue-next';
 import axios from 'axios';
 
@@ -89,6 +89,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('focus', refreshRewards);
     clearInterval(refreshTimer);
     clearTimeout(rewardBoundaryTimer);
+    document.body.style.overflow = "";
 });
 
 // Handle body scroll when sidebar opens/closes
@@ -99,7 +100,7 @@ watch(isCartSidebarOpen, (newVal) => {
     } else {
         document.body.style.overflow = '';
     }
-});
+}, { immediate: true });
 
 const handleOverlayClick = () => {
     closeCart();
@@ -297,6 +298,7 @@ const handleClose = () => {
 
     <!-- Product Quick View -->
     <ProductQuickView
+        v-if="showQuickView"
         :show="showQuickView"
         :product="quickViewProduct"
         @close="showQuickView = false"

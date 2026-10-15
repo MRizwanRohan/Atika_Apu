@@ -5,12 +5,38 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
+        @php
+            $isStorefront = str_starts_with($page['component'], 'Frontend/')
+                || str_starts_with($page['component'], 'User/')
+                || str_starts_with($page['component'], 'PreOrderLead/');
+            $firstSlider = $page['component'] === 'Frontend/Home/Home'
+                ? data_get($page, 'props.sliders.0') : null;
+            $desktopImage = data_get($firstSlider, 'image');
+            $mobileImage = data_get($firstSlider, 'mobile_image');
+        @endphp
+
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts & Preconnects -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&display=swap" rel="stylesheet">
+        <link id="site-font-stylesheet" href="https://fonts.googleapis.com/css2?family={{ $isStorefront ? 'Heebo' : 'Montserrat' }}:wght@400..900&display=swap" rel="stylesheet">
+
+        {{-- Discover the actual responsive hero before the Vue bundle starts. --}}
+        @if($desktopImage)
+            <link rel="preload" as="image" href="{{ $desktopImage }}" fetchpriority="high"
+                @if($mobileImage) media="(min-width: 769px)" @endif
+                @if(data_get($firstSlider, 'responsive_image.srcset'))
+                    imagesrcset="{{ data_get($firstSlider, 'responsive_image.srcset') }}"
+                    imagesizes="(min-width: 1280px) 1200px, 100vw"
+                @endif>
+            @if($mobileImage)
+                <link rel="preload" as="image" href="{{ $mobileImage }}" fetchpriority="high" media="(max-width: 768px)"
+                    @if(data_get($firstSlider, 'responsive_mobile_image.srcset'))
+                        imagesrcset="{{ data_get($firstSlider, 'responsive_mobile_image.srcset') }}" imagesizes="100vw"
+                    @endif>
+            @endif
+        @endif
 
         <!-- Scripts -->
 
@@ -18,7 +44,13 @@
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
     </head>
-    <body class="font-sans antialiased">
-        @inertia
+    <body class="font-sans antialiased {{ $isStorefront ? 'frontend' : '' }}">
+        @if($page['component'] === 'Frontend/Home/Home' && !($__inertiaSsrResponse ?? null))
+            <div id="app" data-page="{{ json_encode($page) }}">
+                @include('storefront-bootstrap')
+            </div>
+        @else
+            @inertia
+        @endif
     </body>
 </html>

@@ -89,9 +89,13 @@ const swiperBreakpoints = {
                             <div
                                 class="relative aspect-square rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 overflow-hidden"
                             >
-                                <img
+                                <img loading="lazy" decoding="async"
                                     v-if="category.image"
                                     :src="category.image"
+                        :srcset="category.responsive_image?.srcset"
+                        sizes="128px"
+                        :width="category.responsive_image?.width"
+                        :height="category.responsive_image?.height"
                                     :alt="category.name"
                                     class="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
                                 />

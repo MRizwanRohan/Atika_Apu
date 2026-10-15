@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Support\SystemCheck;
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Support\Facades\Log;
@@ -17,6 +16,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->scoped(\App\Support\ResponsiveImages::class);
+
         // Register any application services here
         $this->app->bind(
             \App\Contracts\PreOrderLeadInterface::class,
@@ -59,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        // Page chunks are loaded by Inertia when requested, rather than prefetching every route.
 
         // Monitor slow queries (> 500ms) to identify bottlenecks early
         DB::listen(function ($query) {

@@ -46,6 +46,12 @@ class ImageHelper
         // ✅ Convert & compress to WebP (quality: 70)
         imagewebp($image, $destination, 70);
         imagedestroy($image);
+        try {
+            \App\Support\ResponsiveImages::generate($destination);
+        } catch (\Throwable $exception) {
+            // The original upload remains usable if optional variants cannot be written.
+            report($exception);
+        }
 
         // Return full URL
         return url($path . '/' . $filename);
@@ -58,6 +64,8 @@ class ImageHelper
         $fullPath = public_path($relativePath);
 
         if (File::exists($fullPath)) {
+            File::delete(glob(dirname($fullPath) . '/' . pathinfo($fullPath, PATHINFO_FILENAME) . '.w*.webp') ?: []);
+            File::delete($fullPath . '.responsive.json');
             File::delete($fullPath);
         }
     }

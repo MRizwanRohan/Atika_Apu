@@ -75,6 +75,21 @@ class HandleInertiaRequests extends Middleware
         // Move cart data fetching into closures for better performance
         $userId = $user ? $user->id : null;
         
+        // Keep personal data request-scoped, including an empty cart result.
+        $cartLoaded = false;
+        $cart = null;
+        $getCart = function () use ($userId, $sessionId, &$cartLoaded, &$cart) {
+            if (!$cartLoaded) {
+                $cart = $this->cartService->getCart($userId, $sessionId);
+                $cartLoaded = true;
+            }
+            return $cart;
+        };
+        $compareIds = null;
+        $getCompareIds = function () use ($userId, $sessionId, &$compareIds) {
+            return $compareIds ??= $this->compareService->getCompareIds($userId, $sessionId);
+        };
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -93,22 +108,16 @@ class HandleInertiaRequests extends Middleware
             'categories' => fn () => $this->categoryService->getAllCategoriesForApi(),
             
             // Share cart data globally - fully lazy loaded
-            'cart' => fn() => $this->cartService->getCart($userId, $sessionId) 
-                ? new CartResource($this->cartService->getCart($userId, $sessionId)) 
-                : null,
-            'cartCount' => fn() => $this->cartService->getCart($userId, $sessionId) 
-                ? $this->cartService->getCart($userId, $sessionId)->items->count() 
-                : 0,
-            'cartTotal' => fn() => $this->cartService->getCart($userId, $sessionId) 
-                ? $this->cartService->getCart($userId, $sessionId)->items->sum(fn($i) => (float)$i->price * $i->quantity) 
-                : 0,
+            'cart' => fn () => $getCart() ? new CartResource($getCart()) : null,
+            'cartCount' => fn () => $getCart()?->items->count() ?? 0,
+            'cartTotal' => fn () => $getCart()?->items->sum(fn ($i) => (float) $i->price * $i->quantity) ?? 0,
             'cartSessionId' => $sessionId,
 
             // Share wishlist and compare counts - lazy loaded
             'wishlistCount' => fn() => $this->wishlistService->getWishlistCount($userId, $sessionId),
-            'wishlistIds' => fn() => $this->wishlistService->getWishlist($userId, $sessionId)->pluck('id')->toArray(),
-            'compareCount' => fn() => $this->compareService->getCompareCount($userId, $sessionId),
-            'compareIds' => fn() => $this->compareService->getCompareIds($userId, $sessionId),
+            'wishlistIds' => fn() => $this->wishlistService->getWishlistIds($userId, $sessionId),
+            'compareCount' => fn() => count($getCompareIds()),
+            'compareIds' => fn() => $getCompareIds(),
 
             // Share site settings globally - already closures or made into closures
             'settings' => fn () => $this->settingsService->getSiteInfo(),

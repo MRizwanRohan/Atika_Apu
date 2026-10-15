@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Frontend\Home;
 
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Services\Product\ProductService;
 use App\Services\ProductGroup\ProductGroupService;
 use App\Models\Slider;
 use App\Models\ProductVideo;
 use Illuminate\Support\Facades\Cache;
-use App\Models\Product;
-use App\Models\Banner;
 
 use App\Models\InstagramFeed;
 
@@ -28,32 +28,22 @@ class HomeController extends Controller
      */
     public function index(): Response
     {
-        $groupedProducts = $this->productService->categorywithproducts();
-        
-        $activeCampaigns = Cache::remember('active_campaigns.all', 1800, function() {
-            return $this->productService->getActiveCampaigns();
-        });
-
-        $productGroups = $this->productGroupService->getAllWithProducts();
-        $sliders = $this->sliders();
-        $productVideos = $this->productVideos();
-
-        $instagramFeeds = Cache::remember('instagram_feeds.active', 3600, function() {
-            return InstagramFeed::active()->orderBy('sort_order', 'asc')->get();
-        });
-
-        // $newArrivalBanners = $this->getNewArrivalBannersFromDB();
-
-        // Categories are shared globally via HandleInertiaRequests middleware
         return Inertia::render('Frontend/Home/Home', [
-            'groupedProducts' => $groupedProducts,
-            'activeCampaigns' => $activeCampaigns,
-            'productGroups' => $productGroups,
-            'sliders' => $sliders,
-            'productswithVideo' => $productVideos,
-            'instagramFeeds' => $instagramFeeds,
-            // 'sideBanners' => $newArrivalBanners,
+            'sliders' => fn () => $this->sliders(),
+            // Below-fold data is requested only when its section approaches the viewport.
+            'groupedProducts' => Inertia::optional(fn () => $this->productService->categorywithproducts()),
+            'productGroups' => Inertia::optional(fn () => $this->productGroupService->homepagePage()),
+            'productswithVideo' => Inertia::optional(fn () => $this->productVideos()),
+            'instagramFeeds' => Inertia::optional(fn () => Cache::remember('instagram_feeds.active', 3600,
+                fn () => InstagramFeed::active()->orderBy('sort_order')->get(['id', 'image', 'link'])
+            )),
         ]);
+    }
+
+    public function productGroups(Request $request): JsonResponse
+    {
+        $validated = $request->validate(['page' => 'sometimes|integer|min:1|max:10000']);
+        return response()->json($this->productGroupService->homepagePage((int) ($validated['page'] ?? 1)));
     }
 
 
@@ -65,20 +55,10 @@ class HomeController extends Controller
         return $sliders;
     }
 
-    private function getNewArrivalBannersFromDB()
-    {
-        return Banner::select(
-            'new_arrival_b_banner1',
-            'new_arrival_b_banner1_url',
-            'new_arrival_b_banner2',
-            'new_arrival_b_banner2_url'
-        )->first();
-    }
-
     private function productVideos()
     {
         return ProductVideo::whereHas('product', function($query) {
-            $query->where('status', 'published');
+            $query->where('status', 'Published');
         })
         ->with(['product' => function($query) {
             $query->select('id', 'name', 'product_code', 'slug', 'price', 'previous_price', 'feature_image', 'type')
@@ -89,6 +69,7 @@ class HomeController extends Controller
         ->whereNotNull('video')
         ->orderBy('created_at', 'desc')
         ->take(30)
-        ->get();
+        ->get(['id', 'product_id', 'title', 'video', 'link'])
+        ->each(fn ($video) => $video->product?->setAppends(['responsive_image']));
     }
 }

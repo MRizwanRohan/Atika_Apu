@@ -1,18 +1,15 @@
 <script setup>
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, WhenVisible } from "@inertiajs/vue3";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
-import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
-import Campaigns from "@/Components/Frontend/Product/Campaigns.vue";
+const ProductCard = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductCard.vue"));
 import Sliders from "@/Components/Frontend/Slider/Sliders.vue";
-import Features from "@/Components/Frontend/Features/Features.vue";
-import ProductVideoReel from "@/Components/Frontend/Product/ProductVideoReel.vue";
-import GsapSlider from "@/Components/Frontend/Slider/GsapSlider.vue";
-import { computed, toRef } from "vue";
+const ProductVideoReel = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductVideoReel.vue"));
+import { computed, toRef, defineAsyncComponent } from "vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
-import ProductsGroup from "@/Components/Frontend/Home/ProductsGroup.vue";
-import InstagramFeed from "@/Components/Frontend/Home/InstagramFeed.vue";
-import PromoPopup from "@/Components/Frontend/Home/PromoPopup.vue";
+const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
+const InstagramFeed = defineAsyncComponent(() => import("@/Components/Frontend/Home/InstagramFeed.vue"));
+const PromoPopup = defineAsyncComponent(() => import("@/Components/Frontend/Home/PromoPopup.vue"));
 
 defineOptions({
     layout: FrontendLayout,
@@ -24,16 +21,12 @@ const props = defineProps({
         default: () => [],
     },
     groupedProducts: {
-        type: Object,
-        default: () => ({}),
-    },
-    activeCampaigns: {
-        type: Object,
-        default: () => ({}),
-    },
-    productGroups: {
         type: Array,
         default: () => [],
+    },
+    productGroups: {
+        type: Object,
+        default: () => ({}),
     },
     sliders: {
         type: Array,
@@ -51,10 +44,6 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    // sideBanners: {
-    //     type: Object,
-    //     default: () => ({}),
-    // },
 });
 
 // Expose settings as a ref so it's accessible in the template and reactive in script
@@ -63,7 +52,6 @@ const settings = toRef(props, "settings");
 // Expose other props as refs so template bindings remain available
 const categories = toRef(props, "categories");
 const groupedProducts = toRef(props, "groupedProducts");
-const activeCampaigns = toRef(props, "activeCampaigns");
 const productGroups = toRef(props, "productGroups");
 const sliders = toRef(props, "sliders");
 
@@ -74,63 +62,33 @@ const pageTitle = computed(
 
 <template>
     <Head :title="pageTitle">
-        <!-- LCP Image Preload -->
-        <link 
-            v-if="sliders && sliders.length > 0" 
-            rel="preload" 
-            as="image" 
-            :href="sliders[0].image" 
-            fetchpriority="high"
-        >
+
         <meta name="description" :content="settings?.generalSettings?.site_description || 'E-commerce store'">
     </Head>
 
-     <!-- <pre>{{ sideBanners }}</pre> -->
-
       <Sliders :sliders="sliders" />
 
-    <PromoPopup 
+    <PromoPopup
         v-if="settings?.generalSettings?.popup_enabled"
         :enabled="settings?.generalSettings?.popup_enabled == 1"
         :image="settings?.generalSettings?.popup_image"
         :link="settings?.generalSettings?.popup_link"
     />
 
-
-    <!-- Featured Categories -->
     <FeaturedCategories :categories="categories" />
 
-    <ProductVideoReel :productswithVideo="productswithVideo" />
+    <WhenVisible data="productswithVideo" :buffer="100">
+        <template #fallback><div class="h-48" aria-hidden="true" /></template>
+        <ProductVideoReel :productswithVideo="productswithVideo" />
+    </WhenVisible>
 
-    <!-- Offers preview (compact) -->
-    <!-- <section class="py-8 bg-white">
-        <div class="container mx-auto px-4">
-            <div v-if="activeCampaigns && activeCampaigns.length > 0" class="flex items-center justify-between gap-4">
-                <div class="flex-1">
-                    <h2 class="text-xl font-bold text-gray-900">Latest Offers</h2>
-                    <p class="text-sm text-gray-600 mt-1">Active campaigns and limited time deals. Click View All to see every offer.</p>
-                    <div class="mt-4 flex items-center gap-3 overflow-auto">
-                        <div v-for="c in activeCampaigns.slice(0,3)" :key="c.id" class="px-3 py-2 bg-gray-50 border rounded-lg text-sm font-medium text-gray-800 whitespace-nowrap">
-                            {{ c.name }}
-                        </div>
-                    </div>
-                </div>
+    <WhenVisible data="productGroups" :buffer="100">
+        <template #fallback><div class="h-64" aria-hidden="true" /></template>
+        <ProductsGroup :pagination="productGroups" />
+    </WhenVisible>
 
-                <div class="shrink-0">
-                    <Link :href="route('offers.index')" class="px-4 py-2 bg-primary text-white rounded-lg">View All Offers</Link>
-                </div>
-            </div>
-
-            <div v-else class="text-center text-gray-500 py-8">
-                No offers currently. Check back soon.
-            </div>
-        </div>
-    </section> -->
-
-    <!-- Product Groups Section -->
-    <ProductsGroup :productGroups="productGroups" />
-
-    <!-- Products by Category Section -->
+    <WhenVisible data="groupedProducts" :buffer="100">
+    <template #fallback><div class="h-64" aria-hidden="true" /></template>
     <section
         v-for="group in groupedProducts"
         :key="group.name"
@@ -140,7 +98,7 @@ const pageTitle = computed(
             v-if="group.products && group.products.length > 0"
             class="container mx-auto px-4"
         >
-            <!-- Section Header -->
+
             <div class="flex items-center justify-between">
                 <div>
                     <h2
@@ -172,7 +130,6 @@ const pageTitle = computed(
             </div>
             <hr class="border-gray-200 my-4" />
 
-            <!-- Product Grid -->
             <div
                 class="pt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-6"
             >
@@ -183,48 +140,13 @@ const pageTitle = computed(
                 />
             </div>
 
-            <!-- Show More Button -->
-            <!-- <div v-if="group.products.length > 5" class="text-center mt-8">
-                <Link
-                    :href="`/category/${group.slug}`"
-                    class="inline-block px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                    View All {{ group.products.length }} Products
-                </Link>
-            </div> -->
         </div>
     </section>
 
-    <!-- <pre>{{ categories }}</pre> -->
+    </WhenVisible>
+    <WhenVisible data="instagramFeeds" :buffer="100">
+        <template #fallback><div class="h-48" aria-hidden="true" /></template>
+        <InstagramFeed :instagramFeeds="instagramFeeds" :settings="settings" />
+    </WhenVisible>
 
-    <!-- CTA Section -->
-    <!-- <section class="py-16 bg-gray-900 text-white">
-        <div class="container mx-auto px-4 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-4">
-                Ready to Start Shopping?
-            </h2>
-            <p class="text-gray-400 max-w-2xl mx-auto mb-8">
-                Join thousands of happy customers and discover amazing deals
-                every day.
-            </p>
-            <div class="flex flex-wrap justify-center gap-4">
-                <Link
-                    href="/products"
-                    class="px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                    Browse Products
-                </Link>
-                <Link
-                    v-if="!$page.props.auth?.user"
-                    :href="route('register')"
-                    class="px-8 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
-                >
-                    Create Account
-                </Link>
-            </div>
-        </div>
-    </section> -->
-    <InstagramFeed :instagramFeeds="instagramFeeds" :settings="settings" />
-    <!-- Features Section -->
-    <!-- <Features /> -->
 </template>

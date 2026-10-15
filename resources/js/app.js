@@ -38,6 +38,12 @@ createInertiaApp({
 });
 
 // ── SPA PageView: track every Inertia navigation ──
-router.on('navigate', () => {
+router.on('navigate', ({ detail: { page } }) => {
+    // Inertia navigation does not reload the Blade head when crossing site areas.
+    const storefront = /^(Frontend|User|PreOrderLead)\//.test(page.component);
+    const font = document.getElementById('site-font-stylesheet');
+    const family = storefront ? 'Heebo' : 'Montserrat';
+    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400..900&display=swap`;
+    if (font && font.getAttribute('href') !== href) font.setAttribute('href', href);
     useMetaPixel().trackPageView();
 });

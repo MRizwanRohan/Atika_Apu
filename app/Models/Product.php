@@ -11,6 +11,11 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const CARD_COLUMNS = [
+        'products.id', 'name', 'slug', 'product_code', 'type', 'price', 'previous_price',
+        'feature_image', 'gallery_images', 'stock', 'is_pre_order', 'is_free_delivery', 'brand_id',
+    ];
+
     protected $fillable = [
         'name',
         'slug',
@@ -50,7 +55,7 @@ class Product extends Model
         'is_pre_order' => 'boolean',
     ];
 
-    protected $appends = ['feature_image_url', 'avg_rating', 'reviews_count', 'category'];
+    protected $appends = ['feature_image_url', 'avg_rating', 'reviews_count', 'category', 'responsive_image'];
 
     // New Many-to-Many Relationship
     public function categories(): BelongsToMany
@@ -165,5 +170,10 @@ class Product extends Model
         $newVersion = static::getCacheVersion() + 1;
         \Illuminate\Support\Facades\Cache::forever('products_cache_version', $newVersion);
         return $newVersion;
+    }
+
+    public function getResponsiveImageAttribute(): array
+    {
+        return app(\App\Support\ResponsiveImages::class)->attributes($this->feature_image);
     }
 }

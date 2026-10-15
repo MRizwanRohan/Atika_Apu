@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch, defineAsyncComponent } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import CategoryNav from "./CategoryNav.vue";
-import CartSidebar from "./CartSidebar.vue";
+const CartSidebar = defineAsyncComponent(() => import("./CartSidebar.vue"));
 import { useCartSidebar } from "@/Composables/useCartSidebar";
 import SearchBar from "../Header/SearchBar.vue";
 import MobileBottomNav from "./MobileBottomNav.vue";
@@ -44,6 +44,8 @@ const {
     closeCart: closeCartSidebar,
 } = useCartSidebar();
 
+const cartSidebarLoaded = ref(false);
+watch(isCartSidebarOpen, (open) => { if (open) cartSidebarLoaded.value = true; }, { immediate: true });
 const isSearchOpen = ref(false);
 
 const user = computed(() => page.props.auth?.user);
@@ -423,7 +425,7 @@ const cleantopnotice = (html) => {
         </transition>
 
         <!-- Components -->
-        <CartSidebar :is-open="isCartSidebarOpen" @close="closeCartSidebar" />
+        <CartSidebar v-if="cartSidebarLoaded" :is-open="isCartSidebarOpen" @close="closeCartSidebar" />
         <MobileBottomNav
             v-if="!route().current('product.details')"
             :wishlist-count="wishlistCount"

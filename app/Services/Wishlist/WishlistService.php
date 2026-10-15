@@ -87,6 +87,17 @@ class WishlistService
     /**
      * Get wishlist count
      */
+    public function getWishlistIds($userId = null, $sessionId = null): array
+    {
+        return Wishlist::query()
+            ->where(function ($query) use ($userId, $sessionId) {
+                $userId ? $query->where('user_id', $userId) : $query->where('session_id', $sessionId);
+            })
+            ->whereHas('product')
+            ->pluck('product_id')
+            ->all();
+    }
+
     public function getWishlistCount($userId = null, $sessionId = null)
     {
         return Wishlist::where(function ($query) use ($userId, $sessionId) {

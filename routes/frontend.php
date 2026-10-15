@@ -33,6 +33,8 @@ use App\Http\Controllers\Frontend\Pages\PagesController;
 
 // Home Page - Welcome
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home/product-groups', [HomeController::class, 'productGroups'])
+    ->middleware('throttle:60,1')->name('home.product-groups');
 
 // Offers (Campaigns) page
 use App\Http\Controllers\Frontend\Offer\OfferController;

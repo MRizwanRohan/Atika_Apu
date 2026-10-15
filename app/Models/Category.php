@@ -10,6 +10,8 @@ class Category extends Model
 {
     use SoftDeletes;
 
+    protected $appends = ['responsive_image'];
+
     protected $fillable = ["name","slug", "status", "image","icon", "order","parent_id"];
 
 
@@ -36,5 +38,10 @@ class Category extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'category_product');
+    }
+
+    public function getResponsiveImageAttribute(): array
+    {
+        return app(\App\Support\ResponsiveImages::class)->attributes($this->image);
     }
 }

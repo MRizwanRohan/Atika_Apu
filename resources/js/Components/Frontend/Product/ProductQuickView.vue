@@ -334,6 +334,7 @@ watch(
             imageLoadStates.value = [];
         }
     },
+    { immediate: true },
 );
 
 // Close on ESC key

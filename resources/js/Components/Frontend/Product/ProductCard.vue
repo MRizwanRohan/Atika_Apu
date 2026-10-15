@@ -1,8 +1,8 @@
 <script setup>
 import { Link, router } from "@inertiajs/vue3";
-import { computed, ref } from "vue";
+import { computed, ref, defineAsyncComponent } from "vue";
 import StarRating from "@/Components/Frontend/Product/StarRating.vue";
-import ProductQuickView from "@/Components/Frontend/Product/ProductQuickView.vue";
+const ProductQuickView = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductQuickView.vue"));
 import { useCart } from "@/Composables/useCart";
 
 const props = defineProps({
@@ -191,6 +191,11 @@ const handleCartClick = (e) => {
 
             <img
                 :src="product.feature_image"
+                :srcset="product.responsive_image?.srcset"
+                sizes="(min-width: 1280px) 240px, (min-width: 1024px) 300px, (min-width: 768px) 45vw, 50vw"
+                :width="product.responsive_image?.width"
+                :height="product.responsive_image?.height"
+                decoding="async"
                 :alt="product.name"
                 loading="lazy"
                 class="w-full h-full object-contain"
@@ -306,6 +311,7 @@ const handleCartClick = (e) => {
 
         <!-- Quick View Component -->
         <ProductQuickView
+            v-if="showQuickView"
             :product="product"
             :show="showQuickView"
             @close="showQuickView = false"

@@ -1,13 +1,45 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
+import axios from "axios";
 import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 
-defineProps({
-    productGroups: {
-        type: Array,
+const props = defineProps({
+    pagination: {
+        type: Object,
         required: true,
     },
 });
+const productGroups = ref([]);
+const nextPage = ref(null);
+const loading = ref(false);
+const error = ref("");
+let generation = 0;
+watch(() => props.pagination, (pagination) => {
+    generation++;
+    productGroups.value = pagination.data || [];
+    nextPage.value = pagination.next_page_url;
+    loading.value = false;
+    error.value = "";
+}, { immediate: true });
+
+const loadMore = async () => {
+    if (loading.value || !nextPage.value) return;
+    const currentGeneration = generation;
+    loading.value = true;
+    error.value = "";
+    try {
+        const { data } = await axios.get(nextPage.value);
+        if (currentGeneration !== generation) return;
+        const ids = new Set(productGroups.value.map(group => group.id));
+        productGroups.value.push(...data.data.filter(group => !ids.has(group.id)));
+        nextPage.value = data.next_page_url;
+    } catch {
+        if (currentGeneration === generation) error.value = "Unable to load collections. Please try again.";
+    } finally {
+        if (currentGeneration === generation) loading.value = false;
+    }
+};
 </script>
 
 <template>
@@ -27,8 +59,12 @@ defineProps({
                     :href="route('product-group.show', group.slug)"
                     class="block relative"
                 >
-                    <img
+                    <img loading="lazy" decoding="async"
                         :src="group.banner"
+                        :srcset="group.responsive_banner?.srcset"
+                        sizes="(min-width: 1280px) 1200px, 100vw"
+                        :width="group.responsive_banner?.width"
+                        :height="group.responsive_banner?.height"
                         :alt="group.name"
                         class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                     />
@@ -94,6 +130,12 @@ defineProps({
             </div>
         </div>
     </section>
+    <div v-if="nextPage" class="container py-6 text-center">
+        <p v-if="error" role="alert" class="mb-3 text-red-600">{{ error }}</p>
+        <button type="button" :disabled="loading" @click="loadMore" class="rounded-lg bg-primary px-6 py-3 text-white disabled:opacity-50">
+            {{ loading ? "Loading…" : "View More Collections" }}
+        </button>
+    </div>
 </template>
 
 <style scoped>

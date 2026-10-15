@@ -23,4 +23,6 @@ interface ProductGroupRepositoryInterface
     public function find(int $id): ?ProductGroup;
 
     public function getAllWithProducts(): Collection;
+
+    public function homepagePage(int $page): LengthAwarePaginator;
 }

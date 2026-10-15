@@ -1,12 +1,7 @@
-<script>
-// Module-level variable to track the very first load of the SPA
-let isInitialLoad = true;
-</script>
-
 <script setup>
 import "../../css/frontend.css";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { usePage, Head, router } from "@inertiajs/vue3";
+import { usePage, Head } from "@inertiajs/vue3";
 import FrontendHeader from "@/Components/Frontend/FrontendHeader.vue";
 import FrontendFooter from "@/Components/Frontend/FrontendFooter.vue";
 import MobileMenu from "@/Components/Frontend/MobileMenu.vue";
@@ -16,9 +11,6 @@ import { useToast } from "@/Composables/useToast";
 
 const page = usePage();
 const isMobileMenuOpen = ref(false);
-
-// Use the module-level flag to decide if we should show the loader
-const isLoading = ref(isInitialLoad);
 
 const categories = computed(() => page.props.categories || []);
 const settings = computed(() => page.props.settings || {});
@@ -44,16 +36,8 @@ const closeMobileMenu = () => {
     isMobileMenuOpen.value = false;
 };
 
-// Handle Loading State
 onMounted(() => {
     setPrimaryColor();
-    if (isLoading.value) {
-        // Hide initial loader
-        setTimeout(() => {
-            isLoading.value = false;
-            isInitialLoad = false;
-        }, 800);
-    }
 
     // Initial injection of marketing tools
     injectMarketingTools();
@@ -129,11 +113,6 @@ const injectMarketingTools = () => {
 
 <template>
     <Head>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap"
-            rel="stylesheet"
-        />
         <link v-if="media?.favicon" rel="icon" :href="media.favicon" />
     </Head>
 

@@ -69,7 +69,7 @@ class ProductGroupRepository implements ProductGroupRepositoryInterface
     public function getAllWithProducts(): Collection
     {
         return ProductGroup::with(['products' => function($query) {
-                $query->where('status', 'Published')
+                $query->select(Product::CARD_COLUMNS)->where('status', 'Published')
                     ->with(['categories', 'variations.attributes.value.attribute', 'campaigns', 'brand'])
                     ->withAvg('reviews', 'rating')
                     ->withCount('reviews')
@@ -78,5 +78,19 @@ class ProductGroupRepository implements ProductGroupRepositoryInterface
             ->where('status', true)
             ->orderBy('order_number', 'asc')
             ->get();
+    }
+
+    public function homepagePage(int $page): LengthAwarePaginator
+    {
+        return ProductGroup::with(['products' => function ($query) {
+            $query->select(Product::CARD_COLUMNS)->where('status', 'Published')
+                ->with(['variations.attributes.value.attribute', 'campaigns'])
+                ->withAvg('reviews', 'rating')->withCount('reviews')->take(10);
+        }])->where('status', true)->orderBy('order_number')->orderBy('id')
+            ->paginate(6, ['id', 'name', 'slug', 'banner', 'order_number'], 'page', $page)
+            ->through(function ($group) {
+                $group->products->each(fn ($product) => $product->setAppends(['avg_rating', 'reviews_count', 'responsive_image']));
+                return $group;
+            });
     }
 }

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import VisibleVideo from "./VisibleVideo.vue";
 import {
     X,
     Volume2,
@@ -130,14 +131,12 @@ onUnmounted(() => {
                     @click="openModal(index)"
                     class="relative flex-none w-[45%] sm:w-[30%] md:w-[20%] aspect-[9/16] overflow-hidden cursor-pointer group snap-start rounded-lg"
                 >
-                    <video
+                    <VisibleVideo
                         :src="item.video"
-                        class="w-full h-full object-cover"
-                        autoplay
-                        muted
-                        loop
-                        playsinline
-                    ></video>
+                        :poster="item.product?.feature_image"
+                        :image-attributes="item.product?.responsive_image"
+                        :enabled="!isModalOpen"
+                    />
 
                     <div
                         class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"
@@ -185,13 +184,11 @@ onUnmounted(() => {
                         v-if="productswithVideo.length > 1"
                         class="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 ml-24 h-[70vh] w-[330px] cursor-pointer group overflow-hidden rounded-2xl shadow-2xl transition-transform"
                     >
-                        <video
-                            :src="productswithVideo[getPrevIndex()].video"
+                        <img
+                            :src="productswithVideo[getPrevIndex()].product?.feature_image"
+                            alt="" loading="lazy" decoding="async"
                             class="w-full h-full object-cover"
-                            muted
-                            loop
-                            playsinline
-                        ></video>
+                        />
                     </div>
 
                     <!-- Center Video Container -->
@@ -297,13 +294,11 @@ onUnmounted(() => {
                         v-if="productswithVideo.length > 1"
                         class="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 mr-24 h-[70vh] w-[330px] cursor-pointer group overflow-hidden rounded-2xl shadow-2xl transition-transform z-[-1]"
                     >
-                        <video
-                            :src="productswithVideo[getNextIndex()].video"
+                        <img
+                            :src="productswithVideo[getNextIndex()].product?.feature_image"
+                            alt="" loading="lazy" decoding="async"
                             class="w-full h-full object-cover"
-                            muted
-                            loop
-                            playsinline
-                        ></video>
+                        />
                     </div>
 
                     <!-- Mobile Navigation Arrows -->

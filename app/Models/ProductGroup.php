@@ -11,6 +11,8 @@ class ProductGroup extends Model
 {
     use HasFactory;
 
+    protected $appends = ['responsive_banner'];
+
     protected $fillable = [
         'name',
         'slug',
@@ -50,5 +52,10 @@ class ProductGroup extends Model
     {
         return $this->belongsToMany(Product::class, 'product_group_product')
             ->withTimestamps();
+    }
+
+    public function getResponsiveBannerAttribute(): array
+    {
+        return app(\App\Support\ResponsiveImages::class)->attributes($this->banner);
     }
 }

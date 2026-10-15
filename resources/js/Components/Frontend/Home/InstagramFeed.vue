@@ -29,21 +29,25 @@ defineProps({
 
             <!-- Instagram Grid -->
             <div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                <div 
-                    v-for="feed in instagramFeeds" 
+                <div
+                    v-for="feed in instagramFeeds"
                     :key="feed.id"
                     class="group relative aspect-9/16 overflow-hidden rounded-2xl bg-gray-200"
                 >
-                    <img 
-                        :src="`${feed.image}`" 
+                    <img loading="lazy" decoding="async"
+                        :src="`${feed.image}`"
+                        :srcset="feed.responsive_image?.srcset"
+                        sizes="(min-width: 1024px) 300px, 50vw"
+                        :width="feed.responsive_image?.width"
+                        :height="feed.responsive_image?.height"
                         :alt="`Instagram Post ${feed.id}`"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    
+
                     <!-- Overlay -->
-                    <a 
-                        v-if="feed.link" 
-                        :href="feed.link" 
+                    <a
+                        v-if="feed.link"
+                        :href="feed.link"
                         target="_blank"
                         class="absolute inset-0 z-10 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                     >
@@ -53,8 +57,8 @@ defineProps({
                             </span>
                         </div>
                     </a>
-                    <div 
-                        v-else 
+                    <div
+                        v-else
                         class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                     >
                         <span class="text-white">
