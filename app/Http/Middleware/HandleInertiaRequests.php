@@ -97,6 +97,7 @@ class HandleInertiaRequests extends Middleware
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'phone_number' => $user->phone_number,
                     // expose permissions and roles as plain arrays for the frontend
                     'permissions' => fn() => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
                     'roles' => fn() => $user ? $user->getRoleNames()->toArray() : [],

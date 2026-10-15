@@ -25,8 +25,15 @@ export function shouldTrackMetaPixel(pathname = getCurrentPathname()) {
 /**
  * Inject the Meta Pixel base script into <head>.
  * Called once when the app boots (app.js).
+ *
+ * @param {string} id          - Meta Pixel ID
+ * @param {Object} [userData]  - Optional user data for Advanced Matching
+ *   @param {string} [userData.em]  - User email (hashed automatically by Pixel)
+ *   @param {string} [userData.ph]  - User phone number (hashed automatically by Pixel)
+ *   @param {string} [userData.fn]  - First name
+ *   @param {string} [userData.ln]  - Last name
  */
-export function initMetaPixel(id) {
+export function initMetaPixel(id, userData = {}) {
     if (!id || initialized || !shouldTrackMetaPixel()) return;
     pixelId = String(id);
     initialized = true;
@@ -59,7 +66,15 @@ export function initMetaPixel(id) {
     window.fbq('optOut', pixelId, 'ESTRuleEngine');
     // Laravel owns CAPI delivery; do not also forward through a legacy gateway.
     window.fbq('skipOpenbridge', pixelId);
-    window.fbq('init', pixelId);
+    // Build Advanced Matching object — only include truthy values.
+    // Meta's Pixel SDK automatically hashes these using SHA-256.
+    const advancedMatching = {};
+    if (userData.em) advancedMatching.em = userData.em.trim().toLowerCase();
+    if (userData.ph) advancedMatching.ph = userData.ph.replace(/\D/g, '');
+    if (userData.fn) advancedMatching.fn = userData.fn.trim().toLowerCase();
+    if (userData.ln) advancedMatching.ln = userData.ln.trim().toLowerCase();
+
+    window.fbq('init', pixelId, advancedMatching);
 }
 
 /**

@@ -21,7 +21,18 @@ createInertiaApp({
         // Initialize before Success.vue's onMounted sends the purchase.
         const metaPixel = props.initialPage.props.metaPixel;
         if (metaPixel?.pixel_enabled && metaPixel.pixel_id) {
-            initMetaPixel(metaPixel.pixel_id);
+            // Pass logged-in user data for Advanced Matching.
+            // Meta Pixel SDK hashes em/ph automatically via SHA-256.
+            const authUser = props.initialPage.props.auth?.user;
+            const userData = {};
+            if (authUser?.email) userData.em = authUser.email;
+            if (authUser?.phone_number) userData.ph = authUser.phone_number;
+            if (authUser?.name) {
+                const parts = authUser.name.trim().split(' ');
+                if (parts[0]) userData.fn = parts[0];
+                if (parts.length > 1) userData.ln = parts[parts.length - 1];
+            }
+            initMetaPixel(metaPixel.pixel_id, userData);
         }
 
         const vueApp = createApp({ render: () => h(App, props) })
