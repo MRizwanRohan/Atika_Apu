@@ -63,6 +63,7 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
 
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/status-chart-data', [DashboardController::class, 'statusChartData'])->name('dashboard.status-chart');
 
 
     // profile

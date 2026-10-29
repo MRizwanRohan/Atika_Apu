@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Summary Metrics
         $salesToday = Order::whereDate('created_at', Carbon::today())
@@ -79,6 +79,18 @@ class DashboardController extends Controller
         $orderStatusData = $this->getOrderStatusData();
         $paymentStatusData = $this->getPaymentStatusData();
 
+        // Status Analytics (Pie / Donut Chart with Status-wise Order Count & Sales Amount + Filters)
+        $statusPeriod = $request->input('period', $request->input('status_period', 'all'));
+        $statusStartDate = $request->input('start_date');
+        $statusEndDate = $request->input('end_date');
+        $statusSource = $request->input('source', 'all');
+
+        $statusAnalytics = $this->getStatusAnalytics($statusPeriod, $statusStartDate, $statusEndDate, $statusSource);
+
+        if ($request->wantsJson() && !$request->header('X-Inertia')) {
+            return response()->json($statusAnalytics);
+        }
+
         // Recent Orders
         $recentOrders = Order::with([
             'customer',
@@ -119,14 +131,13 @@ class DashboardController extends Controller
             'orderStatusData' => $orderStatusData,
             'paymentStatusData' => $paymentStatusData,
             'deliverySalesData' => $this->getDeliverySalesData(),
+            'statusAnalytics' => $statusAnalytics,
             'recentOrders' => $recentOrders,
         ];
 
         return Inertia::render('Admin/Dashboard/Index', [
             'data' => $data,
         ]);
-
-
     }
 
     private function getDailyOrdersData()
@@ -269,6 +280,172 @@ class DashboardController extends Controller
         });
     }
 
+    /**
+     * API endpoint to fetch filtered status analytics
+     */
+    public function statusChartData(Request $request)
+    {
+        $period = $request->input('period', $request->input('status_period', 'all'));
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $source = $request->input('source', 'all');
 
+        return response()->json($this->getStatusAnalytics($period, $startDate, $endDate, $source));
+    }
 
+    /**
+     * Calculate status-wise order count and sales amount with flexible date filtering
+     */
+    public function getStatusAnalytics($period = 'all', $startDate = null, $endDate = null, $source = 'all')
+    {
+        $query = Order::query()->where('status', '!=', 'incomplete');
+
+        switch ($period) {
+            case 'today':
+                $query->whereDate('created_at', Carbon::today());
+                break;
+            case 'yesterday':
+                $query->whereDate('created_at', Carbon::yesterday());
+                break;
+            case 'week':
+                $query->whereBetween('created_at', [
+                    Carbon::now()->subDays(6)->startOfDay(),
+                    Carbon::now()->endOfDay(),
+                ]);
+                break;
+            case 'month':
+                $query->whereBetween('created_at', [
+                    Carbon::now()->startOfMonth(),
+                    Carbon::now()->endOfDay(),
+                ]);
+                break;
+            case 'year':
+                $query->whereBetween('created_at', [
+                    Carbon::now()->startOfYear(),
+                    Carbon::now()->endOfDay(),
+                ]);
+                break;
+            case 'custom':
+                if (!empty($startDate) && !empty($endDate)) {
+                    $query->whereBetween('created_at', [
+                        Carbon::parse($startDate)->startOfDay(),
+                        Carbon::parse($endDate)->endOfDay(),
+                    ]);
+                } elseif (!empty($startDate)) {
+                    $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+                } elseif (!empty($endDate)) {
+                    $query->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+                }
+                break;
+            case 'all':
+            default:
+                $period = 'all';
+                break;
+        }
+
+        if (!empty($source) && $source !== 'all') {
+            $query->where('source', $source);
+        }
+
+        $rows = $query->select(
+            'status',
+            DB::raw('COUNT(*) as order_count'),
+            DB::raw('COALESCE(SUM(total), 0) as total_amount')
+        )
+        ->groupBy('status')
+        ->get();
+
+        $totalOrders = (int) $rows->sum('order_count');
+        $totalSales = round((float) $rows->sum('total_amount'), 2);
+
+        $statusDefinitions = [
+            'pending' => [
+                'label' => 'Pending',
+                'color' => '#3B82F6', // Blue
+            ],
+            'confirmed' => [
+                'label' => 'Confirmed',
+                'color' => '#6366F1', // Indigo
+            ],
+            'processing' => [
+                'label' => 'Processing',
+                'color' => '#8B5CF6', // Purple
+            ],
+            'shipped' => [
+                'label' => 'Shipped',
+                'color' => '#F59E0B', // Amber
+            ],
+            'delivered' => [
+                'label' => 'Delivered',
+                'color' => '#10B981', // Emerald
+            ],
+            'cancelled' => [
+                'label' => 'Cancelled',
+                'color' => '#EF4444', // Red
+            ],
+            'returned' => [
+                'label' => 'Returned',
+                'color' => '#EC4899', // Pink
+            ],
+            'on_hold' => [
+                'label' => 'On Hold',
+                'color' => '#14B8A6', // Teal
+            ],
+            'partially_delivered' => [
+                'label' => 'Partially Delivered',
+                'color' => '#64748B', // Slate
+            ],
+            'received_china' => [
+                'label' => 'Received in China Warehouse',
+                'color' => '#EA580C', // Orange
+            ],
+            'received_bd_airport' => [
+                'label' => 'Sent To BD',
+                'color' => '#D946EF', // Fuchsia
+            ],
+            'received_bd_warehouse' => [
+                'label' => 'Arrived In BD',
+                'color' => '#059669', // Emerald dark
+            ],
+            'purchase_ok' => [
+                'label' => 'Purchase',
+                'color' => '#D97706', // Amber dark
+            ],
+        ];
+
+        $items = $rows->map(function ($row) use ($totalOrders, $totalSales, $statusDefinitions) {
+            $rawStatus = (string) ($row->status ?? 'unknown');
+            $statusKey = strtolower($rawStatus);
+            $orderCount = (int) $row->order_count;
+            $amount = round((float) $row->total_amount, 2);
+            $countPercentage = $totalOrders > 0 ? round(($orderCount / $totalOrders) * 100, 1) : 0;
+            $salesPercentage = $totalSales > 0 ? round(($amount / $totalSales) * 100, 1) : 0;
+            $avgOrderValue = $orderCount > 0 ? round($amount / $orderCount, 2) : 0;
+
+            $meta = $statusDefinitions[$statusKey] ?? null;
+            $label = $meta['label'] ?? ucwords(str_replace('_', ' ', $rawStatus));
+            $color = $meta['color'] ?? '#94A3B8';
+
+            return [
+                'status' => $rawStatus,
+                'label' => $label,
+                'count' => $orderCount,
+                'sales' => $amount,
+                'count_percentage' => $countPercentage,
+                'sales_percentage' => $salesPercentage,
+                'avg_order_value' => $avgOrderValue,
+                'color' => $color,
+            ];
+        })->sortByDesc('count')->values();
+
+        return [
+            'items' => $items,
+            'totalOrders' => $totalOrders,
+            'totalSales' => $totalSales,
+            'period' => $period,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'source' => $source,
+        ];
+    }
 }

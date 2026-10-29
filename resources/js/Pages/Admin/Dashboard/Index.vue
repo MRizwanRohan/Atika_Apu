@@ -4,6 +4,7 @@ import { Head, Link } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import VueApexCharts from "vue3-apexcharts";
 import OrderMap from "@/Components/Order/OrderMap.vue";
+import OrderStatusPieChart from "@/Components/Dashboard/OrderStatusPieChart.vue";
 
 const props = defineProps({
     data: {
@@ -191,83 +192,21 @@ const maxSold = computed(() => {
                 </div>
             </div>
 
+            <!-- Order Status Pie Chart with Order Count, Sales Amount & Filter -->
+            <OrderStatusPieChart
+                :initial-data="data.statusAnalytics"
+                class="mb-4 sm:mb-6"
+            />
+
             <!-- Main Content Grid -->
-            <div class="grid grid-cols-1 gap-4 sm:gap-6">
-                <!-- Top Selling -->
+            <div class="space-y-4 sm:space-y-6">
+                <!-- Analytics Graph -->
                 <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
                     <div class="flex items-center justify-between gap-3 mb-4">
-                        <h2 class="text-base sm:text-lg font-normal text-[#0f172a]">Top Selling</h2>
-                        <select v-model="topSellingPeriod" class="border-none bg-gray-50 rounded-lg text-xs sm:text-sm font-normal text-gray-600 focus:ring-0">
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                            <option value="overall">Overall</option>
-                        </select>
-                    </div>
-                    <div class="space-y-4">
-                        <div v-for="(product, index) in currentTopSelling" :key="product.id" class="flex items-center gap-3">
-                            <div class="w-6 text-sm sm:text-base font-normal" :class="index === 0 ? 'text-[#f97316]' : 'text-[#38bdf8]'">
-                                {{ index + 1 }}
-                            </div>
-                            <div class="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gray-100 overflow-hidden">
-                                <img :src="product.feature_image_url" alt="" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-grow">
-                                <div class="flex items-center justify-between gap-3 mb-1.5">
-                                    <h4 class="text-sm sm:text-base font-normal text-[#0f172a] line-clamp-1">
-                                        {{ product.name }}
-                                        <span v-if="product.is_pre_order" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-normal bg-amber-100 text-amber-800">
-                                            Pre-Order
-                                        </span>
-                                    </h4>
-                                    <span class="text-xs sm:text-sm font-normal text-gray-500">{{ product.total_sold }} Sold</span>
-                                </div>
-                                <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-1000" 
-                                         :style="{ width: (product.total_sold / maxSold) * 100 + '%' }"
-                                         :class="index === 0 ? 'bg-[#0f172a]' : 'bg-[#0ea5e9]'">
-                                    </div>
-                                </div>
-                            </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-normal text-[#0f172a]">Sales Analytics</h2>
+                            <p class="text-xs text-gray-400 mt-0.5">Revenue and order trend over time</p>
                         </div>
-                        <div v-if="currentTopSelling.length === 0" class="text-center py-6 text-sm text-gray-400">
-                            No sales data for this period
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Low Stock Alerts -->
-                <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
-                    <h2 class="text-base sm:text-lg font-normal text-[#0f172a] mb-4">Low Stock Alerts</h2>
-                    <div class="space-y-3">
-                        <div v-for="product in data.lowStock" :key="product.id" class="flex items-center gap-3 p-3 sm:p-4 border border-gray-50 rounded-xl hover:bg-gray-50 transition-colors">
-                            <div class="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gray-100 overflow-hidden">
-                                <img :src="product.feature_image_url" alt="" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-grow">
-                                <h4 class="text-sm sm:text-base font-normal text-[#0f172a]">
-                                    {{ product.name }}
-                                    <span v-if="product.is_pre_order" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-normal bg-amber-100 text-amber-800">
-                                        Pre-Order
-                                    </span>
-                                </h4>
-                                <p class="text-xs sm:text-sm text-gray-400">Stock: {{ product.stock }} items left</p>
-                            </div>
-                            <div class="bg-red-50 text-red-500 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-normal">
-                                {{ product.stock }} Left
-                            </div>
-                        </div>
-                        <div v-if="data.lowStock.length === 0" class="text-center py-6 text-sm text-gray-400">
-                            No low stock alerts
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Analytics Graph (Keeping it but styling it) -->
-                <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mt-1 sm:mt-2">
-                    <div class="flex items-center justify-between gap-3 mb-4">
-                        <h2 class="text-base sm:text-lg font-normal text-[#0f172a]">Sales Analytics</h2>
                         <div class="flex gap-2">
                             <button @click="salesPeriod = 'week'" 
                                     :class="salesPeriod === 'week' ? 'bg-[#0f172a] text-white' : 'bg-gray-100 text-gray-500'"
@@ -282,6 +221,80 @@ const maxSold = computed(() => {
                         </div>
                     </div>
                     <VueApexCharts height="350" :options="dailyOrdersOptions" :series="dailyOrdersSeries" />
+                </div>
+
+                <!-- Top Selling and Low Stock Alerts (2 Columns on large screens) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <!-- Top Selling -->
+                    <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <h2 class="text-base sm:text-lg font-normal text-[#0f172a]">Top Selling</h2>
+                            <select v-model="topSellingPeriod" class="border-none bg-gray-50 rounded-lg text-xs sm:text-sm font-normal text-gray-600 focus:ring-0">
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="year">This Year</option>
+                                <option value="overall">Overall</option>
+                            </select>
+                        </div>
+                        <div class="space-y-4">
+                            <div v-for="(product, index) in currentTopSelling" :key="product.id" class="flex items-center gap-3">
+                                <div class="w-6 text-sm sm:text-base font-normal" :class="index === 0 ? 'text-[#f97316]' : 'text-[#38bdf8]'">
+                                    {{ index + 1 }}
+                                </div>
+                                <div class="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gray-100 overflow-hidden">
+                                    <img :src="product.feature_image_url" alt="" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-grow">
+                                    <div class="flex items-center justify-between gap-3 mb-1.5">
+                                        <h4 class="text-sm sm:text-base font-normal text-[#0f172a] line-clamp-1">
+                                            {{ product.name }}
+                                            <span v-if="product.is_pre_order" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-normal bg-amber-100 text-amber-800">
+                                                Pre-Order
+                                            </span>
+                                        </h4>
+                                        <span class="text-xs sm:text-sm font-normal text-gray-500">{{ product.total_sold }} Sold</span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full transition-all duration-1000" 
+                                             :style="{ width: (product.total_sold / maxSold) * 100 + '%' }"
+                                             :class="index === 0 ? 'bg-[#0f172a]' : 'bg-[#0ea5e9]'">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="currentTopSelling.length === 0" class="text-center py-6 text-sm text-gray-400">
+                                No sales data for this period
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alerts -->
+                    <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                        <h2 class="text-base sm:text-lg font-normal text-[#0f172a] mb-4">Low Stock Alerts</h2>
+                        <div class="space-y-3">
+                            <div v-for="product in data.lowStock" :key="product.id" class="flex items-center gap-3 p-3 sm:p-4 border border-gray-50 rounded-xl hover:bg-gray-50 transition-colors">
+                                <div class="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gray-100 overflow-hidden">
+                                    <img :src="product.feature_image_url" alt="" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-grow">
+                                    <h4 class="text-sm sm:text-base font-normal text-[#0f172a]">
+                                        {{ product.name }}
+                                        <span v-if="product.is_pre_order" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-xs font-normal bg-amber-100 text-amber-800">
+                                            Pre-Order
+                                        </span>
+                                    </h4>
+                                    <p class="text-xs sm:text-sm text-gray-400">Stock: {{ product.stock }} items left</p>
+                                </div>
+                                <div class="bg-red-50 text-red-500 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-normal">
+                                    {{ product.stock }} Left
+                                </div>
+                            </div>
+                            <div v-if="data.lowStock.length === 0" class="text-center py-6 text-sm text-gray-400">
+                                No low stock alerts
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
