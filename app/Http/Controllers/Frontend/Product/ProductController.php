@@ -154,7 +154,23 @@ class ProductController extends Controller
         // Related products
         $relatedProducts = $this->productService->getRelatedProducts($product['id']);
 
+        // Small versions of the gallery images for the thumbnail strip
+        $responsiveImages = app(\App\Support\ResponsiveImages::class);
+        $imageUrls = array_filter(array_merge(
+            [$product['feature_image'] ?? null],
+            (array) ($product['gallery_images'] ?? []),
+            collect($product['variations'] ?? [])->pluck('image_path')->all()
+        ));
+        $imageThumbs = [];
+        foreach (array_unique($imageUrls) as $url) {
+            $thumb = $responsiveImages->thumbnail($url);
+            if ($thumb && $thumb !== $url) {
+                $imageThumbs[$url] = $thumb;
+            }
+        }
+
         return Inertia::render('Frontend/Product/Details', [
+            'imageThumbs' => $imageThumbs,
             'product' => $product,
             'reviews' => $reviews,
             'reviewStats' => $reviewStats,

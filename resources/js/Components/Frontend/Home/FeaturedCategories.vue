@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
+import SectionHeader from "./SectionHeader.vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -21,6 +22,25 @@ const parentCategories = computed(() => {
 });
 
 const swiperModules = [Autoplay, Navigation];
+
+const swiperInstance = ref(null);
+const isLocked = ref(true);
+const isBeginning = ref(false);
+const isEnd = ref(false);
+
+// Loop mode can briefly report an edge; a looping carousel never has one.
+const sync = (instance = swiperInstance.value) => {
+    if (!instance) return;
+    const loop = Boolean(instance.params.loop);
+    isLocked.value = instance.isLocked;
+    isBeginning.value = !loop && instance.isBeginning;
+    isEnd.value = !loop && instance.isEnd;
+};
+
+const onSwiper = (instance) => {
+    swiperInstance.value = instance;
+    sync(instance);
+};
 
 const swiperBreakpoints = {
     0: {
@@ -62,8 +82,22 @@ const swiperBreakpoints = {
 
             <!-- Categories Slider -->
             <div class="relative px-4 md:px-8">
+                <SectionHeader
+                    title="Explore Our Categories"
+                    subtitle="Something stylish for every taste"
+                    :show-nav="!isLocked"
+                    :is-beginning="isBeginning"
+                    :is-end="isEnd"
+                    @prev="swiperInstance?.slidePrev()"
+                    @next="swiperInstance?.slideNext()"
+                />
+
                 <!-- Tip: set :loop="false" while verifying to prevent cloned slides from changing which slide appears first -->
                 <swiper
+                    @swiper="onSwiper"
+                    @slide-change="sync()"
+                    @breakpoint="sync()"
+                    @resize="sync()"
                     :modules="swiperModules"
                     :slides-per-view="3"
                     :space-between="15"

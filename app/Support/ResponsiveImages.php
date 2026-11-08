@@ -28,6 +28,28 @@ class ResponsiveImages
         ];
     }
 
+    /**
+     * Smallest generated variant that is at least $minWidth wide, or the original URL.
+     */
+    public function thumbnail(?string $url, int $minWidth = 320): ?string
+    {
+        if (!$url) return $url;
+        $path = $this->localPath($url);
+        $metadata = $path && is_file($path . '.responsive.json')
+            ? json_decode(file_get_contents($path . '.responsive.json'), true) : null;
+        if (empty($metadata['variants'])) return $url;
+
+        $variants = $metadata['variants'];
+        ksort($variants, SORT_NUMERIC);
+        foreach ($variants as $width => $filename) {
+            if ((int) $width >= $minWidth) {
+                $base = preg_replace('/[?#].*$/', '', $url);
+                return substr($base, 0, strrpos($base, '/') + 1) . $filename;
+            }
+        }
+        return $url;
+    }
+
     private function localPath(string $url): ?string
     {
         $host = parse_url($url, PHP_URL_HOST);

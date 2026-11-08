@@ -166,12 +166,13 @@ class ReviewService
     /**
      * Get formatted reviews for product details page (for frontend)
      */
-    public function getFormattedProductReviews($productId)
+    public function getFormattedProductReviews($productId, int $limit = 50)
     {
         $reviews = Review::where('product_id', $productId)
             ->where('is_approved', true)
             ->with(['user:id,name'])
             ->orderBy('created_at', 'desc')
+            ->limit($limit)
             ->get();
 
         return $reviews->map(function ($review) {
@@ -196,20 +197,21 @@ class ReviewService
      */
     public function getReviewStats($productId)
     {
-        $reviews = Review::where('product_id', $productId)
+        $counts = Review::where('product_id', $productId)
             ->where('is_approved', true)
-            ->get();
-        
-        $totalReviews = $reviews->count();
-        $averageRating = $totalReviews > 0 ? round($reviews->avg('rating'), 1) : 0;
-        
-        $ratingDistribution = [
-            5 => $reviews->where('rating', 5)->count(),
-            4 => $reviews->where('rating', 4)->count(),
-            3 => $reviews->where('rating', 3)->count(),
-            2 => $reviews->where('rating', 2)->count(),
-            1 => $reviews->where('rating', 1)->count(),
-        ];
+            ->selectRaw('rating, COUNT(*) as total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating');
+
+        $ratingDistribution = [];
+        foreach ([5, 4, 3, 2, 1] as $star) {
+            $ratingDistribution[$star] = (int) ($counts[$star] ?? 0);
+        }
+
+        $totalReviews = array_sum($ratingDistribution);
+        $averageRating = $totalReviews > 0
+            ? round(collect($ratingDistribution)->map(fn ($n, $star) => $n * $star)->sum() / $totalReviews, 1)
+            : 0;
 
         return [
             'total_reviews' => $totalReviews,

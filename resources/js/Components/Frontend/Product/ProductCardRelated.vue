@@ -191,6 +191,8 @@ const handleCompare = () => {
                 <img
                     :src="product.feature_image"
                     :alt="product.name"
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                     @load="imageLoaded = true"
                 />

@@ -37,6 +37,10 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
     },
+    imageThumbs: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const selectedVariationImage = ref(null);
@@ -214,6 +218,7 @@ const isPreOrderMode = computed(() => {
                         <div class="sticky top-24">
                             <ImageGallery
                                 :images="productImages"
+                                :thumbs="imageThumbs"
                                 :selected-variation-image="
                                     selectedVariationImage
                                 "

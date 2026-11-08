@@ -35,8 +35,47 @@ table tbody tr td {
   overflow-y: auto;
   transition: width 0.3s ease;
 } */
-.ck-editor ul {
-    @apply list-disc list-inside;
+/* Tailwind's reset strips list/heading defaults; restore them inside the editor's typing area only. */
+.ck-editor__editable {
+    @apply text-gray-800;
+}
+.ck-editor__editable ul {
+    @apply list-disc pl-6 my-3;
+}
+.ck-editor__editable ol {
+    @apply list-decimal pl-6 my-3;
+}
+.ck-editor__editable li {
+    @apply my-1;
+}
+.ck-editor__editable li > p {
+    @apply my-0;
+}
+.ck-editor__editable h1 {
+    @apply text-3xl font-bold mt-6 mb-3;
+}
+.ck-editor__editable h2 {
+    @apply text-2xl font-bold mt-6 mb-3;
+}
+.ck-editor__editable h3 {
+    @apply text-xl font-semibold mt-5 mb-2;
+}
+.ck-editor__editable h4 {
+    @apply text-lg font-semibold mt-4 mb-2;
+}
+.ck-editor__editable p {
+    @apply my-3;
+}
+.ck-editor__editable li > h1,
+.ck-editor__editable li > h2,
+.ck-editor__editable li > h3 {
+    @apply my-1;
+}
+.ck-editor__editable a {
+    @apply text-blue-600 underline;
+}
+.ck-editor__editable blockquote {
+    @apply my-4 pl-4 border-l-4 border-gray-300 italic text-gray-600;
 }
 
 .label {
@@ -112,7 +151,7 @@ table tbody tr td {
 }
 
 .ck-content {
-    font-family: "Lato";
+    font-family: inherit;
     line-height: 1.6;
     word-break: break-word;
 }

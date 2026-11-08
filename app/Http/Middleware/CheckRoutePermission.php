@@ -87,6 +87,9 @@ class CheckRoutePermission
         // Blogs
         'admin.blogs.*' => 'admin.blogs.index',
 
+        // Recipes
+        'admin.recipes.*' => 'admin.recipes.index',
+
         // Reviews
         'admin.reviews.*' => 'admin.reviews.index',
 

@@ -151,6 +151,7 @@ const formatPermissionName = (name) => {
     'admin.landing-pages.index': 'Manage Landing Pages',
     'admin.site-pages.index': 'Manage Dynamic Site Pages',
     'admin.blogs.index': 'Manage Blogs',
+    'admin.recipes.index': 'Manage Recipes',
     'admin.reviews.index': 'Manage Product Reviews',
     'admin.courier.settings.index': 'Manage Courier & Delivery Settings',
     'admin.courier.dashboard': 'View Courier Dashboard',

@@ -3,11 +3,16 @@ import { Link } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import axios from "axios";
 import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
+import FeaturedProduct from "./FeaturedProduct.vue";
 
 const props = defineProps({
     pagination: {
         type: Object,
         required: true,
+    },
+    featured: {
+        type: Object,
+        default: null,
     },
 });
 const productGroups = ref([]);
@@ -43,10 +48,11 @@ const loadMore = async () => {
 </script>
 
 <template>
+    <FeaturedProduct v-if="featured && !productGroups.length" :featured="featured" />
+
+    <template v-for="(group, index) in productGroups" :key="group.id">
     <!-- Product Groups Section -->
     <section
-        v-for="group in productGroups"
-        :key="group.id"
         class="py-2 md:py-16 bg-white border-b border-gray-100 last:border-0"
     >
         <div class="container mx-auto px-4">
@@ -130,6 +136,9 @@ const loadMore = async () => {
             </div>
         </div>
     </section>
+
+    <FeaturedProduct v-if="featured && index === 0" :featured="featured" />
+    </template>
     <div v-if="nextPage" class="container py-6 text-center">
         <p v-if="error" role="alert" class="mb-3 text-red-600">{{ error }}</p>
         <button type="button" :disabled="loading" @click="loadMore" class="rounded-lg bg-primary px-6 py-3 text-white disabled:opacity-50">

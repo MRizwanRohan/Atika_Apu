@@ -45,6 +45,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'admin.landing-pages.index',
             'admin.site-pages.index',
             'admin.blogs.index',
+            'admin.recipes.index',
             'admin.reviews.index',
             'admin.courier.settings.index',
             'admin.courier.dashboard',

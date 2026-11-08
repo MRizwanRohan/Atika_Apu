@@ -9,6 +9,8 @@ use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Services\Product\ProductService;
 use App\Services\ProductGroup\ProductGroupService;
+use App\Services\Product\FeaturedProductService;
+use App\Services\Recipe\RecipeService;
 use App\Models\Slider;
 use App\Models\ProductVideo;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +21,9 @@ class HomeController extends Controller
 {
     public function __construct(
         protected ProductService $productService,
-        protected ProductGroupService $productGroupService
+        protected ProductGroupService $productGroupService,
+        protected FeaturedProductService $featuredProductService,
+        protected RecipeService $recipeService
     ) {}
 
 
@@ -31,8 +35,10 @@ class HomeController extends Controller
         return Inertia::render('Frontend/Home/Home', [
             'sliders' => fn () => $this->sliders(),
             // Below-fold data is requested only when its section approaches the viewport.
-            'groupedProducts' => Inertia::optional(fn () => $this->productService->categorywithproducts()),
+            'latestProducts' => Inertia::optional(fn () => $this->productService->latestProducts()),
             'productGroups' => Inertia::optional(fn () => $this->productGroupService->homepagePage()),
+            'featuredProduct' => Inertia::optional(fn () => $this->featuredProductService->forHomepage()),
+            'recipeSection' => Inertia::optional(fn () => $this->recipeService->forHomepage()),
             'productswithVideo' => Inertia::optional(fn () => $this->productVideos()),
             'instagramFeeds' => Inertia::optional(fn () => Cache::remember('instagram_feeds.active', 3600,
                 fn () => InstagramFeed::active()->orderBy('sort_order')->get(['id', 'image', 'link'])

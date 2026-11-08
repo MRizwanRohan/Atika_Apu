@@ -1,12 +1,14 @@
 <script setup>
-import { Head, Link, WhenVisible } from "@inertiajs/vue3";
+import { Head, WhenVisible } from "@inertiajs/vue3";
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
-const ProductCard = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductCard.vue"));
+const LatestProducts = defineAsyncComponent(() => import("@/Components/Frontend/Home/LatestProducts.vue"));
+const RecipeSection = defineAsyncComponent(() => import("@/Components/Frontend/Home/RecipeSection.vue"));
 import Sliders from "@/Components/Frontend/Slider/Sliders.vue";
 const ProductVideoReel = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductVideoReel.vue"));
 import { computed, toRef, defineAsyncComponent } from "vue";
 
 import FeaturedCategories from "@/Components/Frontend/Home/FeaturedCategories.vue";
+import FeatureHighlights from "@/Components/Frontend/Home/FeatureHighlights.vue";
 const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
 const InstagramFeed = defineAsyncComponent(() => import("@/Components/Frontend/Home/InstagramFeed.vue"));
 const PromoPopup = defineAsyncComponent(() => import("@/Components/Frontend/Home/PromoPopup.vue"));
@@ -20,13 +22,21 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    groupedProducts: {
+    latestProducts: {
         type: Array,
         default: () => [],
     },
     productGroups: {
         type: Object,
         default: () => ({}),
+    },
+    featuredProduct: {
+        type: Object,
+        default: null,
+    },
+    recipeSection: {
+        type: Object,
+        default: null,
     },
     sliders: {
         type: Array,
@@ -51,7 +61,6 @@ const settings = toRef(props, "settings");
 
 // Expose other props as refs so template bindings remain available
 const categories = toRef(props, "categories");
-const groupedProducts = toRef(props, "groupedProducts");
 const productGroups = toRef(props, "productGroups");
 const sliders = toRef(props, "sliders");
 
@@ -68,6 +77,8 @@ const pageTitle = computed(
 
       <Sliders :sliders="sliders" />
 
+    <FeatureHighlights />
+
     <PromoPopup
         v-if="settings?.generalSettings?.popup_enabled"
         :enabled="settings?.generalSettings?.popup_enabled == 1"
@@ -82,67 +93,19 @@ const pageTitle = computed(
         <ProductVideoReel :productswithVideo="productswithVideo" />
     </WhenVisible>
 
-    <WhenVisible data="productGroups" :buffer="100">
+    <WhenVisible :data="['productGroups', 'featuredProduct']" :buffer="100">
         <template #fallback><div class="h-64" aria-hidden="true" /></template>
-        <ProductsGroup :pagination="productGroups" />
+        <ProductsGroup :pagination="productGroups" :featured="featuredProduct" />
     </WhenVisible>
 
-    <WhenVisible data="groupedProducts" :buffer="100">
-    <template #fallback><div class="h-64" aria-hidden="true" /></template>
-    <section
-        v-for="group in groupedProducts"
-        :key="group.name"
-        class="py-8 bg-white"
-    >
-        <div
-            v-if="group.products && group.products.length > 0"
-            class="container mx-auto px-4"
-        >
+    <WhenVisible data="latestProducts" :buffer="100">
+        <template #fallback><div class="h-64" aria-hidden="true" /></template>
+        <LatestProducts :products="latestProducts" />
+    </WhenVisible>
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2
-                        class="text-xl md:text-2xl font-bold text-gray-900 mb-2"
-                    >
-                        {{ group.name }}
-                    </h2>
-                </div>
-                <Link
-                    :href="`/category/${group.slug}`"
-                    class="flex text-sm items-center gap-2 text-primary font-semibold hover:text-primary/90 transition-colors"
-                >
-                    View All
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M17 8l4 4m0 0l-4 4m4-4H3"
-                        />
-                    </svg>
-                </Link>
-            </div>
-            <hr class="border-gray-200 my-4" />
-
-            <div
-                class="pt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-6"
-            >
-                <ProductCard
-                    v-for="product in group.products.slice(0, 8)"
-                    :key="product.id"
-                    :product="product"
-                />
-            </div>
-
-        </div>
-    </section>
-
+    <WhenVisible data="recipeSection" :buffer="200">
+        <template #fallback><div class="h-48" aria-hidden="true" /></template>
+        <RecipeSection v-if="recipeSection" :section="recipeSection" />
     </WhenVisible>
     <WhenVisible data="instagramFeeds" :buffer="100">
         <template #fallback><div class="h-48" aria-hidden="true" /></template>

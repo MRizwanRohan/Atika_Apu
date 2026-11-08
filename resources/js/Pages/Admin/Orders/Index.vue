@@ -75,11 +75,14 @@ const openPaymentModal = (order) => {
 const getOrderItemImage = (item) => {
     if (!item) return "";
 
-    if (item.product?.type === "variable" && item.variation?.image) {
-        return item.variation.image;
+    const variationImage = item.variation?.image;
+    const hasVariationImage = variationImage && variationImage !== "N/A";
+
+    if (item.product?.type === "variable" && hasVariationImage) {
+        return variationImage;
     }
 
-    return item.product?.image || item.variation?.image || "";
+    return item.product?.image || (hasVariationImage ? variationImage : "");
 };
 
 const handleOrderItemImageError = (event, item) => {

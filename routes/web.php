@@ -42,6 +42,8 @@ use App\Http\Controllers\Admin\Product\ProductVideoController;
 use App\Http\Controllers\Admin\Banner\BannerController;
 use App\Http\Controllers\Admin\MetaTracking\MetaTrackingController;
 use App\Http\Controllers\Admin\ProductGroup\ProductGroupController;
+use App\Http\Controllers\Admin\Product\FeaturedProductController;
+use App\Http\Controllers\Admin\Recipe\RecipeController as AdminRecipeController;
 use App\Http\Controllers\Admin\InstagramFeed\InstagramFeedController;
 use App\Http\Controllers\Admin\Customer\CustomerController;
 use App\Http\Controllers\Admin\Sms\SmsSettingController;
@@ -156,6 +158,14 @@ Route::group(['middleware' => ['auth', 'check.route.permission'], 'prefix' => 'a
     Route::resource('product-groups', ProductGroupController::class);
     Route::put('product-groups/{productGroup}/status', [ProductGroupController::class, 'toggleStatus'])->name('product-groups.status');
     Route::get('product-groups-search-products', [ProductGroupController::class, 'searchProducts'])->name('product-groups.search-products');
+
+    Route::get('featured-product', [FeaturedProductController::class, 'index'])->name('products.featured');
+    Route::put('featured-product', [FeaturedProductController::class, 'update'])->name('products.featured.update');
+    Route::get('featured-product/search', [FeaturedProductController::class, 'search'])->name('products.featured.search');
+
+    Route::post('recipes/section', [AdminRecipeController::class, 'updateSection'])->name('recipes.section');
+    Route::put('recipes/{recipe}/status', [AdminRecipeController::class, 'toggleStatus'])->name('recipes.status');
+    Route::resource('recipes', AdminRecipeController::class)->except(['show']);
 
     // copon
     Route::resource('global-offers', \App\Http\Controllers\Admin\GlobalOfferController::class)->only(['index', 'store']);

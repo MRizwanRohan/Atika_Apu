@@ -189,6 +189,21 @@ class ProductService
         });
   }
 
+  public function latestProducts(int $limit = 15)
+  {
+    $version = Product::getCacheVersion();
+    return Cache::remember("products.v{$version}.latest.cards.{$limit}", 1800, function () use ($limit) {
+        return Product::select(Product::CARD_COLUMNS)
+            ->where('status', 'Published')
+            ->with(['variations.attributes.value.attribute', 'campaigns'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->orderBy('created_at', 'desc')
+            ->take($limit)
+            ->get()->each(fn ($product) => $product->setAppends(['avg_rating', 'reviews_count', 'responsive_image']));
+    });
+  }
+
 
       /**
      * Get active campaigns with products
@@ -310,14 +325,15 @@ class ProductService
             })
             ->where('id', '!=', $productId)
             ->where('status', 'Published')
-            ->with(['categories', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+            ->select(Product::CARD_COLUMNS)
+            ->with(['variations.attributes.value.attribute', 'campaigns'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->take($limit)
             ->get();
 
           if ($related->isNotEmpty()) {
-            return $related;
+            return $this->prepareRelatedCards($related);
           }
         }
 
@@ -326,26 +342,29 @@ class ProductService
           $related = Product::where('brand_id', $product->brand_id)
             ->where('id', '!=', $productId)
             ->where('status', 'Published')
-            ->with(['categories', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+            ->select(Product::CARD_COLUMNS)
+            ->with(['variations.attributes.value.attribute', 'campaigns'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->take($limit)
             ->get();
 
           if ($related->isNotEmpty()) {
-            return $related;
+            return $this->prepareRelatedCards($related);
           }
         }
 
         // Final fallback: latest published products excluding current
-        return Product::where('id', '!=', $productId)
+        $latest = Product::where('id', '!=', $productId)
           ->where('status', 'Published')
-          ->with(['categories', 'variations.attributes.value.attribute', 'brand', 'campaigns'])
+          ->select(Product::CARD_COLUMNS)
+          ->with(['variations.attributes.value.attribute', 'campaigns'])
           ->withAvg('reviews', 'rating')
           ->withCount('reviews')
           ->orderBy('created_at', 'desc')
           ->take($limit)
           ->get();
+        return $this->prepareRelatedCards($latest);
       } catch (\Exception $e) {
         // On error, return empty collection but don't break the page
         return collect();
@@ -353,6 +372,21 @@ class ProductService
     });
   }
 
+
+  /**
+   * Trim related products to what the product card renders: no appended
+   * accessors that hit the DB, and a small thumbnail instead of the original.
+   */
+  private function prepareRelatedCards($products)
+  {
+    $images = app(\App\Support\ResponsiveImages::class);
+
+    return $products->each(function ($product) use ($images) {
+      $product->feature_image = $images->thumbnail($product->feature_image);
+      $product->makeHidden(['gallery_images']);
+      $product->setAppends(['avg_rating', 'reviews_count']);
+    });
+  }
 
   public function getAllCategories()
   {

@@ -218,6 +218,7 @@ import {
     ShieldCheck,
     Globe,
     MessageSquare,
+    ChefHat,
 } from "lucide-vue-next";
 
 import { Link, usePage } from "@inertiajs/vue3";
@@ -343,6 +344,11 @@ const navigationItems = [
                 label: "Product Groups",
                 route: "admin.product-groups.index",
                 permission: "admin.product-groups.index",
+            },
+            {
+                label: "Featured Product",
+                route: "admin.products.featured",
+                permission: "admin.products.index",
             },
             //{
             //   label: "Product Videos",
@@ -490,6 +496,12 @@ const navigationItems = [
         route: "admin.site-pages.index",
         icon: FilePenLine,
         permission: "admin.site-pages.index",
+    },
+    {
+        label: "Recipes",
+        route: "admin.recipes.index",
+        icon: ChefHat,
+        permission: "admin.recipes.index",
     },
     // {
     //     label: "Blogs",

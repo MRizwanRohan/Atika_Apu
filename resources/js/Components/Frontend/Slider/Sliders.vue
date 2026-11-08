@@ -1,26 +1,22 @@
 <template>
-    <section class="lg:py-6 py-0 bg-white">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                <!-- Main Slider (Full width) -->
-                <div class="lg:col-span-12">
-                    <swiper
-                        v-if="sliders && sliders.length > 0"
-                        :modules="modules"
-                        :slides-per-view="1"
-                        :loop="sliders.length > 1"
-                        :autoplay="{
-                            delay: 5000,
-                            disableOnInteraction: false,
-                            pauseOnMouseEnter: true,
-                        }"
-                        :pagination="{
-                            clickable: true,
-                            dynamicBullets: true,
-                        }"
-                        :navigation="false"
-                        class="main-slider rounded-2xl overflow-hidden shadow-sm h-full"
-                    >
+    <section class="bg-white">
+        <swiper
+            v-if="sliders && sliders.length > 0"
+            :modules="modules"
+            :slides-per-view="1"
+            :loop="sliders.length > 1"
+            :autoplay="{
+                delay: 5000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+            }"
+            :pagination="{
+                clickable: true,
+                dynamicBullets: true,
+            }"
+            :navigation="false"
+            class="main-slider overflow-hidden shadow-sm h-full w-full"
+        >
                         <swiper-slide v-for="(slider, index) in sliders" :key="slider.id">
                             <Link
                                 v-if="slider.Link"
@@ -74,11 +70,8 @@
                                     />
                                 </picture>
                             </div>
-                        </swiper-slide>
-                    </swiper>
-                </div>
-            </div>
-        </div>
+            </swiper-slide>
+        </swiper>
     </section>
 </template>
 

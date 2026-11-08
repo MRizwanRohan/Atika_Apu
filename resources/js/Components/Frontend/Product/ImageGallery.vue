@@ -32,8 +32,10 @@
                     >
                         <img
                             v-if="media.type === 'image'"
-                            :src="media.src"
+                            :src="props.thumbs[media.src] || media.src"
                             :alt="`Thumbnail ${index + 1}`"
+                            loading="lazy"
+                            decoding="async"
                             class="w-full h-full object-cover p-1"
                         />
                         <div
@@ -94,6 +96,8 @@
                             v-if="activeMedia.type === 'image'"
                             :src="activeMedia.src"
                             :alt="`Product image ${activeIndex + 1}`"
+                            :fetchpriority="activeIndex === 0 ? 'high' : 'auto'"
+                            decoding="async"
                             class="w-full h-full object-contain transition-transform duration-200"
                             :style="zoomStyle"
                         />
@@ -161,6 +165,7 @@ interface Media {
 
 interface Props {
     images?: string[];
+    thumbs?: Record<string, string>;
     selectedVariationImage?: string | null;
     video?: string | null;
     pricing?: { main?: number; cross?: number | null; discountValue?: number; discountType?: string } | null;
@@ -171,6 +176,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     images: () => [],
+    thumbs: () => ({}),
     selectedVariationImage: null,
     video: null,
     pricing: null,

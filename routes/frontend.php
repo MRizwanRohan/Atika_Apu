@@ -13,6 +13,7 @@ use App\Http\Controllers\Frontend\Review\ReviewController;
 use App\Http\Controllers\Frontend\Wishlist\WishlistController;
 use App\Http\Controllers\Frontend\Compare\CompareController;
 use App\Http\Controllers\Frontend\Pages\PagesController;
+use App\Http\Controllers\Frontend\Recipe\RecipeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,9 @@ Route::get('/product/{slug}', [ProductController::class, 'detailsPage'])->name('
 
 // Product Group details page
 Route::get('/product-group/{slug}', [ProductController::class, 'productGroup'])->name('product-group.show');
+
+Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
+Route::get('/recipes/{slug}', [RecipeController::class, 'show'])->name('recipes.show');
 
 // Cart routes with throttle to prevent spam
 Route::prefix('cart')->name('cart.')->middleware('throttle:30,1')->group(function () {

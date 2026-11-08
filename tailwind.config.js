@@ -19,6 +19,8 @@ export default {
             },
             fontFamily: {
                 heebo: ['Heebo', 'sans-serif'],
+                display: ['Oswald', 'Heebo', 'sans-serif'],
+                script: ['"Great Vibes"', 'cursive'],
                 sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
             },
 

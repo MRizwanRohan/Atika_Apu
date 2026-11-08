@@ -1,4 +1,3 @@
-import "../css/app.css";
 import "./bootstrap";
 
 import { createInertiaApp, router } from "@inertiajs/vue3";
@@ -9,6 +8,9 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
 import { initMetaPixel, useMetaPixel } from "@/Composables/useMetaPixel";
 
 const appName = import.meta.env.VITE_APP_NAME || "";
+
+// Must match the storefront font URL in app.blade.php exactly.
+const STOREFRONT_FONTS = "family=Heebo:wght@400..900&family=Oswald:wght@500..700&family=Great+Vibes";
 
 createInertiaApp({
     title: (title) => (appName ? `${title}` : title),
@@ -40,6 +42,11 @@ createInertiaApp({
             .use(ZiggyVue)
             .mount(el);
 
+        // Drop the static skeleton in the same tick Vue finishes mounting,
+        // so the browser never paints the gap between "skeleton gone" and
+        // "Vue content in" as two separate frames.
+        document.getElementById("storefront-skeleton")?.remove();
+
         return vueApp;
     },
     progress: {
@@ -53,8 +60,8 @@ router.on('navigate', ({ detail: { page } }) => {
     // Inertia navigation does not reload the Blade head when crossing site areas.
     const storefront = /^(Frontend|User|PreOrderLead)\//.test(page.component);
     const font = document.getElementById('site-font-stylesheet');
-    const family = storefront ? 'Heebo' : 'Montserrat';
-    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400..900&display=swap`;
+    const families = storefront ? STOREFRONT_FONTS : 'family=Montserrat:wght@400..900';
+    const href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
     if (font && font.getAttribute('href') !== href) font.setAttribute('href', href);
     useMetaPixel().trackPageView();
 });

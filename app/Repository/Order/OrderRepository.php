@@ -145,8 +145,6 @@ public function getPaginatedOrders(
 
     protected function formatOrder($order): array
     {
-        Log::info('Formatting order mamun', ['order' => $order]);
-
         $duplicatePercentage = $this->calculateDuplicatePercentage($order);
 
         return [
@@ -213,7 +211,9 @@ public function getPaginatedOrders(
                             ->mapWithKeys(function ($value) {
                                 return [$value->attribute->name => $value->value];
                             }) ?? collect(),
-                        'image' => $item->productVariation->image_path ?? 'N/A'
+                        'image' => $item->productVariation->image_path
+                            ? app(\App\Support\ResponsiveImages::class)->thumbnail($item->productVariation->image_path)
+                            : null
                     ] : null
                 ];
             })->toArray()
@@ -236,7 +236,7 @@ public function getPaginatedOrders(
             'id' => $product->id,
             'name' => $product->name,
             'slug' => $product->slug,
-            'image' => $product->feature_image,
+            'image' => app(\App\Support\ResponsiveImages::class)->thumbnail($product->feature_image),
             'type' => $product->type
         ];
     }

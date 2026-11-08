@@ -85,7 +85,7 @@ class ProductGroupRepository implements ProductGroupRepositoryInterface
         return ProductGroup::with(['products' => function ($query) {
             $query->select(Product::CARD_COLUMNS)->where('status', 'Published')
                 ->with(['variations.attributes.value.attribute', 'campaigns'])
-                ->withAvg('reviews', 'rating')->withCount('reviews')->take(10);
+                ->withAvg('reviews', 'rating')->withCount('reviews')->take(5);
         }])->where('status', true)->orderBy('order_number')->orderBy('id')
             ->paginate(6, ['id', 'name', 'slug', 'banner', 'order_number'], 'page', $page)
             ->through(function ($group) {

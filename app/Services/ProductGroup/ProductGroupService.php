@@ -16,7 +16,7 @@ class ProductGroupService
         protected ProductGroupRepositoryInterface $repository
     ) {}
 
-    public function paginate(int $perPage = 10): LengthAwarePaginator
+    public function paginate(int $perPage = 5): LengthAwarePaginator
     {
         return $this->repository->paginate($perPage);
     }
