@@ -9,7 +9,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Contracts\Cache\Store;
 use Illuminate\Support\Facades\Cache;
 use App\Services\Categories\CategoryService;
-use App\Http\Requests\Categories\StoreCategoryRequest;
 use App\Http\Requests\Categories\UpdateCategoryRequest;
 
 class CategoryController extends Controller
@@ -39,32 +38,25 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        $categories = $this->categoryService->getAllCategories();
-        //return $categories;
-        return Inertia::render('Admin/Categories/Create', ['categories' => $categories]);
+        return $this->categoriesAreFixed();
+    }
+
+    /**
+     * The shop sells sauces only, so the category list is fixed to the one Sauce category.
+     */
+    private function categoriesAreFixed()
+    {
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('error', 'Sauce is the only category. New categories cannot be added.');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCategoryRequest $request)
+    public function store(Request $request)
     {
-        try {
-
-            $category = $this->categoryService->createCategory($request->validated());
-
-            // Clear categories cache
-            Cache::forget('categories.all');
-
-            return redirect()
-                ->route('admin.categories.index')
-                ->with('success', 'Category created successfully.');
-        } catch (\Exception $e) {
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', 'Failed to create category: ' . $e->getMessage());
-        }
+        return $this->categoriesAreFixed();
     }
 
 
@@ -156,6 +148,12 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        if ($category->isFixed()) {
+            return redirect()
+                ->back()
+                ->with('error', 'The Sauce category is required and cannot be deleted.');
+        }
+
         try {
             $categoryService = new CategoryService();
             $result = $categoryService->deleteCategory($category);

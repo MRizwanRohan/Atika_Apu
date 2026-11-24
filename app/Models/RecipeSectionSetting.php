@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class RecipeSectionSetting extends Model
 {
     public const DEFAULT_LABEL = 'Recipe Inspiration';
-    public const DEFAULT_TITLE = 'Made Better With Our Sauces';
+    public const DEFAULT_TITLE = 'Make every meal extraordinary.';
+    public const DEFAULT_DESCRIPTION = 'From quick snacks to main course, our sauces turn every recipe into a masterpiece.';
 
     protected $fillable = [
         'enabled',
         'label',
         'title',
+        'description',
         'banner',
         'banner_link',
     ];
@@ -29,6 +31,7 @@ class RecipeSectionSetting extends Model
             'enabled' => true,
             'label' => self::DEFAULT_LABEL,
             'title' => self::DEFAULT_TITLE,
+            'description' => self::DEFAULT_DESCRIPTION,
         ]);
     }
 

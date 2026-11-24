@@ -120,7 +120,6 @@ const injectMarketingTools = () => {
     <div class="min-h-screen flex flex-col bg-white">
         <!-- Header -->
         <FrontendHeader
-            :categories="categories"
             :settings="settings"
             @toggle-mobile-menu="toggleMobileMenu"
         />
@@ -128,7 +127,6 @@ const injectMarketingTools = () => {
         <!-- Mobile Menu Overlay -->
         <MobileMenu
             :is-open="isMobileMenuOpen"
-            :categories="categories"
             @close="closeMobileMenu"
         />
 
@@ -142,7 +140,6 @@ const injectMarketingTools = () => {
             <FrontendFooter
                 :settings="settings"
                 :pages="pages"
-                :categories="categories"
             />
         </div>
 

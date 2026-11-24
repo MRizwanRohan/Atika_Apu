@@ -63,12 +63,14 @@ class ResponsiveImages
         return null;
     }
 
-    public static function generate(string $path): bool
+    public static function generate(string $path, string $format = 'webp', int $quality = 70): bool
     {
         $size = @getimagesize($path);
+        $readable = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP];
+        if (defined('IMAGETYPE_AVIF')) $readable[] = IMAGETYPE_AVIF;
         // Preserve animated GIFs and originals; cap decoding memory for large uploads.
-        if (!$size || !in_array($size[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)
-            || $size[0] * $size[1] > 20000000 || !function_exists('imagewebp')) return false;
+        if (!$size || !in_array($size[2], $readable, true)
+            || $size[0] * $size[1] > 20000000 || !function_exists('image' . $format)) return false;
         $source = @imagecreatefromstring(file_get_contents($path));
         if (!$source) return false;
         $variants = [];
@@ -80,11 +82,14 @@ class ResponsiveImages
                 imagealphablending($image, false);
                 imagesavealpha($image, true);
                 imagecopyresampled($image, $source, 0, 0, 0, 0, $width, $height, $size[0], $size[1]);
-                $filename = pathinfo($path, PATHINFO_FILENAME) . ".w{$width}.webp";
+                $filename = pathinfo($path, PATHINFO_FILENAME) . ".w{$width}.{$format}";
                 $destination = dirname($path) . '/' . $filename;
                 $temporary = $destination . '.' . uniqid() . '.tmp';
                 try {
-                    if (!imagewebp($image, $temporary, 70) || !rename($temporary, $destination)) {
+                    $encoded = $format === 'avif'
+                        ? imageavif($image, $temporary, $quality)
+                        : imagewebp($image, $temporary, $quality);
+                    if (!$encoded || !rename($temporary, $destination)) {
                         throw new \RuntimeException("Unable to write responsive image: {$destination}");
                     }
                 } finally {

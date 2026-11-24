@@ -86,9 +86,11 @@ class SettingsService
 
     public function getAllPages(){
         return Cache::remember('site_pages_active', 3600, function () {
-            return SitePage::select('id', 'name', 'slug')
+            return SitePage::select('id', 'name', 'slug', 'footer_group')
                 ->where('status', 1)
                 ->whereNotIn('slug', ['pre-order-policy'])
+                ->where(fn ($q) => $q->whereNull('footer_group')->orWhere('footer_group', '!=', 'none'))
+                ->orderBy('id')
                 ->get();
         });
     }

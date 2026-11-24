@@ -189,6 +189,57 @@ class ProductService
         });
   }
 
+  /** Published products in the fixed Sauce category, for the homepage slider. */
+  public function sauceProducts(int $limit = 30)
+  {
+    $version = Product::getCacheVersion();
+    return Cache::remember("products.v{$version}.sauces.cards.{$limit}", 1800, function () use ($limit) {
+        $sauceId = Category::where('slug', Category::SAUCE_SLUG)->value('id');
+        if (!$sauceId) {
+            return collect();
+        }
+
+        return Product::select(Product::CARD_COLUMNS)
+            ->where('status', 'Published')
+            ->whereHas('categories', fn ($q) => $q->where('categories.id', $sauceId))
+            ->with(['variations.attributes.value.attribute', 'campaigns'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->orderBy('order')
+            ->orderBy('id')
+            ->take($limit)
+            ->get()->each(fn ($product) => $product->setAppends(['avg_rating', 'reviews_count', 'responsive_image']));
+    });
+  }
+
+  /** Name, link slug and a small image for each sauce, for the header dropdown. */
+  public function sauceNav(): array
+  {
+    $version = Product::getCacheVersion();
+    return Cache::remember("products.v{$version}.sauce_nav", 1800, function () {
+        $sauceId = Category::where('slug', Category::SAUCE_SLUG)->value('id');
+        if (!$sauceId) {
+            return [];
+        }
+
+        $images = app(\App\Support\ResponsiveImages::class);
+
+        return Product::where('status', 'Published')
+            ->whereHas('categories', fn ($q) => $q->where('categories.id', $sauceId))
+            ->orderBy('order')
+            ->orderBy('id')
+            ->take(30)
+            ->get(['id', 'name', 'slug', 'feature_image'])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'image' => $images->thumbnail($p->feature_image, 120),
+            ])
+            ->all();
+    });
+  }
+
   public function latestProducts(int $limit = 15)
   {
     $version = Product::getCacheVersion();

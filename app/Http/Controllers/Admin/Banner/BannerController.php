@@ -77,7 +77,7 @@ class BannerController extends Controller
                     ImageHelper::deleteImage($banner->$bannerField);
                 }
                 // Upload new image
-                $data[$bannerField] = ImageHelper::uploadImage($request->file($bannerField), 'storage/banners');
+                $data[$bannerField] = ImageHelper::uploadImage($request->file($bannerField), 'storage/banners', ImageHelper::HIGH_QUALITY);
             }
             
             // Handle URL
@@ -96,7 +96,7 @@ class BannerController extends Controller
                     ImageHelper::deleteImage($banner->$bannerField);
                 }
                 // Upload new image
-                $data[$bannerField] = ImageHelper::uploadImage($request->file($bannerField), 'storage/banners');
+                $data[$bannerField] = ImageHelper::uploadImage($request->file($bannerField), 'storage/banners', ImageHelper::HIGH_QUALITY);
             }
             
             // Handle URL
@@ -124,7 +124,7 @@ class BannerController extends Controller
                         ImageHelper::deleteImage($existingRandomBanners[$index]['image']);
                     }
 
-                    $bannerData['image'] = ImageHelper::uploadImage($uploadedRandomFiles[$index]['image'], 'storage/banners');
+                    $bannerData['image'] = ImageHelper::uploadImage($uploadedRandomFiles[$index]['image'], 'storage/banners', ImageHelper::HIGH_QUALITY);
                 } elseif (isset($randomBannerInput['image']) && is_string($randomBannerInput['image']) && $randomBannerInput['image']) {
                     // Frontend may send existing image as string path
                     $bannerData['image'] = $randomBannerInput['image'];

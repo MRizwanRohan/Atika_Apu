@@ -38,7 +38,7 @@ class PromotionalSliderController extends Controller
         ]);
 
         $imagePath = $request->hasFile('image')
-            ? ImageHelper::uploadImage($request->file('image'), 'storage/sliders')
+            ? ImageHelper::uploadImage($request->file('image'), 'storage/sliders', ImageHelper::HIGH_QUALITY)
             : null;
 
         PromotionalSlider::create([
@@ -68,7 +68,7 @@ class PromotionalSliderController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image
             ImageHelper::deleteImage($promotionalSlider->image);
-            $data['image'] = ImageHelper::uploadImage($request->file('image'), 'storage/sliders');
+            $data['image'] = ImageHelper::uploadImage($request->file('image'), 'storage/sliders', ImageHelper::HIGH_QUALITY);
         }
         $data['link'] = $request->link;
 

@@ -1,10 +1,18 @@
 <script setup>
+import { computed } from "vue";
 import { Link } from "@inertiajs/vue3";
 import RecipeBanner from "@/Components/Frontend/Recipe/RecipeBanner.vue";
 import RecipeCard from "@/Components/Frontend/Recipe/RecipeCard.vue";
 
-defineProps({
+const props = defineProps({
     section: { type: Object, required: true },
+});
+
+// The last word of the title is shown in the highlight color.
+const titleParts = computed(() => {
+    const title = (props.section.title || "").trim();
+    const cut = title.lastIndexOf(" ");
+    return cut === -1 ? ["", title] : [title.slice(0, cut), title.slice(cut + 1)];
 });
 </script>
 
@@ -18,46 +26,47 @@ defineProps({
             :alt="section.title"
         />
 
-        <div v-if="section.recipes.length" class="container mx-auto px-4 py-8 md:py-14">
-            <div class="flex items-end justify-between gap-4 mb-5 md:mb-8">
-                <div class="min-w-0">
-                    <p class="text-xs md:text-sm font-semibold uppercase tracking-[0.15em] text-primary">
-                        {{ section.label }}
-                    </p>
-                    <h2 class="mt-1 font-display font-bold uppercase leading-tight tracking-wide text-primary text-2xl sm:text-3xl md:text-4xl break-words">
-                        {{ section.title }}
-                    </h2>
+        <div v-if="section.recipes.length" class="container mx-auto px-4 py-8 md:py-12">
+            <div
+                class="rounded-[28px] p-5 sm:p-8 lg:p-10"
+                style="background-color: color-mix(in srgb, var(--primary-color) 7%, white)"
+            >
+                <div class="grid items-center gap-7 lg:grid-cols-[minmax(240px,310px)_minmax(0,1fr)] lg:gap-10">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary md:text-[13px]">
+                            {{ section.label }}
+                        </p>
+                        <h2 class="mt-3 font-serif text-3xl leading-[1.15] tracking-tight text-gray-900 sm:text-4xl">
+                            {{ titleParts[0] }}
+                            <span class="text-primary">{{ titleParts[1] }}</span>
+                        </h2>
+                        <p v-if="section.description" class="mt-4 max-w-sm text-sm leading-relaxed text-gray-700 md:text-[15px]">
+                            {{ section.description }}
+                        </p>
+                        <Link
+                            :href="route('recipes.index')"
+                            class="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 md:h-12"
+                        >
+                            Explore Recipes
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                        </Link>
+                    </div>
+
+                    <!-- Swipeable row on phones, 4 across from tablets up -->
+                    <div class="min-w-0">
+                        <div class="recipe-row -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-2 scroll-px-5 sm:-mx-8 sm:px-8 sm:scroll-px-8 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:scroll-px-0 lg:gap-5">
+                            <div
+                                v-for="recipe in section.recipes"
+                                :key="recipe.id"
+                                class="w-[46%] shrink-0 snap-start sm:w-[34%] md:w-auto"
+                            >
+                                <RecipeCard :recipe="recipe" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <Link
-                    :href="route('recipes.index')"
-                    class="hidden text-sm md:flex shrink-0 items-center gap-2 text-primary font-semibold hover:gap-3 transition-all duration-300"
-                >
-                    View All Recipes
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                </Link>
-            </div>
-
-            <!-- Swipeable row on phones, grid from tablets up -->
-            <div class="recipe-row flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 md:scroll-px-0 md:grid md:grid-cols-3 lg:grid-cols-5 md:gap-6 md:overflow-visible">
-                <div
-                    v-for="recipe in section.recipes"
-                    :key="recipe.id"
-                    class="w-[44%] shrink-0 snap-start md:w-auto"
-                >
-                    <RecipeCard :recipe="recipe" />
-                </div>
-            </div>
-
-            <div class="mt-8 text-center md:hidden">
-                <Link
-                    :href="route('recipes.index')"
-                    class="inline-flex text-[12px] items-center justify-center px-8 py-3 bg-gray-50 text-gray-900 font-bold rounded-lg border border-gray-200 active:bg-gray-100 transition-colors w-full sm:w-auto"
-                >
-                    View All Recipes
-                </Link>
             </div>
         </div>
     </section>

@@ -35,7 +35,7 @@
                                     <img
                                         :src="slider.image"
                                         :srcset="slider.responsive_image?.srcset"
-                                        sizes="(min-width: 1280px) 1200px, 100vw"
+                                        sizes="100vw"
                                         :width="slider.responsive_image?.width"
                                         :height="slider.responsive_image?.height"
                                         :fetchpriority="index === 0 ? 'high' : 'auto'"
@@ -59,7 +59,7 @@
                                     <img
                                         :src="slider.image"
                                         :srcset="slider.responsive_image?.srcset"
-                                        sizes="(min-width: 1280px) 1200px, 100vw"
+                                        sizes="100vw"
                                         :width="slider.responsive_image?.width"
                                         :height="slider.responsive_image?.height"
                                         :fetchpriority="index === 0 ? 'high' : 'auto'"

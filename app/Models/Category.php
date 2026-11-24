@@ -10,9 +10,27 @@ class Category extends Model
 {
     use SoftDeletes;
 
+    /** The shop sells sauces only; this is the one category all products belong to. */
+    public const SAUCE_SLUG = 'sauce';
+
     protected $appends = ['responsive_image'];
 
     protected $fillable = ["name","slug", "status", "image","icon", "order","parent_id"];
+
+    public static function sauce(): self
+    {
+        $category = static::withTrashed()->where('slug', self::SAUCE_SLUG)->first();
+        if ($category?->trashed()) {
+            $category->restore();
+        }
+
+        return $category ?? static::create(['name' => 'Sauce', 'status' => 'active', 'order' => 0]);
+    }
+
+    public function isFixed(): bool
+    {
+        return $this->slug === self::SAUCE_SLUG && $this->parent_id === null;
+    }
 
 
     protected static function boot()

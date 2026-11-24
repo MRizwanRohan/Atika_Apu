@@ -160,6 +160,13 @@ class Product extends Model
         return $this->feature_image ? asset($this->feature_image) : null;
     }
 
+    protected static function booted(): void
+    {
+        // Homepage and listing caches are keyed on this version; any product change makes them rebuild.
+        static::saved(fn () => static::incrementCacheVersion());
+        static::deleted(fn () => static::incrementCacheVersion());
+    }
+
     public static function getCacheVersion()
     {
         return \Illuminate\Support\Facades\Cache::get('products_cache_version', 1);

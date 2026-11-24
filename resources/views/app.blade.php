@@ -30,7 +30,7 @@
                 @if($mobileImage) media="(min-width: 769px)" @endif
                 @if(data_get($firstSlider, 'responsive_image.srcset'))
                     imagesrcset="{{ data_get($firstSlider, 'responsive_image.srcset') }}"
-                    imagesizes="(min-width: 1280px) 1200px, 100vw"
+                    imagesizes="100vw"
                 @endif>
             @if($mobileImage)
                 <link rel="preload" as="image" href="{{ $mobileImage }}" fetchpriority="high" media="(max-width: 768px)"

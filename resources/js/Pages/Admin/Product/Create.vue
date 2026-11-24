@@ -8,12 +8,13 @@ defineProps({
   categories: Array,
   brands: Array,
   returnTo: String,
+  defaultCategoryIds: { type: Array, default: () => [] },
 });
 </script>
 
 <template>
   <Head title="Create Product" />
   <AdminLayout>
-    <ProductForm :attribute-values="attributeValues" :categories="categories" :brands="brands" :return-to="returnTo" />
+    <ProductForm :attribute-values="attributeValues" :categories="categories" :brands="brands" :return-to="returnTo" :default-category-ids="defaultCategoryIds" />
   </AdminLayout>
 </template>

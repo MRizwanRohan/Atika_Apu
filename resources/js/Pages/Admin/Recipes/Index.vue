@@ -18,6 +18,7 @@ const sectionForm = useForm({
     enabled: Boolean(props.section.enabled),
     label: props.section.label,
     title: props.section.title,
+    description: props.section.description,
     banner_link: props.section.banner_link,
     banner_file: null,
     remove_banner: false,
@@ -88,7 +89,7 @@ const askDelete = (recipe) => {
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900">Homepage recipe section</h3>
-                            <p class="text-sm text-gray-500">Shown after "Find your style": banner on top, then up to 5 recipes.</p>
+                            <p class="text-sm text-gray-500">Shown on the homepage: an optional banner on top, then a text panel with up to 4 recipes.</p>
                         </div>
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input v-model="sectionForm.enabled" type="checkbox" class="toggle toggle-primary" />
@@ -105,8 +106,15 @@ const askDelete = (recipe) => {
                         <div>
                             <label for="s-title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                             <input id="s-title" v-model="sectionForm.title" type="text" maxlength="100" class="input input-bordered w-full" />
+                            <p class="mt-1 text-xs text-gray-500">The last word is shown in the highlight color.</p>
                             <p v-if="sectionForm.errors.title" class="mt-1 text-sm text-red-600">{{ sectionForm.errors.title }}</p>
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="s-desc" class="block text-sm font-medium text-gray-700 mb-1">Short description</label>
+                        <textarea id="s-desc" v-model="sectionForm.description" rows="2" maxlength="240" class="textarea textarea-bordered w-full"></textarea>
+                        <p v-if="sectionForm.errors.description" class="mt-1 text-sm text-red-600">{{ sectionForm.errors.description }}</p>
                     </div>
 
                     <div>

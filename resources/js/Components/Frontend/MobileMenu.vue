@@ -1,65 +1,42 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
 
 const props = defineProps({
     isOpen: {
         type: Boolean,
         default: false,
     },
-    categories: {
-        type: Array,
-        default: () => [],
-    },
 });
 
 const emit = defineEmits(["close"]);
 
-// Track expanded categories
-const expandedCategories = ref(new Set());
+const page = usePage();
+const navSauces = computed(() => page.props.navSauces || []);
+const saucesOpen = ref(false);
 
-// Categories are already hierarchical with children from API
-const parentCategories = computed(() => {
-    // Filter only active root-level categories
-    return props.categories.filter(
-        (cat) => cat.status === "active" || cat.status === 1,
-    );
-});
+// Same options and active rules as the desktop header menu.
+const path = computed(() => (page.url || "/").split("?")[0]);
+const active = computed(() => ({
+    home: path.value === "/",
+    shop: path.value.startsWith("/products") || path.value.startsWith("/product/"),
+    sauces: path.value.startsWith("/category/sauce"),
+    recipes: path.value.startsWith("/recipes"),
+    about: path.value === "/page/about-us",
+    contact: path.value === "/page/contact",
+}));
 
-// Toggle category expansion
-const toggleCategory = (categoryId) => {
-    if (expandedCategories.value.has(categoryId)) {
-        expandedCategories.value.delete(categoryId);
-    } else {
-        expandedCategories.value.add(categoryId);
-    }
-    // Force reactivity
-    expandedCategories.value = new Set(expandedCategories.value);
-};
+const rowClass = (isActive) => [
+    "flex-1 py-3.5 pr-2 text-[15px] font-semibold transition-colors hover:text-primary",
+    isActive ? "text-primary" : "text-gray-800",
+];
 
-// Check if category is expanded
-const isExpanded = (categoryId) => {
-    return expandedCategories.value.has(categoryId);
-};
-
-// Close menu when clicking outside
-const handleOverlayClick = () => {
-    emit("close");
-};
-
-// Reset expanded state when menu closes
 watch(
     () => props.isOpen,
-    (newVal) => {
-        if (!newVal) {
-            expandedCategories.value = new Set();
-        }
-        // Prevent body scroll when menu is open
-        if (newVal) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "";
-        }
+    (open) => {
+        if (!open) saucesOpen.value = false;
+        // Prevent body scroll while the menu is open
+        document.body.style.overflow = open ? "hidden" : "";
     },
 );
 </script>
@@ -70,7 +47,7 @@ watch(
         <div
             v-if="isOpen"
             class="fixed inset-0 bg-black/50 z-50 lg:hidden"
-            @click="handleOverlayClick"
+            @click="emit('close')"
         ></div>
     </Transition>
 
@@ -80,243 +57,88 @@ watch(
             v-if="isOpen"
             class="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white z-50 shadow-xl overflow-hidden flex flex-col lg:hidden"
         >
-            <!-- Header -->
-            <div
-                class="flex items-center justify-between p-4 border-b bg-gray-50"
-            >
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
                 <h2 class="text-lg font-bold text-gray-900">Menu</h2>
                 <button
                     @click="emit('close')"
                     class="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    aria-label="Close menu"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <!-- Menu Content -->
-            <div class="flex-1 overflow-y-auto">
-                <!-- Quick Links -->
-                <div class="p-4 border-b">
-                    <Link
-                        href="/"
-                        class="flex items-center gap-3 py-2 text-gray-700 hover:text-primary"
-                        @click="emit('close')"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+            <nav aria-label="Main" class="flex-1 overflow-y-auto px-4 py-2">
+                <div class="flex items-center border-b border-gray-100">
+                    <Link href="/" :class="rowClass(active.home)" @click="emit('close')">Home</Link>
+                </div>
+
+                <div class="flex items-center border-b border-gray-100">
+                    <Link :href="route('products.index')" :class="rowClass(active.shop)" @click="emit('close')">Shop</Link>
+                </div>
+
+                <div class="border-b border-gray-100">
+                    <div class="flex items-center">
+                        <Link :href="route('category.show', 'sauce')" :class="rowClass(active.sauces)" @click="emit('close')">Sauces</Link>
+                        <button
+                            v-if="navSauces.length"
+                            type="button"
+                            class="-mr-2 p-3 text-gray-500 transition-colors hover:text-primary"
+                            :aria-expanded="saucesOpen"
+                            aria-label="Show sauces"
+                            @click="saucesOpen = !saucesOpen"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 transition-transform"
+                                :class="{ 'rotate-180': saucesOpen }"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                                 stroke-width="2"
-                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div v-if="saucesOpen" class="mb-2 rounded-xl bg-gray-50 py-1">
+                        <Link
+                            v-for="sauce in navSauces"
+                            :key="sauce.id"
+                            :href="route('product.details', sauce.slug)"
+                            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 transition-colors hover:text-primary"
+                            @click="emit('close')"
+                        >
+                            <img
+                                v-if="sauce.image"
+                                :src="sauce.image"
+                                :alt="sauce.name"
+                                loading="lazy"
+                                class="h-9 w-9 shrink-0 rounded-lg bg-white object-contain"
                             />
-                        </svg>
-                        Home
-                    </Link>
+                            {{ sauce.name }}
+                        </Link>
+                    </div>
                 </div>
 
-                <!-- Categories -->
-                <div class="py-2">
-                    <template
-                        v-for="category in parentCategories"
-                        :key="category.id"
-                    >
-                        <MobileMenuItem
-                            :category="category"
-                            :expanded-categories="expandedCategories"
-                            :level="0"
-                            @toggle="toggleCategory"
-                            @close="emit('close')"
-                        />
-                    </template>
+                <div class="flex items-center border-b border-gray-100">
+                    <Link :href="route('recipes.index')" :class="rowClass(active.recipes)" @click="emit('close')">Recipes</Link>
                 </div>
-            </div>
 
-            <!-- Footer Links -->
-            <!-- <div class="p-4 border-t bg-gray-50">
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <Link
-                        href="/offers"
-                        class="text-primary font-medium"
-                        @click="emit('close')"
-                        >🎁 Offers</Link
-                    >
-                    <Link
-                        href="/compare"
-                        class="text-gray-600 hover:text-primary"
-                        @click="emit('close')"
-                        >Compare</Link
-                    >
-                    <Link
-                        :href="route('pre-order-lead.form')"
-                        class="text-gray-600 hover:text-primary"
-                        @click="emit('close')"
-                        >Pre-order</Link
-                    >
+                <div class="flex items-center border-b border-gray-100">
+                    <Link :href="route('pages.show', 'about-us')" :class="rowClass(active.about)" @click="emit('close')">About Us</Link>
                 </div>
-            </div> -->
+
+                <div class="flex items-center">
+                    <Link :href="route('pages.show', 'contact')" :class="rowClass(active.contact)" @click="emit('close')">Contact</Link>
+                </div>
+            </nav>
         </div>
     </Transition>
 </template>
-
-<script>
-// Recursive Mobile Menu Item Component
-import { defineComponent, computed, h } from "vue";
-import { Link } from "@inertiajs/vue3";
-
-const MobileMenuItem = defineComponent({
-    name: "MobileMenuItem",
-    props: {
-        category: {
-            type: Object,
-            required: true,
-        },
-        expandedCategories: {
-            type: Set,
-            default: () => new Set(),
-        },
-        level: {
-            type: Number,
-            default: 0,
-        },
-    },
-    emits: ["toggle", "close"],
-    setup(props, { emit }) {
-        const children = computed(() => {
-            return props.category.children || [];
-        });
-
-        const hasChildren = computed(() => children.value.length > 0);
-        const isExpanded = computed(() =>
-            props.expandedCategories.has(props.category.id),
-        );
-
-        const paddingLeft = computed(() => `${(props.level + 1) * 16}px`);
-
-        const handleToggle = () => {
-            emit("toggle", props.category.id);
-        };
-
-        const handleClose = () => {
-            emit("close");
-        };
-
-        return {
-            children,
-            hasChildren,
-            isExpanded,
-            paddingLeft,
-            handleToggle,
-            handleClose,
-        };
-    },
-    render() {
-        const elements = [];
-
-        // Category item
-        elements.push(
-            h(
-                "div",
-                {
-                    class: "flex items-center border-b border-gray-100",
-                    style: { paddingLeft: this.paddingLeft },
-                },
-                [
-                    // Category Link
-                    h(
-                        Link,
-                        {
-                            href: `/category/${this.category.slug}`,
-                            class: "flex-1 py-3 pr-2 text-gray-700 hover:text-primary transition-colors",
-                            onClick: this.handleClose,
-                        },
-                        () => this.category.name,
-                    ),
-
-                    // Expand button if has children
-                    this.hasChildren
-                        ? h(
-                              "button",
-                              {
-                                  class: `p-3 hover:bg-gray-100 transition-colors ${this.isExpanded ? "bg-gray-100" : ""}`,
-                                  onClick: this.handleToggle,
-                              },
-                              [
-                                  h(
-                                      "svg",
-                                      {
-                                          xmlns: "http://www.w3.org/2000/svg",
-                                          class: `h-5 w-5 transition-transform ${this.isExpanded ? "rotate-180" : ""}`,
-                                          fill: "none",
-                                          viewBox: "0 0 24 24",
-                                          stroke: "currentColor",
-                                      },
-                                      [
-                                          h("path", {
-                                              "stroke-linecap": "round",
-                                              "stroke-linejoin": "round",
-                                              "stroke-width": "2",
-                                              d: "M19 9l-7 7-7-7",
-                                          }),
-                                      ],
-                                  ),
-                              ],
-                          )
-                        : null,
-                ],
-            ),
-        );
-
-        // Children (if expanded)
-        if (this.hasChildren && this.isExpanded) {
-            elements.push(
-                h(
-                    "div",
-                    {
-                        class: "bg-gray-50",
-                    },
-                    this.children.map((child) =>
-                        h(MobileMenuItem, {
-                            key: child.id,
-                            category: child,
-                            expandedCategories: this.expandedCategories,
-                            level: this.level + 1,
-                            onToggle: (id) => this.$emit("toggle", id),
-                            onClose: this.handleClose,
-                        }),
-                    ),
-                ),
-            );
-        }
-
-        return h("div", {}, elements);
-    },
-});
-
-export default {
-    components: {
-        MobileMenuItem,
-    },
-};
-</script>
 
 <style scoped>
 .fade-enter-active,

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, watch, defineAsyncComponent } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import CategoryNav from "./CategoryNav.vue";
 const CartSidebar = defineAsyncComponent(() => import("./CartSidebar.vue"));
 import { useCartSidebar } from "@/Composables/useCartSidebar";
 import SearchBar from "../Header/SearchBar.vue";
@@ -9,22 +8,14 @@ import MobileBottomNav from "./MobileBottomNav.vue";
 import {
     PhTruck,
     PhMagnifyingGlass,
-    PhShoppingBag,
     PhUser,
-    PhSignOut,
-    PhList,
     PhX,
-    PhHeart,
     PhGift,
     PhCube,
     PhShoppingCartSimple,
 } from "@phosphor-icons/vue";
 
 const props = defineProps({
-    categories: {
-        type: Array,
-        default: () => [],
-    },
     settings: {
         type: Object,
         default: () => ({}),
@@ -60,22 +51,18 @@ const isAdmin = computed(() => {
 });
 
 const wishlistCount = computed(() => page.props.wishlistCount || 0);
-const compareCount = computed(() => page.props.compareCount || 0);
 
 const logoUrl = computed(() => {
     return props.settings?.media?.logo || "";
 });
 
 const siteName = computed(() => {
-    return props.settings?.site_name || "E-Shop";
+    return (
+        props.settings?.generalSettings?.app_name ||
+        props.settings?.site_name ||
+        "Store"
+    );
 });
-
-const formatPrice = (price) => {
-    return new Intl.NumberFormat("en-BD", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(price);
-};
 
 const cleantopnotice = (html) => {
     if (!html) return false;
@@ -85,6 +72,25 @@ const cleantopnotice = (html) => {
         .trim();
     return text.length > 0;
 };
+
+// Main menu. Keep the markup and classes in sync with resources/views/storefront-bootstrap.blade.php.
+const navSauces = computed(() => page.props.navSauces || []);
+const path = computed(() => (page.url || "/").split("?")[0]);
+const active = computed(() => ({
+    home: path.value === "/",
+    shop: path.value.startsWith("/products") || path.value.startsWith("/product/"),
+    sauces: path.value.startsWith("/category/sauce"),
+    recipes: path.value.startsWith("/recipes"),
+    about: path.value === "/page/about-us",
+    contact: path.value === "/page/contact",
+}));
+
+const linkClass = (isActive) => [
+    "relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary",
+    isActive
+        ? "text-primary after:absolute after:inset-x-0 after:bottom-4 after:h-0.5 after:bg-primary"
+        : "text-gray-900",
+];
 </script>
 
 <template>
@@ -136,165 +142,181 @@ const cleantopnotice = (html) => {
             </div>
         </div>
 
-        <!-- <pre>{{ settings }}</pre> -->
-
         <!-- Main Header -->
         <div class="bg-white border-b border-gray-100">
             <div class="container mx-auto px-4">
                 <!-- Desktop Layout -->
-                <div
-                    class="hidden lg:flex items-center justify-between h-14 gap-12"
-                >
+                <div class="hidden lg:flex items-center justify-between h-20 gap-6">
                     <!-- Logo -->
-                    <Link
-                        href="/"
-                        class="flex-shrink-0 flex items-center group"
-                    >
+                    <Link href="/" class="flex-shrink-0 flex items-center">
                         <img
                             v-if="logoUrl"
                             :src="logoUrl"
                             :alt="siteName"
-                            class="w-[130px] object-contain"
+                            class="h-14 w-auto max-w-[200px] object-contain"
                         />
-                        <div
+                        <span
                             v-else
-                            class="text-2xl font-black tracking-tighter"
+                            class="text-2xl font-black tracking-tighter text-gray-900"
+                            >{{ siteName }}</span
                         >
-                            <span class="text-gray-900">Smart</span
-                            ><span class="text-primary">Gear</span>
-                        </div>
                     </Link>
 
-                    <!-- Search Bar (Centered) -->
-                    <div
-                        v-if="route().current() !== 'order.create'"
-                        class="flex-1 max-w-2xl px-4"
-                    >
-                        <SearchBar />
-                    </div>
+                    <!-- Menu -->
+                    <nav aria-label="Main" class="flex items-center">
+                        <Link href="/" :class="linkClass(active.home)">Home</Link>
+                        <Link :href="route('products.index')" :class="linkClass(active.shop)">Shop</Link>
+
+                        <div class="group relative">
+                            <Link :href="route('category.show', 'sauce')" :class="linkClass(active.sauces)">
+                                Sauces
+                                <svg
+                                    v-if="navSauces.length"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-4 w-4 transition-transform duration-200 group-hover:rotate-180"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    aria-hidden="true"
+                                >
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </Link>
+
+                            <div
+                                v-if="navSauces.length"
+                                class="invisible absolute left-1/2 top-full z-50 w-72 -translate-x-1/2 opacity-0 transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+                            >
+                                <div class="rounded-2xl border border-gray-100 bg-white py-2 shadow-xl">
+                                    <Link
+                                        v-for="sauce in navSauces"
+                                        :key="sauce.id"
+                                        :href="route('product.details', sauce.slug)"
+                                        class="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-gray-50"
+                                    >
+                                        <img
+                                            v-if="sauce.image"
+                                            :src="sauce.image"
+                                            :alt="sauce.name"
+                                            loading="lazy"
+                                            class="h-10 w-10 shrink-0 rounded-lg bg-gray-50 object-contain"
+                                        />
+                                        <span class="text-sm font-medium text-gray-800">{{ sauce.name }}</span>
+                                    </Link>
+                                    <Link
+                                        :href="route('category.show', 'sauce')"
+                                        class="mt-1 block border-t border-gray-100 px-4 pb-2 pt-3 text-sm font-semibold text-primary"
+                                    >
+                                        View all sauces →
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Link :href="route('recipes.index')" :class="linkClass(active.recipes)">Recipes</Link>
+                        <Link :href="route('pages.show', 'about-us')" :class="linkClass(active.about)">About Us</Link>
+                        <Link :href="route('pages.show', 'contact')" :class="linkClass(active.contact)">Contact</Link>
+                    </nav>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-1">
+                        <button
+                            type="button"
+                            @click="isSearchOpen = true"
+                            class="flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary"
+                            aria-label="Search"
+                        >
+                            <PhMagnifyingGlass class="h-6 w-6" />
+                        </button>
+
                         <!-- Account -->
                         <div class="relative group">
                             <Link
                                 :href="route('user.dashboard')"
-                                class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
+                                class="flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary"
+                                :aria-label="user ? 'My account' : 'Login or register'"
                             >
-                                <div
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all"
-                                >
-                                    <PhUser class="w-5 h-5" />
-                                </div>
-                                <span
-                                    class="text-[10px] font-medium uppercase tracking-tight"
-                                >
-                                    {{
-                                        user
-                                            ? user.name.split(" ")[0]
-                                            : "Login/Register"
-                                    }}
-                                </span>
+                                <PhUser class="h-6 w-6" />
                             </Link>
 
                             <!-- Dropdown -->
                             <div
-                                class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden py-2"
+                                class="invisible absolute right-0 top-full z-50 w-56 pt-2 opacity-0 transition-all duration-300 group-hover:visible group-hover:opacity-100"
                             >
-                                <template v-if="user">
-                                    <div
-                                        class="px-4 py-3 bg-gray-50/50 mb-1 border-b border-gray-50"
-                                    >
-                                        <p
-                                            class="text-[10px] text-gray-400 font-medium uppercase tracking-widest leading-none mb-1"
+                                <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white py-2 shadow-2xl">
+                                    <template v-if="user">
+                                        <div
+                                            class="px-4 py-3 bg-gray-50/50 mb-1 border-b border-gray-50"
                                         >
-                                            Account
-                                        </p>
-                                        <p
-                                            class="text-sm font-medium text-gray-900 truncate"
+                                            <p
+                                                class="text-[10px] text-gray-400 font-medium uppercase tracking-widest leading-none mb-1"
+                                            >
+                                                Account
+                                            </p>
+                                            <p
+                                                class="text-sm font-medium text-gray-900 truncate"
+                                            >
+                                                {{ user.name }}
+                                            </p>
+                                        </div>
+                                        <Link
+                                            :href="
+                                                isAdmin
+                                                    ? route('admin.dashboard.index')
+                                                    : route('user.dashboard')
+                                            "
+                                            class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
                                         >
-                                            {{ user.name }}
-                                        </p>
-                                    </div>
-                                    <Link
-                                        :href="
-                                            isAdmin
-                                                ? route('admin.dashboard.index')
-                                                : route('user.dashboard')
-                                        "
-                                        class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                    >
-                                        {{
-                                            isAdmin
-                                                ? "Admin Dashboard"
-                                                : "My Dashboard"
-                                        }}
-                                    </Link>
-                                    <Link
-                                        :href="route('user.dashboard')"
-                                        class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                        >My Orders</Link
-                                    >
-                                    <div class="h-px bg-gray-50 my-1"></div>
-                                    <Link
-                                        :href="route('logout')"
-                                        method="post"
-                                        as="button"
-                                        class="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-                                        >Logout</Link
-                                    >
-                                </template>
-                                <template v-else>
-                                    <Link
-                                        :href="route('login')"
-                                        class="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                        >Login</Link
-                                    >
-                                    <Link
-                                        :href="route('register')"
-                                        class="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                        >Register</Link
-                                    >
-                                </template>
+                                            {{
+                                                isAdmin
+                                                    ? "Admin Dashboard"
+                                                    : "My Dashboard"
+                                            }}
+                                        </Link>
+                                        <Link
+                                            :href="route('user.dashboard')"
+                                            class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                                            >My Orders</Link
+                                        >
+                                        <div class="h-px bg-gray-50 my-1"></div>
+                                        <Link
+                                            :href="route('logout')"
+                                            method="post"
+                                            as="button"
+                                            class="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+                                            >Logout</Link
+                                        >
+                                    </template>
+                                    <template v-else>
+                                        <Link
+                                            :href="route('login')"
+                                            class="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                                            >Login</Link
+                                        >
+                                        <Link
+                                            :href="route('register')"
+                                            class="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                                            >Register</Link
+                                        >
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Wishlist -->
-                        <!-- <Link
-                            href="/wishlist"
-                            class="flex flex-col items-center gap-1 text-gray-700 hover:text-primary transition-colors group"
-                        >
-                            <div class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 group-hover:bg-primary/5 transition-all">
-                                <Heart class="w-6 h-6 stroke-[1.5]" />
-                                <span
-                                    v-if="wishlistCount > 0"
-                                    class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-medium rounded-full flex items-center justify-center border-2 border-white"
-                                >
-                                    {{ wishlistCount }}
-                                </span>
-                            </div>
-                            <span class="text-[11px] font-medium uppercase tracking-tight">Wishlist</span>
-                        </Link> -->
-
                         <!-- Cart Button -->
                         <button
+                            type="button"
                             @click="toggleCartSidebar"
-                            class="flex flex-col items-center gap-0.5 text-gray-700 hover:text-primary transition-colors group"
+                            class="relative flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary"
+                            aria-label="Cart"
                         >
-                            <div
-                                class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 group-hover:bg-primary/5 transition-all"
-                            >
-                                <PhShoppingCartSimple class="w-5 h-5" />
-                                <span
-                                    class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
-                                >
-                                    {{ cartCount }}
-                                </span>
-                            </div>
+                            <PhShoppingCartSimple class="h-6 w-6" />
                             <span
-                                class="text-[10px] font-medium uppercase tracking-tight"
-                                >Cart</span
+                                class="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-none text-white"
                             >
+                                {{ cartCount }}
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -309,34 +331,15 @@ const cleantopnotice = (html) => {
                             aria-label="Menu"
                         >
                             <svg
-                                data-v-c6900758=""
-                                data-v-68fa2a2f=""
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="30"
                                 height="16"
                                 viewBox="0 0 30 16"
                                 fill="currentColor"
                             >
-                                <rect
-                                    data-v-c6900758=""
-                                    data-v-68fa2a2f=""
-                                    width="30"
-                                    height="1.5"
-                                ></rect>
-                                <rect
-                                    data-v-c6900758=""
-                                    data-v-68fa2a2f=""
-                                    y="7"
-                                    width="20"
-                                    height="1.5"
-                                ></rect>
-                                <rect
-                                    data-v-c6900758=""
-                                    data-v-68fa2a2f=""
-                                    y="14"
-                                    width="30"
-                                    height="1.5"
-                                ></rect>
+                                <rect width="30" height="1.5"></rect>
+                                <rect y="7" width="20" height="1.5"></rect>
+                                <rect y="14" width="30" height="1.5"></rect>
                             </svg>
                         </button>
 
@@ -365,7 +368,7 @@ const cleantopnotice = (html) => {
                             <PhShoppingCartSimple class="w-7 h-7" />
                             <span
                                 v-if="cartCount > 0"
-                                class="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white"
                             >
                                 {{ cartCount }}
                             </span>
@@ -385,9 +388,6 @@ const cleantopnotice = (html) => {
             </div>
         </div>
 
-        <!-- Desktop Category Navigation -->
-        <CategoryNav :categories="categories" class="hidden lg:block" />
-
         <!-- Search Overlay -->
         <transition
             enter-active-class="transition duration-300 ease-out"
@@ -404,6 +404,7 @@ const cleantopnotice = (html) => {
                 <button
                     @click="isSearchOpen = false"
                     class="absolute top-6 right-6 p-2 bg-gray-50 rounded-full text-gray-500 hover:text-black transition-colors"
+                    aria-label="Close search"
                 >
                     <PhX class="w-6 h-6" />
                 </button>

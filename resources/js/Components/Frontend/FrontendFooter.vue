@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
 import { MessageSquareText, X } from "lucide-vue-next";
 
 const props = defineProps({
@@ -12,69 +12,44 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    categories: {
-        type: Array,
-        default: () => [],
-    },
 });
 
+const page = usePage();
 const currentYear = computed(() => new Date().getFullYear());
 
-// Support settings returned as { generalSettings, media, ... }
+// Everything below comes from the admin panel (settings, media, site pages, sauces).
 const general = computed(() => props.settings?.generalSettings || {});
 const media = computed(() => props.settings?.media || {});
 
 const siteName = computed(
-    () =>
-        general.value?.app_name ||
-        general.value?.site_name ||
-        props.settings?.siteName ||
-        "E-Shop",
+    () => general.value?.app_name || general.value?.site_name || "Store",
 );
-const siteDescription = computed(
-    () =>
-        general.value?.footer_text ||
-        general.value?.site_description ||
-        "Your premium destination for beauty and wellness. We provide curated high-end products to enhance your natural grace.",
-);
+const tagline = computed(() => general.value?.footer_text || "");
+const logo = computed(() => media.value?.logo || null);
+const paymentImage = computed(() => media.value?.footer_payment_logo || null);
 
-const footerLogo = computed(
-    () =>
-        media.value?.footer_logo ||
-        media.value?.footerLogo ||
-        media.value?.logo ||
-        null,
-);
-const facebookIframe = computed(() => {
-    const html = general.value?.facebook_iframe || null;
-    if (!html) return null;
-    return html
-        .replace(/width=["']\d+["']/gi, 'width="100%"')
-        .replace(/height=["']\d+["']/gi, 'height="100%"')
-        .replace(/<iframe/gi, '<iframe allow="unload"')
-        .replace(
-            /(style=["'])([^"']*)(["'])/gi,
-            (match, prefix, style, suffix) => {
-                const cleaned = `${style}; width:100% !important; height:100% !important;`;
-                return `${prefix}${cleaned}${suffix}`;
-            },
-        );
-});
+const sauces = computed(() => (page.props.navSauces || []).slice(0, 7));
+// A page with no footer column chosen stays in Help, where every page used to be listed.
+const helpPages = computed(() => props.pages.filter((p) => (p.footer_group || "help") === "help"));
+const aboutPages = computed(() => props.pages.filter((p) => p.footer_group === "about"));
 
-// Social links
-const facebookUrl = computed(() => general.value?.facebook_url || null);
-const instagramUrl = computed(() => general.value?.instagram_url || null);
-const youtubeUrl = computed(() => general.value?.youtube_url || null);
-const tiktokUrl = computed(() => general.value?.tiktok_url || null);
-const xUrl = computed(() => general.value?.x_url || null);
-
-// Contact fields
-const storeEmail = computed(() => general.value?.store_email || "");
-const storePhone = computed(() => general.value?.store_phone_number || "");
-const storeAddress = computed(() => general.value?.address || "");
-
-const paymentMethodsImage = computed(
-    () => media.value?.footer_payment_logo || null,
+const socialIcons = {
+    facebook: "M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.99H7.898v-2.889h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.462h-1.26c-1.243 0-1.63.771-1.63 1.562v1.875h2.773l-.443 2.889h-2.33v6.99C18.343 21.128 22 16.991 22 12z",
+    instagram: "M7 2C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5H7zm5 6a4 4 0 110 8 4 4 0 010-8zm6.5-.5a1 1 0 110 2 1 1 0 010-2z",
+    youtube: "M23.498 6.186a2.994 2.994 0 00-2.11-2.117C19.675 3.5 12 3.5 12 3.5s-7.675 0-9.388.569A2.994 2.994 0 00.5 6.186 31.25 31.25 0 000 12a31.25 31.25 0 00.5 5.814 2.994 2.994 0 002.112 2.117C4.325 20.5 12 20.5 12 20.5s7.675 0 9.388-.569a2.994 2.994 0 002.11-2.117A31.25 31.25 0 0024 12a31.25 31.25 0 00-.502-5.814zM9.75 15.02V8.98L15.5 12l-5.75 3.02z",
+    tiktok: "M12.525.02c1.31 0 2.591.24 3.75.69v5.62c-1.28-.79-2.79-1.24-4.41-1.24a7.29 7.29 0 00-7.29 7.29c0 4.03 3.26 7.29 7.29 7.29 4.03 0 7.29-3.26 7.29-7.29V0h3.87c.13 2.11 1.25 4 2.93 5.22v4.86c-2.31 0-4.41-.83-6.05-2.22v8.52c0 5.4-4.38 9.77-9.77 9.77S.25 21.78.25 16.38 4.63 6.61 10.02 6.61c1.23 0 2.4.23 3.48.64V.02h-.97z",
+    x: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
+};
+const socials = computed(() =>
+    [
+        ["facebook", "Facebook", general.value?.facebook_url],
+        ["instagram", "Instagram", general.value?.instagram_url],
+        ["youtube", "YouTube", general.value?.youtube_url],
+        ["tiktok", "TikTok", general.value?.tiktok_url],
+        ["x", "X", general.value?.x_url],
+    ]
+        .filter(([, , url]) => url)
+        .map(([key, label, url]) => ({ key, label, url, path: socialIcons[key] })),
 );
 
 // Live chat integration
@@ -88,347 +63,86 @@ const whatsappLink = computed(() =>
     whatsappNumber.value ? `https://wa.me/${whatsappNumber.value}` : null,
 );
 
-// Footer sections
-const categoriesList = computed(() => props.categories?.slice(0, 6) || []);
-const pagesList = computed(() => props.pages || []);
-
 const isChatOpen = ref(false);
 const toggleChat = () => {
     isChatOpen.value = !isChatOpen.value;
 };
 
-// Scroll to top helper
-const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-};
+const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors hover:text-primary";
 </script>
 
 <template>
-    <footer
-        class="bg-[#0a0a0a] text-zinc-400 font-['Jost',sans-serif] selection:bg-primary selection:text-white"
-    >
-        <!-- Newsletter Section -->
-
-        <!-- <pre>{{ settings }}</pre> -->
-
-        <!-- Main Footer Content -->
-        <div class="container mx-auto px-4 py-20">
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8"
-            >
-                <!-- Brand Section -->
-                <div class="lg:col-span-3 space-y-8">
-                    <Link href="/" class="inline-block group">
+    <footer class="border-t border-gray-200/70 bg-[#f8f7f2] text-gray-600">
+        <div class="container mx-auto px-4 pb-24 pt-12 md:pb-6 md:pt-14">
+            <div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4 md:gap-0">
+                <!-- Brand -->
+                <div class="col-span-2 md:col-span-1 md:pr-8">
+                    <Link href="/" class="inline-block">
                         <img
-                            v-if="footerLogo"
-                            :src="footerLogo"
-                            alt="Footer Logo"
-                            class="h-12 w-auto object-contain brightness-110 group-hover:scale-105 transition-transform duration-300"
+                            v-if="logo"
+                            :src="logo"
+                            :alt="siteName"
+                            class="h-14 w-auto max-w-[200px] object-contain"
                         />
-                        <span
-                            v-else
-                            class="text-2xl font-bold text-white tracking-widest"
-                            >{{ siteName }}</span
-                        >
+                        <span v-else class="text-2xl font-black tracking-tighter text-gray-900">{{ siteName }}</span>
                     </Link>
-                    <p class="text-zinc-500 leading-relaxed max-w-sm">
-                        {{ siteDescription }}
-                    </p>
-                    <!-- Social Links -->
-                    <div class="flex items-center gap-4">
+
+                    <p v-if="tagline" class="mt-5 max-w-[16.5rem] whitespace-pre-line text-[14px] leading-[22px] text-gray-700">{{ tagline }}</p>
+
+                    <div v-if="socials.length" class="mt-6 flex items-center gap-3">
                         <a
-                            v-if="facebookUrl"
-                            :href="facebookUrl"
+                            v-for="social in socials"
+                            :key="social.key"
+                            :href="social.url"
                             target="_blank"
-                            class="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-white hover:-translate-y-1 transition-all duration-300"
+                            rel="noopener noreferrer"
+                            :aria-label="social.label"
+                            class="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary"
                         >
-                            <svg
-                                class="w-5 h-5"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.99H7.898v-2.889h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.462h-1.26c-1.243 0-1.63.771-1.63 1.562v1.875h2.773l-.443 2.889h-2.33v6.99C18.343 21.128 22 16.991 22 12z"
-                                />
-                            </svg>
-                        </a>
-                        <a
-                            v-if="instagramUrl"
-                            :href="instagramUrl"
-                            target="_blank"
-                            class="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-white hover:-translate-y-1 transition-all duration-300"
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    d="M7 2C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5H7zm5 6a4 4 0 110 8 4 4 0 010-8zm6.5-.5a1 1 0 110 2 1 1 0 010-2z"
-                                />
-                            </svg>
-                        </a>
-                        <a
-                            v-if="youtubeUrl"
-                            :href="youtubeUrl"
-                            target="_blank"
-                            class="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-white hover:-translate-y-1 transition-all duration-300"
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    d="M23.498 6.186a2.994 2.994 0 00-2.11-2.117C19.675 3.5 12 3.5 12 3.5s-7.675 0-9.388.569A2.994 2.994 0 00.5 6.186 31.25 31.25 0 000 12a31.25 31.25 0 00.5 5.814 2.994 2.994 0 002.112 2.117C4.325 20.5 12 20.5 12 20.5s7.675 0 9.388-.569a2.994 2.994 0 002.11-2.117A31.25 31.25 0 0024 12a31.25 31.25 0 00-.502-5.814zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"
-                                />
-                            </svg>
-                        </a>
-                        <a
-                            v-if="tiktokUrl"
-                            :href="tiktokUrl"
-                            target="_blank"
-                            class="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-white hover:-translate-y-1 transition-all duration-300"
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    d="M12.525.02c1.31 0 2.591.24 3.75.69v5.62c-1.28-.79-2.79-1.24-4.41-1.24a7.29 7.29 0 00-7.29 7.29c0 4.03 3.26 7.29 7.29 7.29 4.03 0 7.29-3.26 7.29-7.29V0h3.87c.13 2.11 1.25 4 2.93 5.22v4.86c-2.31 0-4.41-.83-6.05-2.22v8.52c0 5.4-4.38 9.77-9.77 9.77S.25 21.78.25 16.38 4.63 6.61 10.02 6.61c1.23 0 2.4.23 3.48.64V.02h-.97z"
-                                />
+                            <svg class="h-[18px] w-[18px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path :d="social.path" />
                             </svg>
                         </a>
                     </div>
                 </div>
 
-                <!-- Support & Info -->
-                <div class="lg:col-span-3">
-                    <h4
-                        class="text-white font-semibold uppercase tracking-wider text-sm mb-8"
-                    >
-                        Policy & Legal
-                    </h4>
-                    <ul class="space-y-4">
-                        <li v-for="page in pagesList" :key="page.id">
-                            <Link
-                                :href="`/page/${page.slug}`"
-                                class="hover:text-primary transition-all duration-300 inline-block hover:translate-x-1"
-                            >
-                                {{ page.name }}
-                            </Link>
+                <!-- Shop -->
+                <div class="md:border-l md:border-gray-200 md:px-8">
+                    <h4 class="text-sm font-bold uppercase tracking-wide text-gray-900">Shop</h4>
+                    <ul class="mt-4 space-y-0.5">
+                        <li><Link :href="route('category.show', 'sauce')" :class="linkClass">All Sauces</Link></li>
+                        <li v-for="sauce in sauces" :key="sauce.id">
+                            <Link :href="route('product.details', sauce.slug)" :class="linkClass">{{ sauce.name }}</Link>
                         </li>
                     </ul>
                 </div>
 
-                <!-- Contact & Info -->
-                <div class="lg:col-span-3 space-y-6">
-                    <h4
-                        class="text-white font-semibold uppercase tracking-wider text-sm mb-8"
-                    >
-                        Get In Touch
-                    </h4>
-                    <div class="space-y-4">
-                        <div
-                            v-if="storeAddress"
-                            class="flex items-start gap-4 group"
-                        >
-                            <div
-                                class="w-10 h-10 shrink-0 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-primary/50 group-hover:text-primary transition-all duration-300"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="1.5"
-                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                    />
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="1.5"
-                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <span
-                                    class="block text-xs uppercase tracking-widest text-zinc-600 mb-1"
-                                    >Our Location</span
-                                >
-                                <p class="text-zinc-300 leading-relaxed">
-                                    {{ storeAddress }}
-                                </p>
-                            </div>
-                        </div>
-                        <div
-                            v-if="storePhone"
-                            class="flex items-start gap-4 group"
-                        >
-                            <div
-                                class="w-10 h-10 shrink-0 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-primary/50 group-hover:text-primary transition-all duration-300"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="1.5"
-                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <span
-                                    class="block text-xs uppercase tracking-widest text-zinc-600 mb-1"
-                                    >Phone Number</span
-                                >
-                                <a
-                                    :href="`tel:${storePhone}`"
-                                    class="text-zinc-300 hover:text-primary transition-colors text-lg font-medium"
-                                    >{{ storePhone }}</a
-                                >
-                            </div>
-                        </div>
-                        <div
-                            v-if="storeEmail"
-                            class="flex items-start gap-4 group"
-                        >
-                            <div
-                                class="w-10 h-10 shrink-0 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-primary/50 group-hover:text-primary transition-all duration-300"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="1.5"
-                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <span
-                                    class="block text-xs uppercase tracking-widest text-zinc-600 mb-1"
-                                    >Email Address</span
-                                >
-                                <a
-                                    :href="`mailto:${storeEmail}`"
-                                    class="text-zinc-300 hover:text-primary transition-colors"
-                                    >{{ storeEmail }}</a
-                                >
-                            </div>
-                        </div>
-                    </div>
+                <!-- Help -->
+                <div class="md:border-l md:border-gray-200 md:px-8">
+                    <h4 class="text-sm font-bold uppercase tracking-wide text-gray-900">Help</h4>
+                    <ul class="mt-4 space-y-0.5">
+                        <li><Link :href="route('user.dashboard')" :class="linkClass">My Account</Link></li>
+                        <li><Link href="/order/track" :class="linkClass">Track Order</Link></li>
+                        <li v-for="item in helpPages" :key="item.id">
+                            <Link :href="route('pages.show', item.slug)" :class="linkClass">{{ item.name }}</Link>
+                        </li>
+                    </ul>
                 </div>
 
-                <div v-if="facebookIframe" class="lg:col-span-3">
-                    <h4
-                        class="text-white font-semibold uppercase tracking-wider text-sm mb-8"
-                    >
-                        Facebook
-                    </h4>
-                    <div
-                        class="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950"
-                    >
-                        <div class="facebook-iframe-wrapper overflow-hidden">
-                            <div
-                                class="facebook-iframe-content h-full"
-                                v-html="facebookIframe"
-                            ></div>
-                        </div>
-                    </div>
+                <!-- About -->
+                <div v-if="aboutPages.length" class="md:border-l md:border-gray-200 md:pl-8">
+                    <h4 class="text-sm font-bold uppercase tracking-wide text-gray-900">About</h4>
+                    <ul class="mt-4 space-y-0.5">
+                        <li v-for="item in aboutPages" :key="item.id">
+                            <Link :href="route('pages.show', item.slug)" :class="linkClass">{{ item.name }}</Link>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
 
-        <!-- Bottom Bar -->
-        <div class="border-t border-zinc-800/50 bg-[#050505]">
-            <div class="container mx-auto px-4 py-8">
-                <div
-                    class="flex flex-col lg:flex-row items-center justify-between gap-8"
-                >
-                    <!-- Copyright -->
-                    <div class="text-center lg:text-left">
-                        <p class="text-sm text-zinc-500">
-                            © {{ currentYear }}
-                            <span class="text-zinc-200 font-semibold">{{
-                                siteName
-                            }}</span
-                            >. All rights reserved.
-                            <br class="md:hidden" />
-                            Crafted by
-                            <a
-                                href="https://auxtechbd.com"
-                                target="_blank"
-                                class="text-primary hover:underline"
-                                rel="noopener noreferrer"
-                                >Auxtech</a
-                            >
-                        </p>
-                    </div>
-
-                    <!-- Payment Methods -->
-                    <div class="flex items-center gap-6">
-                        <span
-                            class="text-xs uppercase tracking-widest text-zinc-600"
-                            >Secure Payments</span
-                        >
-                        <div
-                            v-if="paymentMethodsImage"
-                            class="h-8 opacity-70 hover:opacity-100 transition-opacity"
-                        >
-                            <img
-                                :src="paymentMethodsImage"
-                                alt="Payment Methods"
-                                class="h-full object-contain filter grayscale brightness-200"
-                            />
-                        </div>
-                        <div v-else class="flex gap-2">
-                            <div
-                                class="w-10 h-6 bg-zinc-800/50 rounded border border-zinc-700/50 flex items-center justify-center"
-                            >
-                                <img
-                                    src="https://img.icons8.com/color/48/visa.png"
-                                    alt="Visa"
-                                    class="h-4"
-                                />
-                            </div>
-                            <div
-                                class="w-10 h-6 bg-zinc-800/50 rounded border border-zinc-700/50 flex items-center justify-center"
-                            >
-                                <img
-                                    src="https://img.icons8.com/color/48/mastercard.png"
-                                    alt="MC"
-                                    class="h-4"
-                                />
-                            </div>
-                            <div
-                                class="w-10 h-6 bg-zinc-800/50 rounded border border-zinc-700/50 flex items-center justify-center"
-                            >
-                                <img
-                                    src="https://img.icons8.com/color/48/amex.png"
-                                    alt="Amex"
-                                    class="h-4"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="mt-10 text-center text-sm text-gray-700 md:mt-8">
+                <img v-if="paymentImage" :src="paymentImage" alt="Payment methods" class="mx-auto mb-4 h-7 object-contain opacity-80" />
+                <p>© {{ currentYear }} {{ siteName }}. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -565,41 +279,3 @@ const scrollToTop = () => {
         </button>
     </div>
 </template>
-
-<style scoped>
-footer {
-    perspective: 1000px;
-}
-
-/* Custom scrollbar for footer if needed */
-footer ::-webkit-scrollbar {
-    width: 4px;
-}
-
-footer ::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-footer ::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 2px;
-}
-
-@media (max-width: 1024px) {
-    .container {
-        max-width: 100%;
-    }
-}
-
-.facebook-iframe-wrapper,
-.facebook-iframe-wrapper > .facebook-iframe-content,
-.facebook-iframe-wrapper iframe {
-    width: 100% !important;
-    min-height: 100% !important;
-    height: 100% !important;
-}
-
-.facebook-iframe-wrapper iframe {
-    display: block !important;
-}
-</style>

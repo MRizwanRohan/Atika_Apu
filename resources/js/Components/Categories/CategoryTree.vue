@@ -6,7 +6,6 @@ import {
     Edit3,
     ChevronRight,
     ChevronDown,
-    Plus,
     Image as ImageIcon,
     MoreVertical,
     LayoutGrid,
@@ -242,17 +241,6 @@ const updateOrder = async (categoryId) => {
                 class="ml-2 flex shrink-0 items-start justify-end gap-1 self-start md:w-40 md:px-4"
             >
                 <Link
-                    :href="
-                        route('admin.categories.create', {
-                            parent_id: category.id,
-                        })
-                    "
-                    class="action-btn text-gray-400 hover:text-blue-600 hover:bg-blue-50"
-                    title="Add Subcategory"
-                >
-                    <Plus class="w-4 h-4" />
-                </Link>
-                <Link
                     :href="route('admin.categories.edit', category.id)"
                     class="action-btn text-gray-400 hover:text-green-600 hover:bg-green-50"
                     title="Edit Category"
@@ -260,6 +248,7 @@ const updateOrder = async (categoryId) => {
                     <Edit3 class="w-4 h-4" />
                 </Link>
                 <button
+                    v-if="!(category.slug === 'sauce' && !category.parent_id)"
                     @click="openDeleteModal"
                     class="action-btn text-gray-400 hover:text-red-600 hover:bg-red-50"
                     title="Delete Category"

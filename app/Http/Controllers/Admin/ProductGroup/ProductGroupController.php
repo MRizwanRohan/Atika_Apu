@@ -34,7 +34,7 @@ class ProductGroupController extends Controller
         $data = $request->validated();
         
         if ($request->hasFile('banner')) {
-            $data['banner'] = ImageHelper::uploadImage($request->file('banner'), 'uploads/product_groups');
+            $data['banner'] = ImageHelper::uploadImage($request->file('banner'), 'uploads/product_groups', ImageHelper::HIGH_QUALITY);
         }
 
         $this->service->create($data);
@@ -59,7 +59,7 @@ class ProductGroupController extends Controller
             if ($productGroup->getRawOriginal('banner')) {
                 ImageHelper::deleteImage($productGroup->getRawOriginal('banner'));
             }
-            $data['banner'] = ImageHelper::uploadImage($request->file('banner'), 'uploads/product_groups');
+            $data['banner'] = ImageHelper::uploadImage($request->file('banner'), 'uploads/product_groups', ImageHelper::HIGH_QUALITY);
         } else {
             // Keep the old banner if no new file is uploaded
             unset($data['banner']);

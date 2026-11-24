@@ -40,6 +40,7 @@ class RecipeController extends Controller
                 'enabled' => $setting->enabled,
                 'label' => $setting->label ?? RecipeSectionSetting::DEFAULT_LABEL,
                 'title' => $setting->title ?? RecipeSectionSetting::DEFAULT_TITLE,
+                'description' => $setting->description ?? RecipeSectionSetting::DEFAULT_DESCRIPTION,
                 'banner' => $setting->banner,
                 'banner_link' => $setting->banner_link ?? '',
             ],
@@ -115,6 +116,7 @@ class RecipeController extends Controller
             'enabled' => ['required', 'boolean'],
             'label' => ['nullable', 'string', 'max:60'],
             'title' => ['nullable', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:240'],
             'banner_file' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8000'],
             'remove_banner' => ['nullable', 'boolean'],
             'banner_link' => ['nullable', 'string', 'max:255', 'regex:#^(https?://|/)#i'],
@@ -126,7 +128,7 @@ class RecipeController extends Controller
         $oldBanner = $setting->banner;
 
         if ($request->hasFile('banner_file')) {
-            $setting->banner = ImageHelper::uploadImage($request->file('banner_file'), 'storage/recipes/banner');
+            $setting->banner = ImageHelper::uploadImage($request->file('banner_file'), 'storage/recipes/banner', ImageHelper::HIGH_QUALITY);
         } elseif ($request->boolean('remove_banner')) {
             $setting->banner = null;
         }
@@ -135,6 +137,7 @@ class RecipeController extends Controller
             'enabled' => $data['enabled'],
             'label' => $data['label'] ?? null,
             'title' => $data['title'] ?? null,
+            'description' => $data['description'] ?? null,
             'banner_link' => $data['banner_link'] ?? null,
         ])->save();
 

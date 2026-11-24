@@ -27,6 +27,11 @@
 </IfModule>
 # php -- END cPanel-generated handler, do not edit
 
+# Older Apache/cPanel mime tables lack AVIF; without this browsers may refuse to render it.
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+</IfModule>
+
 # Compress text assets; image/video formats are already compressed.
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json image/svg+xml

@@ -120,6 +120,7 @@ class ProductController extends Controller
                 'attributeValues' => $attributeValues,
                 'categories' => $categories,
                 'brands'=> $brands,
+                'defaultCategoryIds' => [\App\Models\Category::sauce()->id],
                 'returnTo' => $this->getSafeProductIndexReturnUrl($request->query('return_to')),
                 'errors' => session('errors') ? session('errors')->getBag('default')->getMessages() : [],
             ]);

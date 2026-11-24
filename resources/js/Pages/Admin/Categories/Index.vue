@@ -1,7 +1,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { defineProps, ref, watch } from "vue";
-import { Link, Head } from "@inertiajs/vue3";
+import { Head } from "@inertiajs/vue3";
 import CategoryTree from "@/Components/Categories/CategoryTree.vue";
 
 const props = defineProps({
@@ -83,15 +83,9 @@ const handleOrderUpdate = ({ id, order }) => {
                         Categories
                     </h2>
                     <p class="mt-1 text-xs text-gray-500">
-                        Simple mobile-friendly category tree
+                        All products belong to the fixed Sauce category. New categories cannot be added.
                     </p>
                 </div>
-                <Link
-                    :href="route('admin.categories.create')"
-                    class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                    Add Category
-                </Link>
             </div>
 
             <div v-if="localCategories.length" class="space-y-3">
@@ -137,12 +131,6 @@ const handleOrderUpdate = ({ id, order }) => {
                 <p class="text-center text-base font-medium text-gray-500">
                     No categories found yet.
                 </p>
-                <Link
-                    :href="route('admin.categories.create')"
-                    class="mt-4 text-sm font-semibold text-slate-900 transition hover:text-slate-700"
-                >
-                    Create your first category →
-                </Link>
             </div>
         </div>
     </AdminLayout>

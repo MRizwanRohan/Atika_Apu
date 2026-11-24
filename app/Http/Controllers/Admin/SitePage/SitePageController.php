@@ -37,6 +37,7 @@ class SitePageController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'title' => 'nullable|string|max:255',
+            'footer_group' => 'nullable|in:help,about,none',
             'content' => 'required'
         ]);
 
@@ -84,16 +85,20 @@ class SitePageController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'title' => 'nullable|string|max:255',
+            'footer_group' => 'nullable|in:help,about,none',
             'content' => 'required|string'
         ]);
 
-        $validated['slug'] = Str::slug($request->name);
+        // The page address (and every menu/footer link to it) only changes when the name does.
+        if ($page->name !== $validated['name']) {
+            $validated['slug'] = Str::slug($request->name);
 
-        // Ensure slug is unique, excluding current page
-        $baseSlug = $validated['slug'];
-        $counter = 1;
-        while (SitePage::where('slug', $validated['slug'])->where('id', '!=', $id)->exists()) {
-            $validated['slug'] = $baseSlug . '-' . $counter++;
+            // Ensure slug is unique, excluding current page
+            $baseSlug = $validated['slug'];
+            $counter = 1;
+            while (SitePage::where('slug', $validated['slug'])->where('id', '!=', $id)->exists()) {
+                $validated['slug'] = $baseSlug . '-' . $counter++;
+            }
         }
 
         $page->update($validated);

@@ -13,6 +13,7 @@ use App\Services\Product\FeaturedProductService;
 use App\Services\Recipe\RecipeService;
 use App\Models\Slider;
 use App\Models\ProductVideo;
+use App\Models\ProductGroup;
 use Illuminate\Support\Facades\Cache;
 
 use App\Models\InstagramFeed;
@@ -34,11 +35,15 @@ class HomeController extends Controller
     {
         return Inertia::render('Frontend/Home/Home', [
             'sliders' => fn () => $this->sliders(),
+            // Near the top of the page, so sent with the first response instead of lazy-loaded.
+            'sauces' => fn () => $this->productService->sauceProducts(),
+            // Small and cached, so it ships with the page and never needs a placeholder that resizes.
+            'recipeSection' => fn () => $this->recipeService->forHomepage(),
+            // Which lazy sections have anything to show; empty ones get no placeholder, so nothing collapses.
+            'homeSections' => fn () => $this->homeSections(),
             // Below-fold data is requested only when its section approaches the viewport.
-            'latestProducts' => Inertia::optional(fn () => $this->productService->latestProducts()),
             'productGroups' => Inertia::optional(fn () => $this->productGroupService->homepagePage()),
             'featuredProduct' => Inertia::optional(fn () => $this->featuredProductService->forHomepage()),
-            'recipeSection' => Inertia::optional(fn () => $this->recipeService->forHomepage()),
             'productswithVideo' => Inertia::optional(fn () => $this->productVideos()),
             'instagramFeeds' => Inertia::optional(fn () => Cache::remember('instagram_feeds.active', 3600,
                 fn () => InstagramFeed::active()->orderBy('sort_order')->get(['id', 'image', 'link'])
@@ -52,6 +57,18 @@ class HomeController extends Controller
         return response()->json($this->productGroupService->homepagePage((int) ($validated['page'] ?? 1)));
     }
 
+
+    private function homeSections(): array
+    {
+        $published = fn ($q) => $q->where('status', 'Published');
+
+        return [
+            'videos' => ProductVideo::whereNotNull('video')->whereHas('product', $published)->exists(),
+            'productGroups' => ProductGroup::where('status', true)->whereHas('products', $published)->exists()
+                || $this->featuredProductService->forHomepage() !== null,
+            'instagram' => InstagramFeed::active()->exists(),
+        ];
+    }
 
     private function sliders()
     {

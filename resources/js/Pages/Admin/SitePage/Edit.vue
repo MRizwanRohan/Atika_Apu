@@ -58,6 +58,30 @@
 
                 <div class="mb-4">
                     <label
+                        for="footer_group"
+                        class="block text-sm font-medium text-gray-700"
+                        >Show in footer</label
+                    >
+                    <select
+                        v-model="form.footer_group"
+                        id="footer_group"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        :class="{ 'border-red-500': form.errors.footer_group }"
+                    >
+                        <option value="help">Help column</option>
+                        <option value="about">About column</option>
+                        <option value="none">Don't show in the footer</option>
+                    </select>
+                    <div
+                        v-if="form.errors.footer_group"
+                        class="text-red-500 text-sm mt-1"
+                    >
+                        {{ form.errors.footer_group }}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label
                         for="content"
                         class="block text-sm font-medium text-gray-700"
                         >Content</label
@@ -126,6 +150,7 @@ const { page } = defineProps({
 const form = useForm({
     name: page?.name,
     title: page?.title,
+    footer_group: page?.footer_group || 'help',
     content: page?.content,
 });
 

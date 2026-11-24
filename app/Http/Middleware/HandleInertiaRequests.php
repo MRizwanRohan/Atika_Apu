@@ -123,6 +123,8 @@ class HandleInertiaRequests extends Middleware
             // Share site settings globally - already closures or made into closures
             'settings' => fn () => $this->settingsService->getSiteInfo(),
             'pages' => fn () => $this->settingsService->getAllPages(),
+            // Items for the header's "Sauces" dropdown.
+            'navSauces' => fn () => app(\App\Services\Product\ProductService::class)->sauceNav(),
             'metaPixel' => function() {
                 $settings = TrackingSettings::getSettings();
                 return [

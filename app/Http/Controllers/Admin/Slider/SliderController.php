@@ -37,8 +37,8 @@ class SliderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
-            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:6000',
+            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:6000',
             'link' => 'nullable|url',
             'bg_color' => 'nullable|string|max:7' // Assuming hex color like #ffffff
         ]);
@@ -46,12 +46,12 @@ class SliderController extends Controller
         $slider = new Slider();
         
         if ($request->hasFile('image')) {
-            $imageUrl = ImageHelper::uploadImage($request->file('image'), 'storage/sliders');
+            $imageUrl = ImageHelper::uploadImage($request->file('image'), 'storage/sliders', ImageHelper::HIGH_QUALITY);
             $slider->image = $imageUrl;
         }
 
         if ($request->hasFile('mobile_image')) {
-            $mobileImageUrl = ImageHelper::uploadImage($request->file('mobile_image'), 'storage/sliders');
+            $mobileImageUrl = ImageHelper::uploadImage($request->file('mobile_image'), 'storage/sliders', ImageHelper::HIGH_QUALITY);
             $slider->mobile_image = $mobileImageUrl;
         }
 
@@ -87,8 +87,8 @@ class SliderController extends Controller
     public function update(Request $request, Slider $slider)
     {
         $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
-            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:6000',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:6000',
+            'mobile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:6000',
             'link' => 'nullable|url',
             'bg_color' => 'nullable|string|max:7'
         ]);
@@ -100,7 +100,7 @@ class SliderController extends Controller
             }
     
             // Upload new image
-            $slider->image = ImageHelper::uploadImage($request->file('image'), 'storage/sliders');
+            $slider->image = ImageHelper::uploadImage($request->file('image'), 'storage/sliders', ImageHelper::HIGH_QUALITY);
         }
 
         if ($request->hasFile('mobile_image')) {
@@ -110,7 +110,7 @@ class SliderController extends Controller
             }
     
             // Upload new mobile image
-            $slider->mobile_image = ImageHelper::uploadImage($request->file('mobile_image'), 'storage/sliders');
+            $slider->mobile_image = ImageHelper::uploadImage($request->file('mobile_image'), 'storage/sliders', ImageHelper::HIGH_QUALITY);
         }
     
         $slider->Link = $request->link;

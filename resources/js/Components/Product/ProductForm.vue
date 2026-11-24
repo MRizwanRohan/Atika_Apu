@@ -55,6 +55,10 @@ const props = defineProps({
         type: String,
         default: "",
     },
+    defaultCategoryIds: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const isEditMode = computed(() => !!props.product);
@@ -328,7 +332,7 @@ const form = useForm({
     _method: isEditMode.value ? "PUT" : "POST",
     name: "",
     product_code: "",
-    category_ids: [],
+    category_ids: isEditMode.value ? [] : [...props.defaultCategoryIds],
     brand_id: "",
     short_description: "",
     description: "",

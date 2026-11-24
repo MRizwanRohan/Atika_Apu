@@ -19,6 +19,11 @@ class StoreProductRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        // Every product is a sauce; fall back to the fixed category when none was chosen.
+        if (empty(array_filter((array) $this->input('category_ids', [])))) {
+            $this->merge(['category_ids' => [\App\Models\Category::sauce()->id]]);
+        }
+
         // Normalize specification: accept JSON string, empty string or null and convert to array/null
         if ($this->has('specification')) {
             $spec = $this->input('specification');

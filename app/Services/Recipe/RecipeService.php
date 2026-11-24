@@ -12,7 +12,7 @@ class RecipeService
 {
     private const VERSION_KEY = 'recipes_cache_version';
     private const CARD_COLUMNS = ['id', 'title', 'subtitle', 'slug', 'image'];
-    public const HOMEPAGE_LIMIT = 5;
+    public const HOMEPAGE_LIMIT = 4;
 
     /**
      * Homepage payload, or null when the section is switched off or has nothing to show.
@@ -33,6 +33,7 @@ class RecipeService
             return [
                 'label' => $setting->label ?: RecipeSectionSetting::DEFAULT_LABEL,
                 'title' => $setting->title ?: RecipeSectionSetting::DEFAULT_TITLE,
+                'description' => $setting->description ?: RecipeSectionSetting::DEFAULT_DESCRIPTION,
                 'banner' => $setting->banner,
                 'responsive_banner' => $setting->banner ? $setting->responsive_banner : [],
                 'banner_link' => $setting->banner_link,
