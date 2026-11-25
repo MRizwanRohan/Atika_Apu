@@ -6,6 +6,7 @@ import Sliders from "@/Components/Frontend/Slider/Sliders.vue";
 const ProductVideoReel = defineAsyncComponent(() => import("@/Components/Frontend/Product/ProductVideoReel.vue"));
 import { computed, toRef, defineAsyncComponent } from "vue";
 
+import NewsletterCta from "@/Components/Frontend/Home/NewsletterCta.vue";
 import SauceSection from "@/Components/Frontend/Home/SauceSection.vue";
 import FeatureHighlights from "@/Components/Frontend/Home/FeatureHighlights.vue";
 const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
@@ -102,6 +103,8 @@ const pageTitle = computed(
     </WhenVisible>
 
     <RecipeSection v-if="recipeSection" :section="recipeSection" />
+
+    <NewsletterCta />
 
     <WhenVisible v-if="homeSections.instagram" data="instagramFeeds" :buffer="800">
         <template #fallback><div class="h-[440px]" aria-hidden="true" /></template>

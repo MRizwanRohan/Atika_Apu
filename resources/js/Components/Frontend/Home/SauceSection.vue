@@ -43,15 +43,24 @@ const breakpoints = {
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary md:text-sm">
                         Our Collection
                     </p>
-                    <h2 class="mt-2 font-serif text-3xl leading-[1.1] tracking-tight text-gray-900 sm:text-4xl lg:text-[2.6rem]">
-                        Explore our
-                        <span class="text-primary">sauces.</span>
+                    <h2 class="mt-3 font-serif text-[1.7rem] font-semibold leading-[1.15] tracking-tight sm:text-4xl lg:text-[2.4rem]" style="color: color-mix(in srgb, var(--primary-color) 45%, black)">
+                        Something delicious<br />
+                        for <span class="text-primary">every taste.</span>
                     </h2>
 
-                    <div class="mt-5 flex items-center justify-between gap-4 md:mt-7 lg:block">
+                    <div class="mt-4 flex items-center gap-3 text-primary" aria-hidden="true">
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 21c0-7 4-13 14-15-2 10-8 14-14 15z" />
+                            <path d="M5 21c1-4 3-8 7-11" />
+                        </svg>
+                        <span class="h-px w-24 md:w-32" style="background: color-mix(in srgb, var(--primary-color) 40%, white)"></span>
+                    </div>
+
+                    <div class="mt-5 flex items-center justify-between gap-4 md:mt-6 lg:block">
                         <Link
                             :href="route('category.show', 'sauce')"
-                            class="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 md:h-12"
+                            class="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 md:h-12"
+                            style="background: color-mix(in srgb, var(--primary-color) 70%, black)"
                         >
                             View All Sauces
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

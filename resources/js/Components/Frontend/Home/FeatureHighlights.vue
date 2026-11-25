@@ -2,43 +2,43 @@
 const features = [
     {
         title: "100% Natural",
-        description: "Real ingredients, no shortcuts.",
+        description: "Real ingredients. No shortcuts.",
         icon: "leaf",
     },
     {
         title: "No Artificials",
-        description: "No artificial colors, flavors or preservatives.",
+        description: "No colors, flavors or preservatives.",
         icon: "flask",
     },
     {
-        title: "Real Spices",
-        description: "Authentic spices for real authentic taste.",
+        title: "Rich in Flavor",
+        description: "Authentic spices for real taste.",
         icon: "bowl",
     },
     {
-        title: "Made with Love",
-        description: "Crafted in small batches with passion and care.",
+        title: "Better for You",
+        description: "Clean recipes for a healthier you.",
         icon: "heart",
     },
 ];
 </script>
 
 <template>
-    <section class="relative z-10 -mt-10 md:-mt-12 px-4">
+    <section class="relative z-10 -mt-2 md:-mt-12 px-4">
         <div
-            class="container mx-auto bg-white rounded-2xl shadow-lg px-6 py-8 md:px-10 md:py-10"
+            class="container mx-auto rounded-xl bg-primary px-2 py-3 text-white shadow-md md:rounded-[28px] md:px-10 md:py-8 md:shadow-lg"
         >
             <div
-                class="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-4 md:divide-x md:divide-gray-200"
+                class="grid grid-cols-2 gap-y-3 md:grid-cols-4 md:gap-y-0 md:divide-x md:divide-white/20"
             >
                 <div
                     v-for="feature in features"
                     :key="feature.title"
-                    class="flex flex-col items-center text-center px-2 md:px-4"
+                    class="flex flex-col items-center px-1 text-center md:px-6"
                 >
                     <svg
                         v-if="feature.icon === 'leaf'"
-                        class="h-9 w-9 text-primary mb-3"
+                        class="h-6 w-6 md:h-9 md:w-9 mb-1 md:mb-3" style="color: color-mix(in srgb, var(--primary-color) 30%, white)"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -58,7 +58,7 @@ const features = [
 
                     <svg
                         v-else-if="feature.icon === 'flask'"
-                        class="h-9 w-9 text-primary mb-3"
+                        class="h-6 w-6 md:h-9 md:w-9 mb-1 md:mb-3" style="color: color-mix(in srgb, var(--primary-color) 30%, white)"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -78,7 +78,7 @@ const features = [
 
                     <svg
                         v-else-if="feature.icon === 'bowl'"
-                        class="h-9 w-9 text-primary mb-3"
+                        class="h-6 w-6 md:h-9 md:w-9 mb-1 md:mb-3" style="color: color-mix(in srgb, var(--primary-color) 30%, white)"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -98,7 +98,7 @@ const features = [
 
                     <svg
                         v-else
-                        class="h-9 w-9 text-primary mb-3"
+                        class="h-6 w-6 md:h-9 md:w-9 mb-1 md:mb-3" style="color: color-mix(in srgb, var(--primary-color) 30%, white)"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -111,10 +111,10 @@ const features = [
                         />
                     </svg>
 
-                    <h3 class="font-bold text-gray-900 text-base md:text-lg mb-1">
+                    <h3 class="text-[12px] font-bold leading-tight text-white md:text-base md:mb-1">
                         {{ feature.title }}
                     </h3>
-                    <p class="text-gray-500 text-xs md:text-sm leading-snug">
+                    <p class="text-[9.5px] leading-tight text-white/85 md:text-sm md:leading-snug">
                         {{ feature.description }}
                     </p>
                 </div>

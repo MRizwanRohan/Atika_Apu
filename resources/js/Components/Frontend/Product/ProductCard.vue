@@ -54,7 +54,7 @@ const handleCartClick = (e) => {
 <template>
     <Link
         :href="route('product.details', product.slug)"
-        class="group relative flex flex-col h-full bg-white rounded-md border border-gray-100 overflow-hidden cursor-pointer hover:shadow-sm transition-shadow"
+        class="group relative flex flex-col h-full bg-white rounded-md border border-primary overflow-hidden cursor-pointer hover:shadow-sm transition-shadow"
         :class="{ 'opacity-80 grayscale-[0.5]': isOutOfStock }"
     >
         <!-- Product Image Section -->

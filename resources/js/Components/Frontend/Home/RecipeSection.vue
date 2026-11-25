@@ -26,17 +26,16 @@ const titleParts = computed(() => {
             :alt="section.title"
         />
 
-        <div v-if="section.recipes.length" class="container mx-auto px-4 py-8 md:py-12">
-            <div
-                class="rounded-[28px] p-5 sm:p-8 lg:p-10"
-                style="background-color: color-mix(in srgb, var(--primary-color) 7%, white)"
-            >
+        <div v-if="section.recipes.length" style="background-color: color-mix(in srgb, var(--primary-color) 4%, white)">
+          <div class="container mx-auto px-4 py-8 md:py-12">
+            <div>
                 <div class="grid items-center gap-7 lg:grid-cols-[minmax(240px,310px)_minmax(0,1fr)] lg:gap-10">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary md:text-[13px]">
+                        <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary md:text-[13px]">
                             {{ section.label }}
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21c0-7 4-13 14-15-2 10-8 14-14 15z" /><path d="M5 21c1-4 3-8 7-11" /></svg>
                         </p>
-                        <h2 class="mt-3 font-serif text-3xl leading-[1.15] tracking-tight text-gray-900 sm:text-4xl">
+                        <h2 class="mt-3 font-serif text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl" style="color: color-mix(in srgb, var(--primary-color) 45%, black)">
                             {{ titleParts[0] }}
                             <span class="text-primary">{{ titleParts[1] }}</span>
                         </h2>
@@ -45,7 +44,8 @@ const titleParts = computed(() => {
                         </p>
                         <Link
                             :href="route('recipes.index')"
-                            class="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 md:h-12"
+                            class="mt-6 inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90 md:h-12"
+                            style="background: color-mix(in srgb, var(--primary-color) 70%, black)"
                         >
                             Explore Recipes
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -56,7 +56,7 @@ const titleParts = computed(() => {
 
                     <!-- Swipeable row on phones, 4 across from tablets up -->
                     <div class="min-w-0">
-                        <div class="recipe-row -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-2 scroll-px-5 sm:-mx-8 sm:px-8 sm:scroll-px-8 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:scroll-px-0 lg:gap-5">
+                        <div class="recipe-row -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 py-2 scroll-px-4 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:scroll-px-0 lg:gap-5">
                             <div
                                 v-for="recipe in section.recipes"
                                 :key="recipe.id"
@@ -68,6 +68,7 @@ const titleParts = computed(() => {
                     </div>
                 </div>
             </div>
+          </div>
         </div>
     </section>
 </template>

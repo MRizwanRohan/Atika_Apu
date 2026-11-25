@@ -19,7 +19,7 @@ const statusLabel = computed(() => {
 <template>
     <Link
         :href="route('product.details', product.slug)"
-        class="group block h-full rounded-2xl border border-black/5 bg-white shadow-[0_6px_22px_rgba(0,0,0,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.10)]"
+        class="group block h-full rounded-2xl border border-primary bg-white shadow-[0_6px_22px_rgba(0,0,0,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.10)]"
     >
         <div class="relative aspect-[4/5] overflow-hidden rounded-t-2xl bg-gradient-to-b from-[#fbf8f1] to-white p-2.5 md:p-3">
             <img
