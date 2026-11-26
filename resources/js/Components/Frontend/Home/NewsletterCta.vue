@@ -10,7 +10,7 @@ const points = [
 </script>
 
 <template>
-    <section class="bg-white py-8 md:py-12">
+    <section class="py-8 md:py-12">
         <div class="container mx-auto px-4">
             <div class="overflow-hidden rounded-3xl bg-[#f3f2ea]">
                 <!-- Trust points -->

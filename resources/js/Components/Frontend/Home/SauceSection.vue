@@ -4,6 +4,14 @@ import { Link } from "@inertiajs/vue3";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import "swiper/css";
 import SauceCard from "./SauceCard.vue";
+import sectionBg from "@/../images/product-section-bg.webp";
+
+// The artwork has its design on both edges and plain paper in the middle. Each half of the
+// section shows the image at full section height, pinned to its own edge, so both decorated
+// edges stay whole at any screen width instead of being cropped by background-size: cover.
+const halfStyle = (side) => ({
+    background: `url(${sectionBg}) ${side} center / auto 100% no-repeat`,
+});
 
 defineProps({
     products: { type: Array, default: () => [] },
@@ -31,12 +39,18 @@ const breakpoints = {
     0: { slidesPerView: 2.2, spaceBetween: 12 },
     640: { slidesPerView: 3.2, spaceBetween: 16 },
     1024: { slidesPerView: 4, spaceBetween: 16 },
-    1280: { slidesPerView: 5, spaceBetween: 20 },
+    1280: { slidesPerView: 4, spaceBetween: 28 },
 };
 </script>
 
 <template>
-    <section v-if="products.length" class="bg-white py-8 md:py-14">
+    <section
+        v-if="products.length"
+        class="relative isolate bg-[#f6d999] pb-8 pt-20 md:pb-14 md:pt-24"
+    >
+        <div class="absolute inset-y-0 left-0 -z-10 w-1/2" :style="halfStyle('left')" aria-hidden="true" />
+        <div class="absolute inset-y-0 right-0 -z-10 w-1/2" :style="halfStyle('right')" aria-hidden="true" />
+
         <div class="container mx-auto px-4">
             <div class="grid items-center gap-6 lg:grid-cols-[minmax(230px,290px)_minmax(0,1fr)] lg:gap-10">
                 <div>

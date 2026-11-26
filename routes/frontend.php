@@ -14,6 +14,7 @@ use App\Http\Controllers\Frontend\Wishlist\WishlistController;
 use App\Http\Controllers\Frontend\Compare\CompareController;
 use App\Http\Controllers\Frontend\Pages\PagesController;
 use App\Http\Controllers\Frontend\Recipe\RecipeController;
+use App\Http\Controllers\Frontend\Blog\WellnessController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +68,10 @@ Route::get('/product-group/{slug}', [ProductController::class, 'productGroup'])-
 
 Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
 Route::get('/recipes/{slug}', [RecipeController::class, 'show'])->name('recipes.show');
+
+// "Wellness" = the published blog posts from Admin > Blogs
+Route::get('/wellness', [WellnessController::class, 'index'])->name('wellness.index');
+Route::get('/wellness/{slug}', [WellnessController::class, 'show'])->name('wellness.show');
 
 // Cart routes with throttle to prevent spam
 Route::prefix('cart')->name('cart.')->middleware('throttle:30,1')->group(function () {

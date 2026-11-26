@@ -23,11 +23,11 @@
                         v-for="(media, index) in allMedia"
                         :key="index"
                         @click="handleThumbnailClick(index)"
-                        class="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0"
+                        class="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden transition-all duration-200 flex-shrink-0"
                         :class="
                             index === activeIndex
-                                ? 'border-primary shadow-md scale-[1.02]'
-                                : 'border-gray-100 hover:border-gray-200'
+                                ? 'scale-[1.04] opacity-100'
+                                : 'opacity-60 hover:opacity-100'
                         "
                     >
                         <img
@@ -36,11 +36,11 @@
                             :alt="`Thumbnail ${index + 1}`"
                             loading="lazy"
                             decoding="async"
-                            class="w-full h-full object-cover p-1"
+                            class="w-full h-full object-cover"
                         />
                         <div
                             v-else
-                            class="w-full h-full bg-gray-50 flex items-center justify-center relative"
+                            class="w-full h-full flex items-center justify-center relative"
                         >
                             <img
                                 v-if="media.type === 'youtube' && media.thumbnail"
@@ -77,7 +77,7 @@
             <!-- Main Image Display -->
             <div class="flex-1 w-full">
                 <div
-                    class="relative w-full aspect-square border border-gray-100 bg-white rounded-sm overflow-hidden shadow-sm"
+                    class="relative w-full aspect-square overflow-hidden rounded-2xl"
                 >
                     <!-- Main Content -->
                     <div

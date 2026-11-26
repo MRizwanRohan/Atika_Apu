@@ -18,7 +18,7 @@ const props = defineProps({
 
     <ContactPage v-if="props.page.slug === 'contact'" :page="props.page" />
 
-    <div v-else class="min-h-screen bg-gray-50/30 font-sans pb-12">
+    <div v-else class="min-h-screen font-sans pb-12">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 class="text-2xl font-semibold mb-4">
           {{ props.page.title || props.page.name }}

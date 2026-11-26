@@ -38,25 +38,30 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return $this->categoriesAreFixed();
-    }
-
-    /**
-     * The shop sells sauces only, so the category list is fixed to the one Sauce category.
-     */
-    private function categoriesAreFixed()
-    {
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('error', 'Sauce is the only category. New categories cannot be added.');
+        $categories = $this->categoryService->getAllCategories();
+        return Inertia::render('Admin/Categories/Create', ['categories' => $categories]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        return $this->categoriesAreFixed();
+        try {
+            $this->categoryService->createCategory($request->validated());
+
+            Cache::forget('categories.all');
+            Cache::forget('nav_categories');
+
+            return redirect()
+                ->route('admin.categories.index')
+                ->with('success', 'Category created successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to create category: ' . $e->getMessage());
+        }
     }
 
 

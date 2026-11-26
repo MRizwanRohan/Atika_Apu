@@ -11,6 +11,11 @@ body {
     font-weight: 500;
 }
 
+/* Storefront pages are white; individual sections bring their own backgrounds. */
+body.frontend {
+    background-color: #fff;
+}
+
 table thead tr th {
     border: 1px solid #ccc;
     text-align: left;

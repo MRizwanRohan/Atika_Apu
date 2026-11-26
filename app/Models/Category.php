@@ -39,6 +39,12 @@ class Category extends Model
         static::creating(function ($category) {
             $category->slug = Str::slug($category->name);
         });
+
+        // The header's "Our Kitchen" menu is cached; any category change refreshes it.
+        $forgetNav = fn () => \Illuminate\Support\Facades\Cache::forget('nav_categories');
+        static::saved($forgetNav);
+        static::deleted($forgetNav);
+        static::restored($forgetNav);
     }
 
     // Relationship: Parent Category - Load soft-deleted parents for historical data

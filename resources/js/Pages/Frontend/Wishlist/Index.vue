@@ -21,7 +21,7 @@ const formatPrice = (price) => {
 <template>
     <FrontendLayout>
         <Head title="Wishlist" />
-        <div class="py-12 bg-gray-50 min-h-[calc(100vh-400px)]">
+        <div class="py-12 min-h-[calc(100vh-400px)]">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between mb-8">
                     <h1 class="text-3xl font-bold text-gray-900">

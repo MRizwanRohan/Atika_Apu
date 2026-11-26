@@ -35,7 +35,7 @@ const breakpoints = {
 </script>
 
 <template>
-    <section v-if="products.length" class="py-8 md:py-16 bg-white">
+    <section v-if="products.length" class="py-8 md:py-16">
         <div class="container mx-auto px-4">
             <div class="flex items-end justify-between gap-4 mb-6 md:mb-8">
                 <div class="min-w-0">

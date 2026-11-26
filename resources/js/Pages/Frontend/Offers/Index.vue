@@ -18,7 +18,7 @@ const props = defineProps({
 <template>
     <Head title="Offers" />
 
-    <section class="py-12 bg-gray-50 min-h-[60vh]">
+    <section class="py-12 min-h-[60vh]">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-2xl font-bold text-gray-900">Offers</h1>

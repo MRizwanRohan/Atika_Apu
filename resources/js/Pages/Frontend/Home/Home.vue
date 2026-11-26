@@ -8,6 +8,7 @@ import { computed, toRef, defineAsyncComponent } from "vue";
 
 import NewsletterCta from "@/Components/Frontend/Home/NewsletterCta.vue";
 import SauceSection from "@/Components/Frontend/Home/SauceSection.vue";
+import StorySection from "@/Components/Frontend/Home/StorySection.vue";
 import FeatureHighlights from "@/Components/Frontend/Home/FeatureHighlights.vue";
 const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
 const InstagramFeed = defineAsyncComponent(() => import("@/Components/Frontend/Home/InstagramFeed.vue"));
@@ -86,6 +87,8 @@ const pageTitle = computed(
     />
 
     <SauceSection :products="sauces" />
+
+    <StorySection />
 
     <!--
         Lazy sections: a placeholder is only rendered when the server says the section has content,

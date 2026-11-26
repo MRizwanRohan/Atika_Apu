@@ -9,6 +9,8 @@ import StarRating from "@/Components/Frontend/Product/StarRating.vue";
 import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 import ProductCardRelated from "@/Components/Frontend/Product/ProductCardRelated.vue";
 import RelatedProducts from "@/Components/Frontend/Product/RelatedProducts.vue";
+// Seamless (mirrored) paper texture tile from the product-section artwork.
+import paperTexture from "@/../images/paper-texture.webp";
 // --- Tabbed sections + smooth scroll / active-state ---
 import { onMounted, onBeforeUnmount, nextTick } from "vue";
 
@@ -209,7 +211,10 @@ const isPreOrderMode = computed(() => {
 <template>
     <FrontendLayout>
         <Head :title="pageTitle" />
-        <div class="min-h-screen bg-white font-sans pb-28 lg:pb-12">
+        <div
+            class="min-h-screen bg-[#f6d999] font-sans pb-28 lg:-mt-24 lg:pb-12 lg:pt-24"
+            :style="{ backgroundImage: `url(${paperTexture})`, backgroundSize: '640px auto' }"
+        >
             <!-- <pre>{{ product }}</pre> -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-4">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-16">
@@ -247,7 +252,7 @@ const isPreOrderMode = computed(() => {
                     <!-- Tabbed product details (specification / description / warranty / reviews) -->
                     <div class="w-full mx-auto">
                         <div
-                            class="border-b border-gray-200 mb-4 sticky top-[70px] z-20 bg-gray-50/95 -mx-4 px-4 md:mx-0 md:px-0"
+                            class="border-b border-[#3d5a2c]/20 mb-4 -mx-4 px-4 md:mx-0 md:px-0"
                         >
                             <nav
                                 class="flex items-center gap-6 overflow-x-auto no-scrollbar"
@@ -307,7 +312,7 @@ const isPreOrderMode = computed(() => {
                                 </h2>
 
                                 <div
-                                    class="overflow-hidden border border-gray-200 bg-white shadow-sm"
+                                    class="overflow-hidden border border-[#3d5a2c]/20"
                                 >
                                     <table class="w-full text-sm text-left">
                                         <tbody class="divide-y divide-gray-100">
@@ -344,7 +349,7 @@ const isPreOrderMode = computed(() => {
                                 class="mb-5"
                             >
                                 <div
-                                    class="prose prose-sm max-w-none text-gray-600 leading-relaxed bg-white p-2 border border-gray-100"
+                                    class="prose prose-sm max-w-none text-gray-600 leading-relaxed p-2"
                                     v-html="product.description"
                                 ></div>
                             </section>

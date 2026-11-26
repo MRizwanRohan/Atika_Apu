@@ -1,5 +1,5 @@
 <template>
-    <section class="bg-white">
+    <section>
         <swiper
             v-if="sliders && sliders.length > 0"
             :modules="modules"
@@ -15,7 +15,7 @@
                 dynamicBullets: true,
             }"
             :navigation="false"
-            class="main-slider overflow-hidden shadow-sm h-full w-full"
+            class="main-slider overflow-hidden h-full w-full"
         >
                         <swiper-slide v-for="(slider, index) in sliders" :key="slider.id">
                             <Link

@@ -66,7 +66,7 @@ const dark = "color-mix(in srgb, var(--primary-color) 65%, black)";
 </script>
 
 <template>
-    <div class="bg-white pb-12 md:pb-20">
+    <div class="pb-12 md:pb-20">
         <!-- Hero -->
         <section class="relative overflow-hidden text-white" :style="{ background: dark }">
             <div class="container mx-auto px-4 py-12 text-center md:py-20">

@@ -123,7 +123,12 @@ class HandleInertiaRequests extends Middleware
             // Share site settings globally - already closures or made into closures
             'settings' => fn () => $this->settingsService->getSiteInfo(),
             'pages' => fn () => $this->settingsService->getAllPages(),
-            // Items for the header's "Sauces" dropdown.
+            // Top-level categories for the header's "Our Kitchen" menu.
+            'navCategories' => fn () => \Illuminate\Support\Facades\Cache::remember('nav_categories', 3600, fn () =>
+                \App\Models\Category::whereNull('parent_id')->where('status', 'active')
+                    ->orderBy('order')->orderBy('id')->get(['id', 'name', 'slug'])
+                    ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])->all()
+            ),
             'navSauces' => fn () => app(\App\Services\Product\ProductService::class)->sauceNav(),
             'metaPixel' => function() {
                 $settings = TrackingSettings::getSettings();

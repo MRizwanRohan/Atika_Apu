@@ -12,17 +12,18 @@ const props = defineProps({
 const emit = defineEmits(["close"]);
 
 const page = usePage();
-const navSauces = computed(() => page.props.navSauces || []);
+const navCategories = computed(() => page.props.navCategories || []);
 const saucesOpen = ref(false);
 
 // Same options and active rules as the desktop header menu.
 const path = computed(() => (page.url || "/").split("?")[0]);
 const active = computed(() => ({
     home: path.value === "/",
+    kitchen: path.value.startsWith("/category/"),
+    story: path.value === "/page/about-us",
+    journal: path.value.startsWith("/recipes"),
+    wellness: path.value.startsWith("/wellness"),
     shop: path.value.startsWith("/products") || path.value.startsWith("/product/"),
-    sauces: path.value.startsWith("/category/sauce"),
-    recipes: path.value.startsWith("/recipes"),
-    about: path.value === "/page/about-us",
     contact: path.value === "/page/contact",
 }));
 
@@ -75,19 +76,15 @@ watch(
                     <Link href="/" :class="rowClass(active.home)" @click="emit('close')">Home</Link>
                 </div>
 
-                <div class="flex items-center border-b border-gray-100">
-                    <Link :href="route('products.index')" :class="rowClass(active.shop)" @click="emit('close')">Shop</Link>
-                </div>
-
                 <div class="border-b border-gray-100">
                     <div class="flex items-center">
-                        <Link :href="route('category.show', 'sauce')" :class="rowClass(active.sauces)" @click="emit('close')">Sauces</Link>
+                        <Link :href="route('products.index')" :class="rowClass(active.kitchen)" @click="emit('close')">Our Kitchen</Link>
                         <button
-                            v-if="navSauces.length"
+                            v-if="navCategories.length"
                             type="button"
                             class="-mr-2 p-3 text-gray-500 transition-colors hover:text-primary"
                             :aria-expanded="saucesOpen"
-                            aria-label="Show sauces"
+                            aria-label="Show categories"
                             @click="saucesOpen = !saucesOpen"
                         >
                             <svg
@@ -106,30 +103,31 @@ watch(
 
                     <div v-if="saucesOpen" class="mb-2 rounded-xl bg-gray-50 py-1">
                         <Link
-                            v-for="sauce in navSauces"
-                            :key="sauce.id"
-                            :href="route('product.details', sauce.slug)"
-                            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 transition-colors hover:text-primary"
+                            v-for="category in navCategories"
+                            :key="category.id"
+                            :href="route('category.show', category.slug)"
+                            class="block px-3 py-2 text-sm text-gray-700 transition-colors hover:text-primary"
                             @click="emit('close')"
                         >
-                            <img
-                                v-if="sauce.image"
-                                :src="sauce.image"
-                                :alt="sauce.name"
-                                loading="lazy"
-                                class="h-9 w-9 shrink-0 rounded-lg bg-white object-contain"
-                            />
-                            {{ sauce.name }}
+                            {{ category.name }}
                         </Link>
                     </div>
                 </div>
 
                 <div class="flex items-center border-b border-gray-100">
-                    <Link :href="route('recipes.index')" :class="rowClass(active.recipes)" @click="emit('close')">Recipes</Link>
+                    <Link :href="route('pages.show', 'about-us')" :class="rowClass(active.story)" @click="emit('close')">Our Story</Link>
                 </div>
 
                 <div class="flex items-center border-b border-gray-100">
-                    <Link :href="route('pages.show', 'about-us')" :class="rowClass(active.about)" @click="emit('close')">About Us</Link>
+                    <Link :href="route('recipes.index')" :class="rowClass(active.journal)" @click="emit('close')">Food Journal</Link>
+                </div>
+
+                <div class="flex items-center border-b border-gray-100">
+                    <Link :href="route('wellness.index')" :class="rowClass(active.wellness)" @click="emit('close')">Wellness</Link>
+                </div>
+
+                <div class="flex items-center border-b border-gray-100">
+                    <Link :href="route('products.index')" :class="rowClass(active.shop)" @click="emit('close')">Shop</Link>
                 </div>
 
                 <div class="flex items-center">

@@ -53,7 +53,7 @@ const loadMore = async () => {
     <template v-for="(group, index) in productGroups" :key="group.id">
     <!-- Product Groups Section -->
     <section
-        class="py-2 md:py-16 bg-white border-b border-gray-100 last:border-0"
+        class="py-2 md:py-16 border-b border-gray-100 last:border-0"
     >
         <div class="container mx-auto px-4">
             <!-- Banner Section -->

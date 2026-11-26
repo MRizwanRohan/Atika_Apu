@@ -3,79 +3,62 @@
     $siteSettings = data_get($page, 'props.settings', []);
     $logo = data_get($siteSettings, 'media.logo');
     $siteName = data_get($siteSettings, 'generalSettings.app_name', config('app.name'));
-    $navSauces = (array) data_get($page, "props.navSauces", []);
+    $navCategories = (array) data_get($page, 'props.navCategories', []);
+    $isHome = request()->routeIs('home');
+    $navLink = 'relative inline-flex h-24 items-center gap-1 text-[16px] font-medium transition-colors hover:text-primary';
     $authUser = data_get($page, 'props.auth.user');
     $cartCount = (int) data_get($page, 'props.cartCount', 0);
 @endphp
-<header class="sticky top-0 z-50 bg-white shadow-sm font-sans">
-    <div class="hidden lg:block bg-primary text-white py-1.5 overflow-hidden">
-        <div class="container max-w-[1400px] mx-auto px-4 flex items-center justify-between">
-            @if(data_get($siteSettings, 'generalSettings.top_notice'))
-                <div class="text-[10px] w-2/3 sm:text-xs tracking-widest">{{ strip_tags(data_get($siteSettings, 'generalSettings.top_notice')) }}</div>
-            @endif
-            <div class="flex items-center justify-end w-full gap-6">
-                <a href="{{ route('order.track') }}" class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="w-4 h-4"><path d="M255.42,117l-14-35A15.93,15.93,0,0,0,226.58,72H192V64a8,8,0,0,0-8-8H32A16,16,0,0,0,16,72V184a16,16,0,0,0,16,16H49a32,32,0,0,0,62,0h50a32,32,0,0,0,62,0h17a16,16,0,0,0,16-16V120A7.94,7.94,0,0,0,255.42,117ZM192,88h34.58l9.6,24H192ZM32,72H176v64H32ZM80,208a16,16,0,1,1,16-16A16,16,0,0,1,80,208Zm81-24H111a32,32,0,0,0-62,0H32V152H176v12.31A32.11,32.11,0,0,0,161,184Zm31,24a16,16,0,1,1,16-16A16,16,0,0,1,192,208Zm48-24H223a32.06,32.06,0,0,0-31-24V128h48Z"/></svg>
-                    <span>Track Order</span>
-                </a>
-                <a href="{{ route('pre-order-lead.form') }}" class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="w-4 h-4"><path d="M223.68,66.15,135.68,18h0a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32h0l80.34,44L128,120,47.66,76ZM40,90l80,43.78v85.79L40,175.82Zm96,129.57V133.82L216,90v85.78Z"/></svg>
-                    <span>Pre Order</span>
-                </a>
-                <a href="{{ route('offers.index') }}" class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="w-4 h-4"><path d="M216,72H180.92c.39-.33.79-.65,1.17-1A29.53,29.53,0,0,0,192,49.57,32.62,32.62,0,0,0,158.44,16,29.53,29.53,0,0,0,137,25.91a54.94,54.94,0,0,0-9,14.48,54.94,54.94,0,0,0-9-14.48A29.53,29.53,0,0,0,97.56,16,32.62,32.62,0,0,0,64,49.57,29.53,29.53,0,0,0,73.91,71c.38.33.78.65,1.17,1H40A16,16,0,0,0,24,88v32a16,16,0,0,0,16,16v64a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V136a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72ZM149,36.51a13.69,13.69,0,0,1,10-4.5h.49A16.62,16.62,0,0,1,176,49.08a13.69,13.69,0,0,1-4.5,10c-9.49,8.4-25.24,11.36-35,12.4C137.7,60.89,141,45.5,149,36.51Zm-64.09.36A16.63,16.63,0,0,1,96.59,32h.49a13.69,13.69,0,0,1,10,4.5c8.39,9.48,11.35,25.2,12.39,34.92-9.72-1-25.44-4-34.92-12.39a13.69,13.69,0,0,1-4.5-10A16.6,16.6,0,0,1,84.87,36.87ZM40,88h80v32H40Zm16,48h64v64H56Zm144,64H136V136h64Zm16-80H136V88h80v32Z"/></svg>
-                    <span>Offers</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
+<header class="sticky top-0 z-50 bg-white shadow-sm font-sans transition-[background-color,box-shadow] duration-300 lg:shadow-none {{ $isHome ? 'lg:fixed lg:inset-x-0' : '' }} lg:bg-transparent">
     <!-- Main Header -->
-    <div class="bg-white border-b border-gray-100">
-        <div class="container max-w-[1400px] mx-auto px-4">
+    <div class="bg-white border-b border-gray-100 lg:border-0 lg:bg-transparent">
+        <div class="container mx-auto px-4 lg:max-w-none lg:px-0">
             <!-- Desktop Layout (keep in sync with FrontendHeader.vue) -->
-            <div class="hidden lg:flex items-center justify-between h-20 gap-6">
-                <!-- Logo -->
-                <a href="{{ route('home') }}" class="flex-shrink-0 flex items-center">
+            <div class="relative hidden h-24 items-center pl-[clamp(200px,18vw,320px)] pr-6 lg:flex xl:pr-10">
+                <a href="{{ route('home') }}" class="absolute left-[clamp(24px,4vw,72px)] flex items-start transition-all duration-300 {{ $isHome ? 'top-3' : 'top-1/2 -translate-y-1/2' }}" aria-label="{{ $siteName }}">
                     @if($logo)
-                        <img src="{{ $logo }}" alt="{{ $siteName }}" class="h-14 w-auto max-w-[200px] object-contain">
+                        <img src="{{ $logo }}" alt="{{ $siteName }}" class="w-auto max-w-[220px] object-contain transition-all duration-300 {{ $isHome ? 'h-[150px] xl:h-[180px]' : 'h-[72px]' }}">
                     @else
                         <span class="text-2xl font-black tracking-tighter text-gray-900">{{ $siteName }}</span>
                     @endif
                 </a>
 
                 <!-- Menu -->
-                <nav aria-label="Main" class="flex items-center">
-                    <a href="{{ route('home') }}" class="relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary text-primary after:absolute after:inset-x-0 after:bottom-4 after:h-0.5 after:bg-primary">Home</a>
-                    <a href="{{ route('products.index') }}" class="relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary text-gray-900">Shop</a>
+                <nav aria-label="Main" class="flex items-center gap-x-7 xl:gap-x-10">
                     <div class="group relative">
-                        <a href="{{ route('category.show', 'sauce') }}" class="relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary text-gray-900">
-                            Sauces
-                            @if(count($navSauces))
+                        <a href="{{ route('products.index') }}" class="{{ $navLink }} text-gray-800">
+                            Our Kitchen
+                            @if(count($navCategories))
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             @endif
                         </a>
                     </div>
-                    <a href="{{ route('recipes.index') }}" class="relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary text-gray-900">Recipes</a>
-                    <a href="{{ route('pages.show', 'about-us') }}" class="relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary text-gray-900">About Us</a>
-                    <a href="{{ route('pages.show', 'contact') }}" class="relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary text-gray-900">Contact</a>
+                    <a href="{{ route('pages.show', 'about-us') }}" class="{{ $navLink }} text-gray-800">Our Story</a>
+                    <a href="{{ route('recipes.index') }}" class="{{ $navLink }} text-gray-800">Food Journal</a>
+                    <a href="{{ route('wellness.index') }}" class="{{ $navLink }} text-gray-800">Wellness</a>
+                    <a href="{{ route('products.index') }}" class="{{ $navLink }} text-gray-800">Shop</a>
                 </nav>
 
                 <!-- Actions -->
-                <div class="flex items-center gap-1">
-                    <a href="{{ route('products.index') }}" class="flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary" aria-label="Search">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="h-6 w-6"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
+                <div class="ml-auto flex items-center gap-4 xl:gap-5">
+                    <a href="{{ route('products.index') }}" class="flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary" aria-label="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="h-7 w-7"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
                     </a>
-                    <div class="relative group">
-                        <a href="{{ $authUser ? route('user.dashboard') : route('login') }}" class="flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary" aria-label="{{ $authUser ? 'My account' : 'Login or register' }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="h-6 w-6"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"/></svg>
+                    <span class="h-9 w-px bg-gray-500/50" aria-hidden="true"></span>
+                    <div class="group relative">
+                        <a href="{{ $authUser ? route('user.dashboard') : route('login') }}" class="flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary" aria-label="{{ $authUser ? 'My account' : 'Login or register' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="h-7 w-7"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"/></svg>
                         </a>
                     </div>
-                    <a href="{{ route('cart.index') }}" class="relative flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary" aria-label="Cart">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="h-6 w-6"><path d="M104,216a16,16,0,1,1-16-16A16,16,0,0,1,104,216Zm88-16a16,16,0,1,0,16,16A16,16,0,0,0,192,200ZM239.71,74.14l-25.64,92.28A24.06,24.06,0,0,1,191,184H92.16A24.06,24.06,0,0,1,69,166.42L33.92,40H16a8,8,0,0,1,0-16H40a8,8,0,0,1,7.71,5.86L57.19,64H232a8,8,0,0,1,7.71,10.14ZM221.47,80H61.64l22.81,82.14A8,8,0,0,0,92.16,168H191a8,8,0,0,0,7.71-5.86Z"/></svg>
-                        <span class="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-none text-white">
-                            {{ $cartCount }}
-                        </span>
+                    <a href="{{ route('cart.index') }}" class="relative flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary" aria-label="Cart">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="h-7 w-7"><path d="M239.89,198.12l-14.26-120a16,16,0,0,0-16-14.12H176a48,48,0,0,0-96,0H46.33a16,16,0,0,0-16,14.12l-14.26,120A16,16,0,0,0,20,210.6a16.13,16.13,0,0,0,12,5.4H223.92A16.13,16.13,0,0,0,236,210.6,16,16,0,0,0,239.89,198.12ZM128,32a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32ZM32,200,46.33,80H80v24a8,8,0,0,0,16,0V80h64v24a8,8,0,0,0,16,0V80h33.75l14.17,120Z"/></svg>
+                        @if($cartCount > 0)
+                            <span class="absolute -right-0.5 top-0 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-none text-white">{{ $cartCount }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('products.index') }}" class="inline-flex h-14 items-center gap-2 rounded-full px-8 text-[17px] font-medium text-white shadow-sm transition-opacity hover:opacity-90" style="background-color: color-mix(in srgb, var(--primary-color) 70%, black)">
+                        Order Now
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
                 </div>
             </div>
@@ -127,8 +110,8 @@
 </header>
 <main>
     @if($desktopImage)
-        <section class="bg-white">
-            <a href="{{ data_get($firstSlider, 'Link') ?: route('products.index') }}" class="block overflow-hidden shadow-sm">
+        <section>
+            <a href="{{ data_get($firstSlider, 'Link') ?: route('products.index') }}" class="block overflow-hidden">
                 <picture>
                     @if($mobileImage)
                         <source media="(max-width: 768px)" srcset="{{ data_get($firstSlider, 'responsive_mobile_image.srcset') ?: $mobileImage }}" sizes="100vw"

@@ -117,7 +117,7 @@ const injectMarketingTools = () => {
     </Head>
 
 
-    <div class="min-h-screen flex flex-col bg-white">
+    <div class="min-h-screen flex flex-col">
         <!-- Header -->
         <FrontendHeader
             :settings="settings"

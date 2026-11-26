@@ -30,7 +30,7 @@ const modules = [Navigation, Autoplay];
             <!-- Custom Navigation Buttons -->
             <div class="flex gap-2">
                 <button
-                    class="related-prev flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm"
+                    class="related-prev flex items-center justify-center w-10 h-10 rounded-full border border-gray-800/30 bg-transparent text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +47,7 @@ const modules = [Navigation, Autoplay];
                     </svg>
                 </button>
                 <button
-                    class="related-next flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm"
+                    class="related-next flex items-center justify-center w-10 h-10 rounded-full border border-gray-800/30 bg-transparent text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

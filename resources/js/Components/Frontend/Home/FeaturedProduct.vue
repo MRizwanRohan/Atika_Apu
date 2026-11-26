@@ -41,7 +41,7 @@ const handleCart = () => {
 </script>
 
 <template>
-    <section class="py-10 md:py-16 bg-white">
+    <section class="py-10 md:py-16">
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-2 items-center gap-8 md:gap-14">
                 <!-- Arch image -->

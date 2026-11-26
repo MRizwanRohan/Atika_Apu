@@ -382,12 +382,12 @@ const messengerLink = computed(() => {
             <!-- Quantity Section -->
             <div class="space-y-3">
                 <span class="text-sm font-semibold text-gray-900 block">Select Quantity:</span>
-                <div class="inline-flex items-center bg-[#f3f4f6] rounded-full p-1.5 gap-4">
+                <div class="inline-flex items-center border border-gray-800/25 rounded-full p-1.5 gap-4">
                     <button @click="quantity > 1 && quantity--" 
-                        class="w-8 h-8 flex items-center justify-center text-gray-900 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-all">-</button>
+                        class="w-8 h-8 flex items-center justify-center text-gray-900 bg-transparent rounded-full hover:bg-black/5 transition-all">-</button>
                     <span class="w-6 font-semibold text-center text-gray-900 text-base">{{ quantity }}</span>
                     <button @click="quantity < currentStock && quantity++" 
-                        class="w-8 h-8 flex items-center justify-center text-gray-900 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-all">+</button>
+                        class="w-8 h-8 flex items-center justify-center text-gray-900 bg-transparent rounded-full hover:bg-black/5 transition-all">+</button>
                 </div>
             </div>
 
@@ -405,7 +405,7 @@ const messengerLink = computed(() => {
                     <button
                         @click="addToCart"
                         :disabled="isAddingToCart || !hasStock"
-                        class="h-12 bg-white border border-gray-200 text-gray-900 rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97] disabled:opacity-50 group hover:bg-gray-50"
+                        class="h-12 bg-transparent border border-gray-800/40 text-gray-900 rounded-full font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.97] disabled:opacity-50 group hover:bg-gray-50"
                     >
                         <ShoppingCart :size="20" class="group-hover:translate-y-[-1px] transition-transform" />
                         <span>Add To Cart</span>

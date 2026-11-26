@@ -1,17 +1,15 @@
 <script setup>
-import { ref, computed, watch, defineAsyncComponent } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
 const CartSidebar = defineAsyncComponent(() => import("./CartSidebar.vue"));
 import { useCartSidebar } from "@/Composables/useCartSidebar";
 import SearchBar from "../Header/SearchBar.vue";
 import MobileBottomNav from "./MobileBottomNav.vue";
 import {
-    PhTruck,
     PhMagnifyingGlass,
-    PhUser,
     PhX,
-    PhGift,
-    PhCube,
+    PhHandbag,
+    PhUser,
     PhShoppingCartSimple,
 } from "@phosphor-icons/vue";
 
@@ -39,139 +37,83 @@ const cartSidebarLoaded = ref(false);
 watch(isCartSidebarOpen, (open) => { if (open) cartSidebarLoaded.value = true; }, { immediate: true });
 const isSearchOpen = ref(false);
 
-const user = computed(() => page.props.auth?.user);
 const cartCount = computed(() => page.props.cartCount || 0);
-
-const isAdmin = computed(() => {
-    return user.value?.roles?.some((r) =>
-        ["superadmin", "admin", "super-admin", "Admin", "Super Admin"].includes(
-            r.name,
-        ),
-    );
-});
-
+const user = computed(() => page.props.auth?.user);
+const isAdmin = computed(() =>
+    user.value?.roles?.some((r) => ["superadmin", "admin", "super-admin", "Admin", "Super Admin"].includes(r.name)),
+);
 const wishlistCount = computed(() => page.props.wishlistCount || 0);
 
-const logoUrl = computed(() => {
-    return props.settings?.media?.logo || "";
-});
-
-const siteName = computed(() => {
-    return (
-        props.settings?.generalSettings?.app_name ||
-        props.settings?.site_name ||
-        "Store"
-    );
-});
-
-const cleantopnotice = (html) => {
-    if (!html) return false;
-    const text = html
-        .replace(/<[^>]*>/g, "")
-        .replace(/&nbsp;/g, "")
-        .trim();
-    return text.length > 0;
-};
+const logoUrl = computed(() => props.settings?.media?.logo || "");
+const siteName = computed(
+    () => props.settings?.generalSettings?.app_name || props.settings?.site_name || "Store",
+);
 
 // Main menu. Keep the markup and classes in sync with resources/views/storefront-bootstrap.blade.php.
-const navSauces = computed(() => page.props.navSauces || []);
+const navCategories = computed(() => page.props.navCategories || []);
 const path = computed(() => (page.url || "/").split("?")[0]);
+const isHome = computed(() => path.value === "/");
 const active = computed(() => ({
-    home: path.value === "/",
+    kitchen: path.value.startsWith("/category/"),
+    story: path.value === "/page/about-us",
+    journal: path.value.startsWith("/recipes"),
+    wellness: path.value.startsWith("/wellness"),
     shop: path.value.startsWith("/products") || path.value.startsWith("/product/"),
-    sauces: path.value.startsWith("/category/sauce"),
-    recipes: path.value.startsWith("/recipes"),
-    about: path.value === "/page/about-us",
-    contact: path.value === "/page/contact",
 }));
 
 const linkClass = (isActive) => [
-    "relative inline-flex h-20 items-center gap-1 px-3 text-[15px] font-semibold transition-colors hover:text-primary",
-    isActive
-        ? "text-primary after:absolute after:inset-x-0 after:bottom-4 after:h-0.5 after:bg-primary"
-        : "text-gray-900",
+    "relative inline-flex h-24 items-center gap-1 text-[16px] font-medium transition-colors hover:text-primary",
+    isActive ? "text-primary after:absolute after:inset-x-0 after:bottom-6 after:h-0.5 after:bg-primary" : "text-gray-800",
 ];
+
+// Transparent over the page at the top; turns solid once the page scrolls under it.
+const scrolled = ref(false);
+const onScroll = () => { scrolled.value = window.scrollY > 24; };
+// The large logo hangs over the home banner only; elsewhere it sits inside the bar.
+const logoHangs = computed(() => isHome.value && !scrolled.value);
+onMounted(() => { onScroll(); window.addEventListener("scroll", onScroll, { passive: true }); });
+onBeforeUnmount(() => window.removeEventListener("scroll", onScroll));
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 bg-white shadow-sm font-sans">
-        <!-- Top Notice -->
-        <div
-            class="hidden lg:block bg-primary text-white py-1.5 overflow-hidden"
-        >
-            <div
-                class="container mx-auto px-4 flex items-center justify-between"
-            >
-                <div
-                    v-if="cleantopnotice(settings?.generalSettings?.top_notice)"
-                    class="text-[10px] w-2/3 sm:text-xs tracking-widest text-white"
-                    v-html="settings?.generalSettings?.top_notice"
-                ></div>
-
-                <div class="flex items-center justify-end w-full gap-6">
-                    <Link
-                        href="/order/track"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
-                    >
-                        <PhTruck
-                            class="w-4 h-4 group-hover:scale-110 transition-transform"
-                        />
-                        <span>Track Order</span>
-                    </Link>
-
-                    <Link
-                        :href="route('pre-order-lead.form')"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
-                    >
-                        <PhCube
-                            class="w-4 h-4 group-hover:scale-110 transition-transform"
-                        />
-                        <span>Pre Order</span>
-                    </Link>
-
-                    <Link
-                        href="/offers"
-                        class="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-white/90 hover:text-white transition-colors group"
-                    >
-                        <PhGift
-                            class="w-4 h-4 group-hover:scale-110 transition-transform"
-                        />
-                        <span>Offers</span>
-                    </Link>
-                </div>
-            </div>
-        </div>
-
+    <header
+        class="sticky top-0 z-50 bg-white shadow-sm font-sans transition-[background-color,box-shadow] duration-300 lg:shadow-none"
+        :class="[
+            isHome ? 'lg:fixed lg:inset-x-0' : '',
+            scrolled ? 'lg:bg-white/20 lg:shadow-[0_4px_24px_rgba(0,0,0,0.06)] lg:backdrop-blur-xl lg:backdrop-saturate-150 lg:ring-1 lg:ring-white/30' : 'lg:bg-transparent',
+        ]"
+    >
         <!-- Main Header -->
-        <div class="bg-white border-b border-gray-100">
-            <div class="container mx-auto px-4">
-                <!-- Desktop Layout -->
-                <div class="hidden lg:flex items-center justify-between h-20 gap-6">
-                    <!-- Logo -->
-                    <Link href="/" class="flex-shrink-0 flex items-center">
+        <div class="bg-white border-b border-gray-100 lg:border-0 lg:bg-transparent">
+            <div class="container mx-auto px-4 lg:max-w-none lg:px-0">
+                <!--
+                    Desktop: no container. The left gap is kept free for the logo, which hangs
+                    below the bar at the top of the page; the right side runs to the screen edge.
+                -->
+                <div class="relative hidden h-24 items-center pl-[clamp(200px,18vw,320px)] pr-6 lg:flex xl:pr-10">
+                    <Link
+                        href="/"
+                        class="absolute left-[clamp(24px,4vw,72px)] flex items-start transition-all duration-300"
+                        :class="logoHangs ? 'top-3' : 'top-1/2 -translate-y-1/2'"
+                        :aria-label="siteName"
+                    >
                         <img
                             v-if="logoUrl"
                             :src="logoUrl"
                             :alt="siteName"
-                            class="h-14 w-auto max-w-[200px] object-contain"
+                            class="w-auto max-w-[220px] object-contain transition-all duration-300"
+                            :class="logoHangs ? 'h-[150px] xl:h-[180px]' : 'h-[72px]'"
                         />
-                        <span
-                            v-else
-                            class="text-2xl font-black tracking-tighter text-gray-900"
-                            >{{ siteName }}</span
-                        >
+                        <span v-else class="text-2xl font-black tracking-tighter text-gray-900">{{ siteName }}</span>
                     </Link>
 
                     <!-- Menu -->
-                    <nav aria-label="Main" class="flex items-center">
-                        <Link href="/" :class="linkClass(active.home)">Home</Link>
-                        <Link :href="route('products.index')" :class="linkClass(active.shop)">Shop</Link>
-
+                    <nav aria-label="Main" class="flex items-center gap-x-7 xl:gap-x-10">
                         <div class="group relative">
-                            <Link :href="route('category.show', 'sauce')" :class="linkClass(active.sauces)">
-                                Sauces
+                            <Link :href="route('products.index')" :class="linkClass(active.kitchen)">
+                                Our Kitchen
                                 <svg
-                                    v-if="navSauces.length"
+                                    v-if="navCategories.length"
                                     xmlns="http://www.w3.org/2000/svg"
                                     class="h-4 w-4 transition-transform duration-200 group-hover:rotate-180"
                                     fill="none"
@@ -185,139 +127,101 @@ const linkClass = (isActive) => [
                             </Link>
 
                             <div
-                                v-if="navSauces.length"
-                                class="invisible absolute left-1/2 top-full z-50 w-72 -translate-x-1/2 opacity-0 transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+                                v-if="navCategories.length"
+                                class="invisible absolute left-0 top-full z-50 w-60 -translate-y-4 opacity-0 transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
                             >
                                 <div class="rounded-2xl border border-gray-100 bg-white py-2 shadow-xl">
                                     <Link
-                                        v-for="sauce in navSauces"
-                                        :key="sauce.id"
-                                        :href="route('product.details', sauce.slug)"
-                                        class="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-gray-50"
+                                        v-for="category in navCategories"
+                                        :key="category.id"
+                                        :href="route('category.show', category.slug)"
+                                        class="block px-5 py-2.5 text-[15px] font-medium text-gray-800 transition-colors hover:bg-gray-50 hover:text-primary"
                                     >
-                                        <img
-                                            v-if="sauce.image"
-                                            :src="sauce.image"
-                                            :alt="sauce.name"
-                                            loading="lazy"
-                                            class="h-10 w-10 shrink-0 rounded-lg bg-gray-50 object-contain"
-                                        />
-                                        <span class="text-sm font-medium text-gray-800">{{ sauce.name }}</span>
-                                    </Link>
-                                    <Link
-                                        :href="route('category.show', 'sauce')"
-                                        class="mt-1 block border-t border-gray-100 px-4 pb-2 pt-3 text-sm font-semibold text-primary"
-                                    >
-                                        View all sauces →
+                                        {{ category.name }}
                                     </Link>
                                 </div>
                             </div>
                         </div>
 
-                        <Link :href="route('recipes.index')" :class="linkClass(active.recipes)">Recipes</Link>
-                        <Link :href="route('pages.show', 'about-us')" :class="linkClass(active.about)">About Us</Link>
-                        <Link :href="route('pages.show', 'contact')" :class="linkClass(active.contact)">Contact</Link>
+                        <Link :href="route('pages.show', 'about-us')" :class="linkClass(active.story)">Our Story</Link>
+                        <Link :href="route('recipes.index')" :class="linkClass(active.journal)">Food Journal</Link>
+                        <Link :href="route('wellness.index')" :class="linkClass(active.wellness)">Wellness</Link>
+                        <Link :href="route('products.index')" :class="linkClass(active.shop)">Shop</Link>
                     </nav>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-1">
+                    <div class="ml-auto flex items-center gap-4 xl:gap-5">
                         <button
                             type="button"
                             @click="isSearchOpen = true"
-                            class="flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary"
+                            class="flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary"
                             aria-label="Search"
                         >
-                            <PhMagnifyingGlass class="h-6 w-6" />
+                            <PhMagnifyingGlass class="h-7 w-7" />
                         </button>
 
+                        <span class="h-9 w-px bg-gray-500/50" aria-hidden="true"></span>
+
                         <!-- Account -->
-                        <div class="relative group">
+                        <div class="group relative">
                             <Link
-                                :href="route('user.dashboard')"
-                                class="flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary"
+                                :href="user ? route('user.dashboard') : route('login')"
+                                class="flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary"
                                 :aria-label="user ? 'My account' : 'Login or register'"
                             >
-                                <PhUser class="h-6 w-6" />
+                                <PhUser class="h-7 w-7" />
                             </Link>
 
-                            <!-- Dropdown -->
-                            <div
-                                class="invisible absolute right-0 top-full z-50 w-56 pt-2 opacity-0 transition-all duration-300 group-hover:visible group-hover:opacity-100"
-                            >
+                            <div class="invisible absolute right-0 top-full z-50 w-56 pt-2 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                                 <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white py-2 shadow-2xl">
                                     <template v-if="user">
-                                        <div
-                                            class="px-4 py-3 bg-gray-50/50 mb-1 border-b border-gray-50"
-                                        >
-                                            <p
-                                                class="text-[10px] text-gray-400 font-medium uppercase tracking-widest leading-none mb-1"
-                                            >
-                                                Account
-                                            </p>
-                                            <p
-                                                class="text-sm font-medium text-gray-900 truncate"
-                                            >
-                                                {{ user.name }}
-                                            </p>
+                                        <div class="mb-1 border-b border-gray-50 bg-gray-50/50 px-4 py-3">
+                                            <p class="mb-1 text-[10px] font-medium uppercase leading-none tracking-widest text-gray-400">Account</p>
+                                            <p class="truncate text-sm font-medium text-gray-900">{{ user.name }}</p>
                                         </div>
                                         <Link
-                                            :href="
-                                                isAdmin
-                                                    ? route('admin.dashboard.index')
-                                                    : route('user.dashboard')
-                                            "
-                                            class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                                            :href="isAdmin ? route('admin.dashboard.index') : route('user.dashboard')"
+                                            class="block px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary"
                                         >
-                                            {{
-                                                isAdmin
-                                                    ? "Admin Dashboard"
-                                                    : "My Dashboard"
-                                            }}
+                                            {{ isAdmin ? "Admin Dashboard" : "My Dashboard" }}
                                         </Link>
-                                        <Link
-                                            :href="route('user.dashboard')"
-                                            class="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                            >My Orders</Link
-                                        >
-                                        <div class="h-px bg-gray-50 my-1"></div>
-                                        <Link
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                            class="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-                                            >Logout</Link
-                                        >
+                                        <Link :href="route('user.dashboard')" class="block px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary">My Orders</Link>
+                                        <div class="my-1 h-px bg-gray-50"></div>
+                                        <Link :href="route('logout')" method="post" as="button" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-red-500 transition-colors hover:bg-red-50">Logout</Link>
                                     </template>
                                     <template v-else>
-                                        <Link
-                                            :href="route('login')"
-                                            class="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                            >Login</Link
-                                        >
-                                        <Link
-                                            :href="route('register')"
-                                            class="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                            >Register</Link
-                                        >
+                                        <Link :href="route('login')" class="block px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary">Login</Link>
+                                        <Link :href="route('register')" class="block px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary">Register</Link>
                                     </template>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Cart Button -->
                         <button
                             type="button"
                             @click="toggleCartSidebar"
-                            class="relative flex h-10 w-10 items-center justify-center text-gray-900 transition-colors hover:text-primary"
+                            class="relative flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary"
                             aria-label="Cart"
                         >
-                            <PhShoppingCartSimple class="h-6 w-6" />
+                            <PhHandbag class="h-7 w-7" />
                             <span
-                                class="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-none text-white"
+                                v-if="cartCount > 0"
+                                class="absolute -right-0.5 top-0 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-none text-white"
                             >
                                 {{ cartCount }}
                             </span>
                         </button>
+
+                        <Link
+                            :href="route('products.index')"
+                            class="inline-flex h-14 items-center gap-2 rounded-full px-8 text-[17px] font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                            style="background-color: color-mix(in srgb, var(--primary-color) 70%, black)"
+                        >
+                            Order Now
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                        </Link>
                     </div>
                 </div>
 
@@ -434,8 +338,3 @@ const linkClass = (isActive) => [
     </header>
 </template>
 
-<style scoped>
-.container {
-    max-width: 1400px;
-}
-</style>

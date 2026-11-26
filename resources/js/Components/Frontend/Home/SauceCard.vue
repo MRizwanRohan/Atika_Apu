@@ -19,19 +19,19 @@ const statusLabel = computed(() => {
 <template>
     <Link
         :href="route('product.details', product.slug)"
-        class="group block h-full rounded-2xl border border-primary bg-white shadow-[0_6px_22px_rgba(0,0,0,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.10)]"
+        class="group block h-full bg-transparent transition duration-300 hover:-translate-y-1"
     >
-        <div class="relative aspect-[4/5] overflow-hidden rounded-t-2xl bg-gradient-to-b from-[#fbf8f1] to-white p-2.5 md:p-3">
+        <div class="relative aspect-[4/5] overflow-hidden rounded-2xl">
             <img
                 :src="product.feature_image"
                 :srcset="product.responsive_image?.srcset"
-                sizes="(min-width: 1280px) 190px, (min-width: 768px) 28vw, 44vw"
+                sizes="(min-width: 1280px) 260px, (min-width: 768px) 28vw, 44vw"
                 :width="product.responsive_image?.width"
                 :height="product.responsive_image?.height"
                 :alt="product.name"
                 loading="lazy"
                 decoding="async"
-                class="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 :class="{ 'opacity-60 grayscale': isOutOfStock }"
             />
             <span
@@ -43,7 +43,7 @@ const statusLabel = computed(() => {
         </div>
 
         <div class="px-2 pb-4 pt-3 text-center md:px-3 md:pb-5">
-            <h3 class="min-h-[2.5rem] text-sm font-semibold leading-snug text-gray-900 md:text-[15px]">
+            <h3 class="min-h-[2.5rem] font-serif text-base font-semibold leading-snug md:text-xl" style="color: color-mix(in srgb, var(--primary-color) 45%, black)">
                 {{ product.name }}
             </h3>
             <p class="mt-1.5 text-sm font-semibold text-gray-800 md:text-base">

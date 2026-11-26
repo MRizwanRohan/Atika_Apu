@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import { MessageSquareText, X } from "lucide-vue-next";
+import footerBg from "@/../images/footer-bg.webp";
 
 const props = defineProps({
     settings: {
@@ -68,12 +69,16 @@ const toggleChat = () => {
     isChatOpen.value = !isChatOpen.value;
 };
 
-const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors hover:text-primary";
+const linkClass = "text-[14px] leading-[22px] text-white/75 transition-colors hover:text-white";
 </script>
 
 <template>
-    <footer class="border-t border-gray-200/70 bg-[#f8f7f2] text-gray-600">
-        <div class="container mx-auto px-4 pb-24 pt-12 md:pb-6 md:pt-14">
+    <footer class="relative isolate bg-[#264305] text-white/80">
+        <!-- The artwork is decorated on both edges; each half shows its own edge at full height, so neither is cropped. -->
+        <div class="absolute inset-y-0 left-0 -z-10 w-1/2" :style="{ background: `url(${footerBg}) left bottom / auto 100% no-repeat` }" aria-hidden="true" />
+        <div class="absolute inset-y-0 right-0 -z-10 w-1/2" :style="{ background: `url(${footerBg}) right bottom / auto 100% no-repeat` }" aria-hidden="true" />
+
+        <div class="container mx-auto px-4 pb-24 pt-12 md:px-12 md:pb-6 md:pt-14 lg:px-36">
             <div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4 md:gap-0">
                 <!-- Brand -->
                 <div class="col-span-2 md:col-span-1 md:pr-8">
@@ -84,10 +89,10 @@ const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors ho
                             :alt="siteName"
                             class="h-14 w-auto max-w-[200px] object-contain"
                         />
-                        <span v-else class="text-2xl font-black tracking-tighter text-gray-900">{{ siteName }}</span>
+                        <span v-else class="text-2xl font-black tracking-tighter text-white">{{ siteName }}</span>
                     </Link>
 
-                    <p v-if="tagline" class="mt-5 max-w-[16.5rem] whitespace-pre-line text-[14px] leading-[22px] text-gray-700">{{ tagline }}</p>
+                    <p v-if="tagline" class="mt-5 max-w-[16.5rem] whitespace-pre-line text-[14px] leading-[22px] text-white/85">{{ tagline }}</p>
 
                     <div v-if="socials.length" class="mt-6 flex items-center gap-3">
                         <a
@@ -97,7 +102,7 @@ const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors ho
                             target="_blank"
                             rel="noopener noreferrer"
                             :aria-label="social.label"
-                            class="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary"
+                            class="flex h-10 w-10 items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:border-white hover:bg-white hover:text-[#3d5a2c]"
                         >
                             <svg class="h-[18px] w-[18px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path :d="social.path" />
@@ -107,8 +112,8 @@ const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors ho
                 </div>
 
                 <!-- Shop -->
-                <div class="md:border-l md:border-gray-200 md:px-8">
-                    <h4 class="text-sm font-bold uppercase tracking-wide text-gray-900">Shop</h4>
+                <div class="md:border-l md:border-white/15 md:px-8">
+                    <h4 class="text-sm font-bold uppercase tracking-wide text-white">Shop</h4>
                     <ul class="mt-4 space-y-0.5">
                         <li><Link :href="route('category.show', 'sauce')" :class="linkClass">All Sauces</Link></li>
                         <li v-for="sauce in sauces" :key="sauce.id">
@@ -118,8 +123,8 @@ const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors ho
                 </div>
 
                 <!-- Help -->
-                <div class="md:border-l md:border-gray-200 md:px-8">
-                    <h4 class="text-sm font-bold uppercase tracking-wide text-gray-900">Help</h4>
+                <div class="md:border-l md:border-white/15 md:px-8">
+                    <h4 class="text-sm font-bold uppercase tracking-wide text-white">Help</h4>
                     <ul class="mt-4 space-y-0.5">
                         <li><Link :href="route('user.dashboard')" :class="linkClass">My Account</Link></li>
                         <li><Link href="/order/track" :class="linkClass">Track Order</Link></li>
@@ -130,8 +135,8 @@ const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors ho
                 </div>
 
                 <!-- About -->
-                <div v-if="aboutPages.length" class="md:border-l md:border-gray-200 md:pl-8">
-                    <h4 class="text-sm font-bold uppercase tracking-wide text-gray-900">About</h4>
+                <div v-if="aboutPages.length" class="md:border-l md:border-white/15 md:pl-8">
+                    <h4 class="text-sm font-bold uppercase tracking-wide text-white">About</h4>
                     <ul class="mt-4 space-y-0.5">
                         <li v-for="item in aboutPages" :key="item.id">
                             <Link :href="route('pages.show', item.slug)" :class="linkClass">{{ item.name }}</Link>
@@ -140,7 +145,7 @@ const linkClass = "text-[14px] leading-[22px] text-gray-600 transition-colors ho
                 </div>
             </div>
 
-            <div class="mt-10 text-center text-sm text-gray-700 md:mt-8">
+            <div class="mt-10 border-t border-white/15 pt-6 text-center text-sm text-white/75 md:mt-8">
                 <img v-if="paymentImage" :src="paymentImage" alt="Payment methods" class="mx-auto mb-4 h-7 object-contain opacity-80" />
                 <p>© {{ currentYear }} {{ siteName }}. All rights reserved.</p>
             </div>

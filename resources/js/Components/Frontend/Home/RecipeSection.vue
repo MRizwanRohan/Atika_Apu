@@ -17,7 +17,7 @@ const titleParts = computed(() => {
 </script>
 
 <template>
-    <section class="bg-white">
+    <section>
         <RecipeBanner
             v-if="section.banner"
             :banner="section.banner"

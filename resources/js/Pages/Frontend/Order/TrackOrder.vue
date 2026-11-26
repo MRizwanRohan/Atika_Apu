@@ -72,7 +72,7 @@ const isStatusCompleted = (currentStatus, stepStatus) => {
 <template>
     <Head title="Track Order" />
     <FrontendLayout>
-        <div class="min-h-screen bg-gray-50/50 pb-12 px-4 sm:px-6 lg:px-8 relative">
+        <div class="min-h-screen pb-12 px-4 sm:px-6 lg:px-8 relative">
             <div class="max-w-4xl mx-auto relative z-10">
                 <!-- Search Card (only show when not searched) -->
                 <div v-if="!searched"
