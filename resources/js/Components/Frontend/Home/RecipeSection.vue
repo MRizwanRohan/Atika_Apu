@@ -26,7 +26,7 @@ const titleParts = computed(() => {
             :alt="section.title"
         />
 
-        <div v-if="section.recipes.length" style="background-color: color-mix(in srgb, var(--primary-color) 4%, white)">
+        <div v-if="section.recipes.length">
           <div class="container mx-auto px-4 py-8 md:py-12">
             <div>
                 <div class="grid items-center gap-7 lg:grid-cols-[minmax(240px,310px)_minmax(0,1fr)] lg:gap-10">

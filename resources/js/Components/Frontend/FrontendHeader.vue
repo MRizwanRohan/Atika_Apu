@@ -61,9 +61,23 @@ const active = computed(() => ({
     shop: path.value.startsWith("/products") || path.value.startsWith("/product/"),
 }));
 
+// Pages that open with a dark hero under the transparent bar: light text until the page scrolls.
+const onDarkHero = computed(
+    () => !scrolled.value && (path.value === "/products" || path.value.startsWith("/category/")),
+);
+const iconClass = computed(() =>
+    onDarkHero.value ? "text-white/90 hover:text-[#c6e37a]" : "text-gray-800 hover:text-primary",
+);
+
 const linkClass = (isActive) => [
     "relative inline-flex h-24 items-center gap-1 text-[16px] font-medium transition-colors hover:text-primary",
-    isActive ? "text-primary after:absolute after:inset-x-0 after:bottom-6 after:h-0.5 after:bg-primary" : "text-gray-800",
+    onDarkHero.value
+        ? isActive
+            ? "text-white after:absolute after:inset-x-0 after:bottom-6 after:h-0.5 after:bg-white"
+            : "text-white/90 hover:!text-[#c6e37a]"
+        : isActive
+            ? "text-primary after:absolute after:inset-x-0 after:bottom-6 after:h-0.5 after:bg-primary"
+            : "text-gray-800",
 ];
 
 // Transparent over the page at the top; turns solid once the page scrolls under it.
@@ -154,19 +168,21 @@ onBeforeUnmount(() => window.removeEventListener("scroll", onScroll));
                         <button
                             type="button"
                             @click="isSearchOpen = true"
-                            class="flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary"
+                            class="flex h-11 w-11 items-center justify-center transition-colors"
+                            :class="iconClass"
                             aria-label="Search"
                         >
                             <PhMagnifyingGlass class="h-7 w-7" />
                         </button>
 
-                        <span class="h-9 w-px bg-gray-500/50" aria-hidden="true"></span>
+                        <span class="h-9 w-px" :class="onDarkHero ? 'bg-white/40' : 'bg-gray-500/50'" aria-hidden="true"></span>
 
                         <!-- Account -->
                         <div class="group relative">
                             <Link
                                 :href="user ? route('user.dashboard') : route('login')"
-                                class="flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary"
+                                class="flex h-11 w-11 items-center justify-center transition-colors"
+                            :class="iconClass"
                                 :aria-label="user ? 'My account' : 'Login or register'"
                             >
                                 <PhUser class="h-7 w-7" />
@@ -200,7 +216,8 @@ onBeforeUnmount(() => window.removeEventListener("scroll", onScroll));
                         <button
                             type="button"
                             @click="toggleCartSidebar"
-                            class="relative flex h-11 w-11 items-center justify-center text-gray-800 transition-colors hover:text-primary"
+                            class="relative flex h-11 w-11 items-center justify-center transition-colors"
+                            :class="iconClass"
                             aria-label="Cart"
                         >
                             <PhHandbag class="h-7 w-7" />
@@ -215,7 +232,8 @@ onBeforeUnmount(() => window.removeEventListener("scroll", onScroll));
                         <Link
                             :href="route('products.index')"
                             class="inline-flex h-14 items-center gap-2 rounded-full px-8 text-[17px] font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-                            style="background-color: color-mix(in srgb, var(--primary-color) 70%, black)"
+                            :class="onDarkHero ? '!text-[#264305]' : ''"
+                            :style="{ backgroundColor: onDarkHero ? '#ffffff' : 'color-mix(in srgb, var(--primary-color) 70%, black)' }"
                         >
                             Order Now
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

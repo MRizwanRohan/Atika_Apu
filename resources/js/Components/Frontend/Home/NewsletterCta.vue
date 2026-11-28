@@ -10,11 +10,11 @@ const points = [
 </script>
 
 <template>
-    <section class="py-8 md:py-12">
+    <section class="pb-10 pt-2 md:pb-16 md:pt-4">
         <div class="container mx-auto px-4">
-            <div class="overflow-hidden rounded-3xl bg-[#f3f2ea]">
+            <div class="overflow-hidden rounded-3xl border border-white/50 bg-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-[3px]">
                 <!-- Trust points -->
-                <div class="grid grid-cols-2 gap-x-3 gap-y-4 px-4 py-5 md:grid-cols-4 md:gap-0 md:px-8 md:py-6 md:divide-x md:divide-gray-300/70">
+                <div class="grid grid-cols-2 gap-x-3 gap-y-4 px-4 py-5 md:grid-cols-4 md:gap-0 md:px-8 md:py-6 md:divide-x md:divide-[#3d5a2c]/30">
                     <div v-for="p in points" :key="p.title" class="flex items-center gap-3 md:justify-center md:px-4">
                         <svg class="h-8 w-8 shrink-0 text-primary md:h-9 md:w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path :d="p.icon" />

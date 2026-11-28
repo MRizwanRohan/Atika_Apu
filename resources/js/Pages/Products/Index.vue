@@ -6,6 +6,9 @@ import 'swiper/css';
 import FrontendLayout from "@/Layouts/FrontendLayout.vue";
 import ProductCard from "@/Components/Frontend/Product/ProductCard.vue";
 import CategoryFilterTree from "@/Components/Filters/CategoryFilterTree.vue";
+import ArtworkBackground from "@/Components/Frontend/Home/ArtworkBackground.vue";
+import botanicalArt from "@/../images/footer-bg.webp";
+import paperTexture from "@/../images/paper-texture.webp";
 import {
     ChevronDown,
     ChevronUp,
@@ -324,66 +327,33 @@ const formatPrice = (price) => {
 <template>
     <Head title="Products" />
     <FrontendLayout>
-        <div class="min-h-screen bg-gray-50 mb-20">
-            <div class="container mx-auto px-4 py-6">
-                <!-- Page Header -->
-                <div class="mb-6 text-center">
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-                        <span v-if="searchQuery"
-                            >Search results for "{{ searchQuery }}"</span
-                        >
-                        <span v-else-if="selectedCategory">{{
-                            getCategoryName(selectedCategory)
-                        }}</span>
-                        <span v-else>All Products</span>
-                    </h1>
-                </div>
+        <!-- Shop hero: botanical artwork; on desktop it runs up behind the transparent header -->
+        <ArtworkBackground :image="botanicalArt" tag="section" class="bg-[#264305] text-white lg:-mt-24 lg:pt-24">
+            <div class="container mx-auto px-4 pb-16 pt-10 text-center md:pb-24 md:pt-14">
+                <nav class="mb-4 text-xs text-white/70 md:text-sm" aria-label="Breadcrumb">
+                    <Link :href="route('home')" class="hover:text-white">Home</Link>
+                    <span class="mx-2">/</span>
+                    <span class="text-white">Shop</span>
+                </nav>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#f3b334] md:text-sm">Our Kitchen</p>
+                <h1 class="mx-auto mt-3 max-w-3xl font-serif text-3xl font-semibold leading-tight md:text-5xl">
+                    <span v-if="searchQuery">Search results for "{{ searchQuery }}"</span>
+                    <span v-else-if="selectedCategory">{{ getCategoryName(selectedCategory) }}</span>
+                    <span v-else>Every jar, <span class="text-[#c6e37a]">made with love.</span></span>
+                </h1>
+                <p class="mx-auto mt-4 max-w-xl text-sm text-white/80 md:text-base">
+                    Small-batch Bengali sauces, cooked the way our mothers did, with real ingredients and nothing artificial.
+                </p>
+            </div>
+        </ArtworkBackground>
 
-
-                <!-- Child Categories (top of content) -->
-                <div v-if="childCategories.length > 0" class="mb-4 md:mb-6">
-                    <swiper
-                        :slides-per-view="'auto'"
-                        :breakpoints="{
-                            0: { spaceBetween: 4 },
-                            768: { spaceBetween: 12 }
-                        }"
-                        :centered-slides="false"
-                        :grab-cursor="true"                        :loop="true"                        class="category-swiper !px-4"
-                    >
-                        <swiper-slide
-                            v-for="child in childCategories"
-                            :key="child.id"
-                            class="!w-20 md:!w-24"
-                        >
-                            <button
-                                @click="selectCategory(child.slug)"
-                                class="group flex flex-col items-center gap-1 md:gap-2 w-full rounded-2xl text-center transition-transform duration-200"
-                            >
-                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
-                                    <img
-                                        v-if="child.image"
-                                        :src="child.image"
-                                        :alt="child.name"
-                                        class="w-full h-full object-contain object-center"
-                                    />
-                                    <span
-                                        v-else
-                                        class="text-[10px] uppercase tracking-[0.2em] text-gray-500"
-                                    >
-                                        {{ child.name.charAt(0) }}
-                                    </span>
-                                </div>
-                                <span class="text-[11px] font-medium text-gray-700 leading-tight break-words line-clamp-2">
-                                    {{ child.name }}
-                                </span>
-                            </button>
-                        </swiper-slide>
-                    </swiper>
-                </div>
-
+        <div
+            class="min-h-screen bg-[#f6d999] pb-20"
+            :style="{ backgroundImage: `url(${paperTexture})`, backgroundSize: '640px auto' }"
+        >
+            <div class="container mx-auto px-4">
                 <!-- Top Bar: Results count, Sort, Filter Button -->
-                <div class=" mb-8">
+                <div class="relative z-20 -mt-8 mb-8 rounded-2xl border border-white/70 bg-[#fdf4dd]/85 px-4 py-4 text-[#264305] shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur-md md:px-6">
                     <div class="flex items-center justify-between">
                         <!-- Left: Filter Button -->
                         <button
@@ -404,7 +374,7 @@ const formatPrice = (price) => {
 
                         <!-- Center: Results count -->
                         <div
-                            class="hidden md:block text-[10px] font-medium uppercase tracking-[0.2em] text-gray-500"
+                            class="hidden md:block text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-700"
                         >
                             Showing {{ products.from }}-{{ products.to }} of
                             {{ products.total }} products
@@ -456,6 +426,48 @@ const formatPrice = (price) => {
                             </transition>
                         </div>
                     </div>
+                </div>
+
+                <!-- Child Categories (top of content) -->
+                <div v-if="childCategories.length > 0" class="mb-4 md:mb-6">
+                    <swiper
+                        :slides-per-view="'auto'"
+                        :breakpoints="{
+                            0: { spaceBetween: 4 },
+                            768: { spaceBetween: 12 }
+                        }"
+                        :centered-slides="false"
+                        :grab-cursor="true"                        :loop="true"                        class="category-swiper !px-4"
+                    >
+                        <swiper-slide
+                            v-for="child in childCategories"
+                            :key="child.id"
+                            class="!w-20 md:!w-24"
+                        >
+                            <button
+                                @click="selectCategory(child.slug)"
+                                class="group flex flex-col items-center gap-1 md:gap-2 w-full rounded-2xl text-center transition-transform duration-200"
+                            >
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                    <img
+                                        v-if="child.image"
+                                        :src="child.image"
+                                        :alt="child.name"
+                                        class="w-full h-full object-contain object-center"
+                                    />
+                                    <span
+                                        v-else
+                                        class="text-[10px] uppercase tracking-[0.2em] text-gray-500"
+                                    >
+                                        {{ child.name.charAt(0) }}
+                                    </span>
+                                </div>
+                                <span class="text-[11px] font-medium text-gray-700 leading-tight break-words line-clamp-2">
+                                    {{ child.name }}
+                                </span>
+                            </button>
+                        </swiper-slide>
+                    </swiper>
                 </div>
 
                 <!-- Active Filters Chips -->
@@ -807,7 +819,7 @@ const formatPrice = (price) => {
                         <!-- Products -->
                         <div
                             v-if="products.data.length > 0"
-                            class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-6"
+                            class="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-6 md:gap-y-10 lg:grid-cols-4"
                         >
                             <ProductCard
                                 v-for="product in products.data"
@@ -819,7 +831,7 @@ const formatPrice = (price) => {
                         <!-- No results -->
                         <div
                             v-else
-                            class="bg-white rounded-2xl border border-gray-100 p-8 md:p-16 text-center max-w-2xl mx-auto shadow-sm"
+                            class="rounded-2xl border border-white/60 bg-white/30 p-8 md:p-16 text-center max-w-2xl mx-auto backdrop-blur-[3px]"
                         >
                             <div
                                 class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center bg-gradient-to-tr from-amber-50 to-orange-100 rounded-full text-amber-500 shadow-inner group"

@@ -9,6 +9,7 @@ import { computed, toRef, defineAsyncComponent } from "vue";
 import NewsletterCta from "@/Components/Frontend/Home/NewsletterCta.vue";
 import SauceSection from "@/Components/Frontend/Home/SauceSection.vue";
 import StorySection from "@/Components/Frontend/Home/StorySection.vue";
+import ArtworkBackground from "@/Components/Frontend/Home/ArtworkBackground.vue";
 import FeatureHighlights from "@/Components/Frontend/Home/FeatureHighlights.vue";
 const ProductsGroup = defineAsyncComponent(() => import("@/Components/Frontend/Home/ProductsGroup.vue"));
 const InstagramFeed = defineAsyncComponent(() => import("@/Components/Frontend/Home/InstagramFeed.vue"));
@@ -105,9 +106,11 @@ const pageTitle = computed(
         <ProductsGroup :pagination="productGroups" :featured="featuredProduct" />
     </WhenVisible>
 
-    <RecipeSection v-if="recipeSection" :section="recipeSection" />
-
-    <NewsletterCta />
+    <!-- Recipes and the newsletter share one continuous artwork background. -->
+    <ArtworkBackground>
+        <RecipeSection v-if="recipeSection" :section="recipeSection" />
+        <NewsletterCta />
+    </ArtworkBackground>
 
     <WhenVisible v-if="homeSections.instagram" data="instagramFeeds" :buffer="800">
         <template #fallback><div class="h-[440px]" aria-hidden="true" /></template>
